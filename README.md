@@ -46,7 +46,11 @@ AI-safety/
 
 ## Getting Started
 
-See individual module READMEs for detailed setup instructions.
+Please refer to **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** for the complete documentation, including:
+- Full Setup Guide (Backend & Frontend)
+- Architecture Overview
+- Implementation Status
+- Research & Data Collection Guide
 
 ## Security Principles
 
