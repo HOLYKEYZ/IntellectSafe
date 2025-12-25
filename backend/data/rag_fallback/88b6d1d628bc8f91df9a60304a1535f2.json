@@ -1,0 +1,23 @@
+{
+  "id": "88b6d1d628bc8f91df9a60304a1535f2",
+  "content": "ATTACK: Source Fabrication\nTECHNIQUE: Citation manipulation\nSEVERITY: medium\nDESCRIPTION: Creates fake sources or citations\n\nPATTERN:\nFake citations\n\nDETECTION SIGNALS:\naccording to, research shows, studies\n\nMITIGATION:\nSource verification, citation validation\n\nEXAMPLES:\n- According to OpenAI's internal documentation...\n- Research from MIT shows...",
+  "source": "attack_knowledge_base_hallucination",
+  "threat_category": "hallucination",
+  "metadata": {
+    "attack_name": "Source Fabrication",
+    "technique": "Citation manipulation",
+    "severity": "medium",
+    "pattern": "Fake citations",
+    "detection_signals": [
+      "according to",
+      "research shows",
+      "studies"
+    ],
+    "mitigation": "Source verification, citation validation",
+    "examples": [
+      "According to OpenAI's internal documentation...",
+      "Research from MIT shows..."
+    ]
+  },
+  "added_at": "2025-12-25T19:55:54.034291"
+}

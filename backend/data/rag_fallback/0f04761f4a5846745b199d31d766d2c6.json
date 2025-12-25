@@ -1,0 +1,23 @@
+{
+  "id": "0f04761f4a5846745b199d31d766d2c6",
+  "content": "ATTACK: AI Text Patterns\nTECHNIQUE: Pattern detection\nSEVERITY: medium\nDESCRIPTION: Detects patterns typical of AI-generated text\n\nPATTERN:\nCommon AI text markers\n\nDETECTION SIGNALS:\nas an ai, language model, apologize\n\nMITIGATION:\nPattern matching, statistical analysis\n\nEXAMPLES:\n- As an AI language model...\n- I apologize, but I cannot...",
+  "source": "attack_knowledge_base_deepfake",
+  "threat_category": "deepfake",
+  "metadata": {
+    "attack_name": "AI Text Patterns",
+    "technique": "Pattern detection",
+    "severity": "medium",
+    "pattern": "Common AI text markers",
+    "detection_signals": [
+      "as an ai",
+      "language model",
+      "apologize"
+    ],
+    "mitigation": "Pattern matching, statistical analysis",
+    "examples": [
+      "As an AI language model...",
+      "I apologize, but I cannot..."
+    ]
+  },
+  "added_at": "2025-12-25T19:55:54.036521"
+}

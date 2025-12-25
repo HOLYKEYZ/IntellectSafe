@@ -1,0 +1,24 @@
+{
+  "id": "3145d4221208409365ebfc7d8bcf565c",
+  "content": "ATTACK: Confidence Mismatch\nTECHNIQUE: Confidence manipulation\nSEVERITY: high\nDESCRIPTION: Model expresses high confidence in incorrect information\n\nPATTERN:\nHigh confidence, low accuracy\n\nDETECTION SIGNALS:\n100%, guarantee, certain, definitely\n\nMITIGATION:\nConfidence gating, fact-checking\n\nEXAMPLES:\n- I'm 100% certain that GPT-5 was released yesterday.\n- I can guarantee this API key is valid.",
+  "source": "attack_knowledge_base_hallucination",
+  "threat_category": "hallucination",
+  "metadata": {
+    "attack_name": "Confidence Mismatch",
+    "technique": "Confidence manipulation",
+    "severity": "high",
+    "pattern": "High confidence, low accuracy",
+    "detection_signals": [
+      "100%",
+      "guarantee",
+      "certain",
+      "definitely"
+    ],
+    "mitigation": "Confidence gating, fact-checking",
+    "examples": [
+      "I'm 100% certain that GPT-5 was released yesterday.",
+      "I can guarantee this API key is valid."
+    ]
+  },
+  "added_at": "2025-12-25T19:55:54.025859"
+}

@@ -95,7 +95,7 @@ async def scan_prompt(
             input_preview=request.prompt[:500],
             user_id=request.user_id,
             session_id=request.session_id,
-            metadata={
+            meta_data={
                 **(request.metadata or {}),
                 "has_conversation_history": bool(request.conversation_history),
             },
@@ -111,7 +111,7 @@ async def scan_prompt(
                 "user_id": request.user_id,
                 "session_id": request.session_id,
                 "conversation_history": request.conversation_history or [],
-                **request.metadata or {},
+                **(request.metadata or {}),
             },
             scan_request_id=str(scan_request.id),
         )
@@ -158,7 +158,7 @@ async def scan_output(
             input_preview=request.output[:500],
             user_id=request.user_id,
             session_id=request.session_id,
-            metadata=request.metadata or {},
+            meta_data=request.metadata or {},
         )
         db.add(scan_request)
         db.commit()
@@ -171,7 +171,7 @@ async def scan_output(
             context={
                 "user_id": request.user_id,
                 "session_id": request.session_id,
-                **request.metadata or {},
+                **(request.metadata or {}),
             },
             scan_request_id=str(scan_request.id),
         )
@@ -228,7 +228,7 @@ async def scan_content(
                 input_preview=request.content[:500],
                 user_id=request.user_id,
                 session_id=request.session_id,
-                metadata={**(request.metadata or {}), "content_type": "text"},
+                meta_data={**(request.metadata or {}), "content_type": "text"},
             )
             db.add(scan_request)
             db.commit()
@@ -240,7 +240,7 @@ async def scan_content(
                 context={
                     "user_id": request.user_id,
                     "session_id": request.session_id,
-                    **request.metadata or {},
+                    **(request.metadata or {}),
                 },
                 scan_request_id=str(scan_request.id),
             )
