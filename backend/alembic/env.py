@@ -16,7 +16,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
 
 # Load .env file explicitly
-load_dotenv(Path(__file__).parents[2] / ".env")
+# Load .env file explicitly
+env_path = Path(__file__).parents[2] / ".env"
+load_dotenv(env_path)
 
 from app.core.config import get_settings
 from app.models.database import Base
