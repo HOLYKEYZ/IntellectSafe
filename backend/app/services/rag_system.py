@@ -59,36 +59,31 @@ class RAGSystem:
         metadata: Optional[Dict] = None,
     ) -> str:
         """
-        Add document to knowledge base
-        
-        Returns:
-            Document ID
+        Add document to RAG system
         """
-        if not self.collection:
-            return self._fallback_add(content, source, threat_category, metadata)
+        if self.collection:
+            try:
+                import uuid
+                # Store metadata as dict
+                doc_id = str(uuid.uuid4())
+                threat_cat_value = threat_category.value if hasattr(threat_category, 'value') else threat_category
+                self.collection.add(
+                    documents=[content],
+                    metadatas=[{
+                        "source": source,
+                        "threat_category": threat_cat_value,
+                        **(metadata or {})
+                    }],
+                    ids=[doc_id]
+                )
+                return doc_id
+            except Exception as e:
+                print(f"ChromaDB Error: {e}. Falling back to file storage.")
 
-        # Generate document ID
-        doc_id = hashlib.md5(f"{source}{content[:100]}".encode()).hexdigest()
-
-        # Prepare metadata
-        doc_metadata = {
-            "source": source,
-            "threat_category": threat_category,
-            "added_at": datetime.utcnow().isoformat(),
-            **(metadata or {}),
-        }
-
-        # Add to collection
-        self.collection.add(
-            documents=[content],
-            metadatas=[doc_metadata],
-            ids=[doc_id],
-        )
-
-        return doc_id
+        return self._fallback_add(content, source, threat_category, metadata or {})
 
     def _fallback_add(
-        self, content: str, source: str, threat_category: str, metadata: Optional[Dict]
+        self, content: str, source: str, threat_category: str, metadata: Dict
     ) -> str:
         """Fallback storage when vector DB unavailable"""
         import json
@@ -97,19 +92,20 @@ class RAGSystem:
 
         # Store in file system
         doc_id = hashlib.md5(f"{source}{content[:100]}".encode()).hexdigest()
-        
+
         # Create data directory if it doesn't exist
         data_dir = Path("./data/rag_fallback")
         data_dir.mkdir(parents=True, exist_ok=True)
 
         # Store document as JSON file
         doc_file = data_dir / f"{doc_id}.json"
+        threat_cat_value = threat_category.value if hasattr(threat_category, 'value') else threat_category
         doc_data = {
             "id": doc_id,
             "content": content,
             "source": source,
-            "threat_category": threat_category,
-            "metadata": metadata or {},
+            "threat_category": threat_cat_value,
+            "metadata": metadata,
             "added_at": datetime.utcnow().isoformat(),
         }
 

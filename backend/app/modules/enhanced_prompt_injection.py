@@ -20,13 +20,21 @@ from app.core.llm_council import Verdict
 from app.core.enhanced_council import EnhancedLLMCouncil
 from app.core.llm_roles import SafetyRole
 from app.models.database import ModuleType, RiskLevel, RiskScore
+from app.modules.advanced_detection import AdvancedDetectionEngine
+from app.modules.refusal_persistence import RefusalPersistenceEnforcer
+from app.services.rag_system import RAGSystem
+from app.services.attack_knowledge_base import initialize_attack_knowledge_base
 
 
 class EnhancedPromptInjectionDetector:
     """Enhanced prompt injection detection with advanced techniques"""
 
-    def __init__(self, council: EnhancedLLMCouncil):
+    def __init__(self, council: EnhancedLLMCouncil, rag_system: Optional[RAGSystem] = None):
         self.council = council
+        self.rag_system = rag_system or RAGSystem()
+        self.attack_kb = initialize_attack_knowledge_base(self.rag_system)
+        self.advanced_engine = AdvancedDetectionEngine(council, self.attack_kb)
+        self.refusal_enforcer = RefusalPersistenceEnforcer()
         self.injection_patterns = self._load_advanced_patterns()
         self.recursive_patterns = self._load_recursive_patterns()
         self.boundary_patterns = self._load_boundary_patterns()
@@ -104,36 +112,62 @@ class EnhancedPromptInjectionDetector:
         Returns:
             RiskScore with comprehensive detection
         """
-        # Step 1: Recursive instruction detection
+        session_id = context.get("session_id") if context else None
+        conversation_history = context.get("conversation_history", []) if context else []
+
+        # Step 0: Check refusal persistence (if previous refusals exist)
+        refusal_enforcement = None
+        if session_id:
+            refusal_history = self.refusal_enforcer.get_refusal_history(session_id)
+            if refusal_history:
+                refusal_enforcement = self.refusal_enforcer.enforce_refusal(
+                    prompt, session_id, [r["reason"] for r in refusal_history]
+                )
+
+        # Step 1: Advanced detection engine (comprehensive scan)
+        advanced_results = self.advanced_engine.comprehensive_scan(
+            prompt, session_id, conversation_history
+        )
+
+        # Step 2: Recursive instruction detection
         recursive_score, recursive_signals = self._detect_recursive_instructions(prompt)
 
-        # Step 2: Instruction boundary detection
+        # Step 3: Instruction boundary detection
         boundary_score, boundary_signals = self._detect_boundary_violations(prompt)
 
-        # Step 3: Role confusion detection
+        # Step 4: Role confusion detection
         role_score, role_signals = self._detect_role_confusion(prompt)
 
-        # Step 4: Encoding/obfuscation detection
+        # Step 5: Encoding/obfuscation detection
         encoding_score, encoding_signals = self._detect_encoding_tricks(prompt)
 
-        # Step 5: Advanced pattern matching
+        # Step 6: Advanced pattern matching
         pattern_score, pattern_signals = self._advanced_pattern_scan(prompt)
 
-        # Step 6: LLM Council analysis with specialized role
+        # Step 7: RAG-augmented prompt for council analysis
+        rag_augmented_prompt = self.rag_system.augment_prompt(prompt, "prompt_injection")
+
+        # Step 8: LLM Council analysis with specialized role
         council_result = await self.council.analyze_with_roles(
-            prompt,
+            rag_augmented_prompt,
             analysis_type="injection",
             context=context,
             scan_request_id=scan_request_id,
         )
 
-        # Step 7: Combine all scores
+        # Step 9: Combine all scores (including advanced detection and refusal enforcement)
+        refusal_boost = 0.0
+        if refusal_enforcement and refusal_enforcement.get("should_refuse"):
+            refusal_boost = refusal_enforcement.get("confidence", 0.0) * 50.0  # Boost up to 50 points
+
         heuristic_score = max(
             recursive_score,
             boundary_score,
             role_score,
             encoding_score,
             pattern_score,
+            advanced_results.get("overall_score", 0.0),
+            refusal_boost,
         )
 
         final_score = self._combine_scores(heuristic_score, council_result.weighted_score)
@@ -142,7 +176,7 @@ class EnhancedPromptInjectionDetector:
         # Step 8: Determine verdict
         verdict = self._determine_verdict(final_score, council_result.final_verdict)
 
-        # Step 9: Build explanation
+        # Step 10: Build explanation
         explanation = self._build_enhanced_explanation(
             recursive_signals,
             boundary_signals,
@@ -151,21 +185,31 @@ class EnhancedPromptInjectionDetector:
             pattern_signals,
             council_result,
             final_score,
+            advanced_results,
         )
 
-        # Combine all signals
+        # Combine all signals (including advanced detection and refusal enforcement)
         all_signals = {
             "recursive_instructions": recursive_signals,
             "boundary_violations": boundary_signals,
             "role_confusion": role_signals,
             "encoding_tricks": encoding_signals,
             "pattern_matches": pattern_signals,
+            "advanced_detection": advanced_results,
+            "refusal_enforcement": refusal_enforcement,
             "council_analysis": council_result.votes,
+            "rag_enhanced": True,  # RAG was used for augmentation
             "injection_detected": final_score >= 40.0,
             "attack_type": self._classify_attack_type(
-                recursive_signals, boundary_signals, role_signals
+                recursive_signals, boundary_signals, role_signals, advanced_results
             ),
         }
+
+        # Record refusal if high risk
+        if final_score >= 70.0 and session_id:
+            self.refusal_enforcer.record_refusal(
+                session_id, prompt, explanation
+            )
 
         return RiskScore(
             module_type=ModuleType.PROMPT_INJECTION,
@@ -318,9 +362,13 @@ class EnhancedPromptInjectionDetector:
         return min(max_score, 100.0), signals
 
     def _classify_attack_type(
-        self, recursive: List[Dict], boundary: List[Dict], role: List[Dict]
+        self, recursive: List[Dict], boundary: List[Dict], role: List[Dict], advanced: Dict
     ) -> str:
         """Classify the type of attack"""
+        # Check advanced detection first
+        if advanced.get("attack_types"):
+            return advanced["attack_types"][0] if advanced["attack_types"] else "general_injection"
+        
         if recursive:
             return "recursive_instruction"
         if boundary:
@@ -383,6 +431,7 @@ class EnhancedPromptInjectionDetector:
         pattern: List[Dict],
         council_result,
         final_score: float,
+        advanced_results: Optional[Dict] = None,
     ) -> str:
         """Build comprehensive explanation"""
         parts = []
@@ -400,8 +449,23 @@ class EnhancedPromptInjectionDetector:
         if pattern:
             parts.append(f"Detected {len(pattern)} injection pattern matches")
 
+        # Advanced detection results
+        if advanced_results:
+            adv_signals = advanced_results.get("advanced_attacks", {}).get("advanced_signals", [])
+            if adv_signals:
+                attack_types = list(set(s.get("type", "") for s in adv_signals))
+                parts.append(f"Advanced detection: {len(adv_signals)} signals ({', '.join(attack_types[:3])})")
+            
+            if advanced_results.get("context_poisoning", {}).get("context_poisoning_detected"):
+                parts.append("Context poisoning detected")
+            if advanced_results.get("homograph_attack", {}).get("homograph_detected"):
+                parts.append("Homograph attack detected")
+            if advanced_results.get("instruction_hiding", {}).get("instruction_hiding_detected"):
+                parts.append("Hidden instructions detected")
+
         parts.append(f"LLM Council consensus: {council_result.consensus_score:.1%}")
         parts.append(f"Council verdict: {council_result.final_verdict.value}")
+        parts.append("RAG-enhanced analysis: Knowledge base consulted")
 
         return "\n".join(parts)
 

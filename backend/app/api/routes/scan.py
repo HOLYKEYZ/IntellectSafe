@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -20,13 +20,15 @@ from app.models.database import ScanRequest
 from app.modules.output_safety import OutputSafetyGuard
 from app.modules.enhanced_prompt_injection import EnhancedPromptInjectionDetector
 from app.modules.deepfake_detection import DeepfakeDetector
+from app.services.rag_system import RAGSystem
 from app.services.db import get_db_session
 
 router = APIRouter(prefix="/scan", tags=["scan"])
 
-# Initialize enhanced council and detectors
+# Initialize enhanced council, RAG, and detectors
 enhanced_council = EnhancedLLMCouncil()
-prompt_detector = EnhancedPromptInjectionDetector(enhanced_council)
+rag_system = RAGSystem()
+prompt_detector = EnhancedPromptInjectionDetector(enhanced_council, rag_system)
 output_guard = OutputSafetyGuard(enhanced_council)
 deepfake_detector = DeepfakeDetector(enhanced_council)
 
@@ -36,6 +38,7 @@ class ScanPromptRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=100000)
     user_id: Optional[str] = None
     session_id: Optional[str] = None
+    conversation_history: Optional[list[str]] = None
     metadata: Optional[dict] = None
 
 
@@ -43,6 +46,16 @@ class ScanOutputRequest(BaseModel):
     """Request model for output scanning"""
     output: str = Field(..., min_length=1, max_length=100000)
     original_prompt: Optional[str] = None
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
+    metadata: Optional[dict] = None
+
+
+class ScanContentRequest(BaseModel):
+    """Request model for content scanning"""
+    content_type: str = Field(..., pattern="^(text|image|video|audio)$")
+    content: Optional[str] = None
+    content_url: Optional[str] = None
     user_id: Optional[str] = None
     session_id: Optional[str] = None
     metadata: Optional[dict] = None
@@ -69,6 +82,7 @@ async def scan_prompt(
     """
     Scan a prompt for injection and manipulation attempts
 
+    Enhanced with RAG system and advanced detection.
     Returns structured JSON with risk assessment and explainability.
     """
     try:
@@ -81,18 +95,22 @@ async def scan_prompt(
             input_preview=request.prompt[:500],
             user_id=request.user_id,
             session_id=request.session_id,
-            metadata=request.metadata or {},
+            metadata={
+                **(request.metadata or {}),
+                "has_conversation_history": bool(request.conversation_history),
+            },
         )
         db.add(scan_request)
         db.commit()
         db.refresh(scan_request)
 
-        # Run detection
-        risk_score = await prompt_detector.scan(
+        # Run enhanced detection
+        risk_score = await prompt_detector.scan_enhanced(
             request.prompt,
             context={
                 "user_id": request.user_id,
                 "session_id": request.session_id,
+                "conversation_history": request.conversation_history or [],
                 **request.metadata or {},
             },
             scan_request_id=str(scan_request.id),
@@ -180,16 +198,6 @@ async def scan_output(
         raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
 
-class ScanContentRequest(BaseModel):
-    """Request model for content scanning"""
-    content_type: str = Field(..., pattern="^(text|image|video|audio)$")
-    content: Optional[str] = None  # For text content
-    content_url: Optional[str] = None  # For media files
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
-    metadata: Optional[dict] = None
-
-
 @router.post("/content", response_model=ScanResponse)
 async def scan_content(
     request: ScanContentRequest,
@@ -255,8 +263,6 @@ async def scan_content(
             )
 
         elif request.content_type in ["image", "video", "audio"]:
-            # Placeholder for media deepfake detection
-            # TODO: Implement image/video/audio deepfake detection
             raise HTTPException(
                 status_code=501,
                 detail=f"{request.content_type.capitalize()} deepfake detection not yet implemented. Text detection is available.",
@@ -271,4 +277,3 @@ async def scan_content(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Content scan failed: {str(e)}")
-

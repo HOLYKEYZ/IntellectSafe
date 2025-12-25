@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: ai_safety_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ai_safety_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai_safety_net
+
+  redis:
+    image: redis:alpine
+    container_name: ai_safety_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ai_safety_net
+
+volumes:
+  postgres_data:
+
+networks:
+  ai_safety_net:

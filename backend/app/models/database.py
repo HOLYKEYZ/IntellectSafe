@@ -80,7 +80,7 @@ class ScanRequest(Base):
     input_preview = Column(Text)  # First 500 chars for preview
     user_id = Column(String(255), index=True)  # Optional user identifier
     session_id = Column(String(255), index=True)  # Session tracking
-    metadata = Column(JSON)  # Additional context
+    meta_data = Column(JSON)  # Renamed from metadata
 
     # Relationships
     risk_scores = relationship("RiskScore", back_populates="scan_request", cascade="all, delete-orphan")
@@ -160,7 +160,7 @@ class CouncilDecision(Base):
 
     # Voting breakdown
     votes = Column(JSON, nullable=False)  # {provider: {verdict, score, confidence, reasoning}}
-    weights = Column(JSON, nullable=False)  # Provider reliability weights
+    meta_data = Column(JSON, nullable=True)  # Renamed from metadata to avoid SQLAlchemy conflict  # Provider reliability weights
 
     # Explainability
     reasoning = Column(Text, nullable=False)
@@ -259,7 +259,7 @@ class AuditLog(Base):
 
     # Details
     description = Column(Text, nullable=False)
-    metadata = Column(JSON)
+    meta_data = Column(JSON)  # Renamed from metadata
     ip_address = Column(String(45))
     user_agent = Column(String(500))
 

@@ -13,6 +13,11 @@ from alembic import context
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from dotenv import load_dotenv
+
+# Load .env file explicitly
+load_dotenv(Path(__file__).parents[2] / ".env")
+
 from app.core.config import get_settings
 from app.models.database import Base
 
@@ -20,8 +25,10 @@ from app.models.database import Base
 config = context.config
 
 # Override sqlalchemy.url with environment variable
+# Override sqlalchemy.url with environment variable
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+if settings.DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:

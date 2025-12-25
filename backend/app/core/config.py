@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Find project root (two levels up from this file)
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -29,60 +29,15 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = Field(default=["http://localhost:3002"], env="CORS_ORIGINS")
 
     # Database
-    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 
-    # Redis
-    REDIS_URL: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
-    REDIS_QUEUE_DB: int = 1
-    REDIS_CACHE_DB: int = 2
-    REDIS_RATE_LIMIT_DB: int = 3
-
-    # LLM Providers
-    OPENAI_API_KEY: Optional[str] = Field(None, env="OPEN_AI_API_KEY")
-    OPENAI_MODEL: str = "gpt-4-turbo-preview"
-    OPENAI_TIMEOUT: int = 30
-
-    ANTHROPIC_API_KEY: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
-    ANTHROPIC_MODEL: str = "claude-3-opus-20240229"
-    ANTHROPIC_TIMEOUT: int = 30
-
-    GOOGLE_API_KEY: Optional[str] = Field(None, env="GEMINI_API_KEY")
-    GEMINI_MODEL: str = "gemini-pro"
-    GEMINI_TIMEOUT: int = 30
-
-    DEEPSEEK_API_KEY: Optional[str] = Field(None, env="DEEPSEEK_API_KEY")
-    DEEPSEEK_MODEL: str = "deepseek-chat"
-    DEEPSEEK_TIMEOUT: int = 30
-
-    GROQ_API_KEY: Optional[str] = Field(None, env="GROK_API_KEY")
-    GROQ_MODEL: str = "llama-3-70b-8192"
-    GROQ_TIMEOUT: int = 30
-
-    COHERE_API_KEY: Optional[str] = Field(None, env="COHERE_AI_API_KEY")
-    COHERE_MODEL: str = "command-r-plus"
-    COHERE_TIMEOUT: int = 30
-
-    # LLM Council
-    COUNCIL_TIMEOUT: int = 60  # Max time for council decision
-    COUNCIL_MIN_CONSENSUS: float = 0.6  # Minimum consensus for decision
-    COUNCIL_ENABLE_PARALLEL: bool = True  # Parallel model calls
-    COUNCIL_MAX_RETRIES: int = 2
-
-    # Safety Thresholds
-    RISK_THRESHOLD_BLOCK: float = 70.0  # Block if score >= 70
-    RISK_THRESHOLD_FLAG: float = 40.0  # Flag if score >= 40
-    CONFIDENCE_THRESHOLD: float = 0.7  # Minimum confidence for action
-
-    # Rate Limiting
-    RATE_LIMIT_ENABLED: bool = True
-    RATE_LIMIT_PER_MINUTE: int = 60
-    RATE_LIMIT_PER_HOUR: int = 1000
+    # ... (other fields)
 
     # Security
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    SECRET_KEY: Optional[str] = Field(None, env="SECRET_KEY")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     API_KEY_HEADER: str = "X-API-Key"
@@ -107,14 +62,15 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",")]
         return v
 
-    class Config:
-        env_file = str(ENV_FILE) if ENV_FILE.exists() else ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=str(ENV_FILE) if ENV_FILE.exists() else ".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance"""
     return Settings()
-
