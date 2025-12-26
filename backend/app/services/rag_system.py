@@ -127,7 +127,7 @@ class RAGSystem:
             List of relevant documents with metadata
         """
         if not self.collection:
-            return []
+            return self._fallback_search(query, threat_category, limit)
 
         # Build query
         where = {}
@@ -154,7 +154,47 @@ class RAGSystem:
             return documents
         except Exception as e:
             print(f"Search error: {e}")
+            return self._fallback_search(query, threat_category, limit)
+
+    def _fallback_search(
+        self, query: str, threat_category: Optional[str] = None, limit: int = 5
+    ) -> List[Dict]:
+        """Search in fallback file storage"""
+        import json
+        from pathlib import Path
+
+        data_dir = Path("./data/rag_fallback")
+        if not data_dir.exists():
             return []
+
+        results = []
+        try:
+            # Simple keyword matching
+            for file_path in data_dir.glob("*.json"):
+                with open(file_path, "r", encoding="utf-8") as f:
+                    doc = json.load(f)
+                
+                # Check threat category filter
+                if threat_category and doc.get("threat_category") != threat_category:
+                    continue
+                
+                # Check content match (naive)
+                if query.lower() in doc.get("content", "").lower() or doc.get("content", "").lower() in query.lower():
+                    results.append({
+                        "content": doc.get("content"),
+                        "metadata": {
+                            "source": doc.get("source"),
+                            "threat_category": doc.get("threat_category"),
+                            "bucket": doc.get("metadata", {}).get("bucket"),
+                            "subcategory": doc.get("metadata", {}).get("subcategory")
+                        },
+                        "distance": 0.1  # Simulated close distance for match
+                    })
+        except Exception as e:
+            print(f"Fallback search error: {e}")
+            return []
+            
+        return results[:limit]
 
     def get_threat_intelligence(
         self, threat_type: str, limit: int = 10

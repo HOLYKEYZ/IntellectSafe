@@ -111,7 +111,7 @@ def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) 
                 # For demonstration, assume any match to injection bucket is high risk
                 return {
                     "is_blocked": True,
-                    "matched_pattern": result.get('document', '')[:100] + '...',
+                    "matched_pattern": result.get('document', '')[:100].encode('ascii', 'ignore').decode('ascii') + '...',
                     "similarity_score": 0.95,  # Placeholder - ideally calculate from distance
                     "threat_category": result.get('metadata', {}).get('threat_category'),
                     "bucket": bucket,

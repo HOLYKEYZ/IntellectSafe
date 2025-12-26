@@ -54,7 +54,8 @@ def run_tests():
     
     for i, test in enumerate(TEST_CASES, 1):
         print(f"\n[{i}/{len(TEST_CASES)}] Testing: {test['name']}")
-        print(f"Prompt: \"{test['prompt'][:80]}{'...' if len(test['prompt']) > 80 else ''}\"")
+        safe_prompt = test['prompt'][:80].encode('ascii', 'ignore').decode('ascii')
+        print(f"Prompt: \"{safe_prompt}{'...' if len(test['prompt']) > 80 else ''}\"")
         print(f"Expected: {test['expected']}")
         
         try:
@@ -63,30 +64,34 @@ def run_tests():
             is_blocked = result.get('is_blocked', False)
             similarity = result.get('similarity_score', 0.0)
             bucket = result.get('bucket', 'none')
+            matched_pattern = result.get('document', '')
+            safe_matched_pattern = matched_pattern[:100].encode('ascii', 'ignore').decode('ascii')
             reasoning = result.get('reasoning', 'N/A')
             
-            status = "🚫 BLOCKED" if is_blocked else "✅ ALLOWED"
+            status = "BLOCKED" if is_blocked else "ALLOWED"
             print(f"Result: {status}")
             print(f"  ├─ Similarity: {similarity:.2f}")
             print(f"  ├─ Bucket: {bucket}")
-            print(f"  └─ Reasoning: {reasoning[:100]}...")
+            print(f"  ├─ Matched Pattern: {safe_matched_pattern}{'...' if len(matched_pattern) > 100 else ''}")
+            safe_reasoning = str(reasoning)[:100].encode('ascii', 'ignore').decode('ascii')
+            print(f"  └─ Reasoning: {safe_reasoning}...")
             
             # Determine if test passed
             if test['expected'] == 'BLOCK' and is_blocked:
-                print("  ✓ PASS")
+                print("  [PASS]")
                 passed += 1
             elif test['expected'] == 'ALLOW' and not is_blocked:
-                print("  ✓ PASS")
+                print("  [PASS]")
                 passed += 1
             elif test['expected'] == 'FLAG or BLOCK' and (is_blocked or bucket == 'near_miss'):
-                print("  ✓ PASS")
+                print("  [PASS]")
                 passed += 1
             else:
-                print("  ✗ FAIL (Expected different result)")
+                print("  [FAIL] (Expected different result)")
                 failed += 1
                 
         except Exception as e:
-            print(f"  ✗ ERROR: {str(e)}")
+            print(f"  [ERROR]: {str(e)}")
             failed += 1
     
     print("\n" + "=" * 80)
@@ -94,9 +99,9 @@ def run_tests():
     print("=" * 80)
     
     if failed == 0:
-        print("\n🎉 All tests passed! RAG Safety Brain is working correctly.")
+        print("\n[SUCCESS] All tests passed! RAG Safety Brain is working correctly.")
     else:
-        print(f"\n⚠️  {failed} test(s) failed. Check RAG configuration.")
+        print(f"\n[WARNING] {failed} test(s) failed. Check RAG configuration.")
     
     return passed, failed
 
