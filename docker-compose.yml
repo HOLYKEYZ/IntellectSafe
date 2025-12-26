@@ -1,6 +1,38 @@
 version: '3.8'
 
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8001
+    depends_on:
+      - backend
+    networks:
+      - ai_safety_net
+
+  backend:
+    build: ./backend
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/ai_safety_db
+      - REDIS_URL=redis://redis:6379/0
+      - POETRY_VIRTUALENVS_CREATE=false
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ai_safety_net
+
   db:
     image: postgres:15
     container_name: ai_safety_db
