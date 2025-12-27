@@ -12,7 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from dotenv import load_dotenv
 
-# Find project root (two levels up from this file)
+# Find project root (config.py is at backend/app/core/config.py, so 3 levels up = AI-safety/)
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 ENV_FILE = PROJECT_ROOT / ".env"
 

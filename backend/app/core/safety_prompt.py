@@ -106,16 +106,16 @@ def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) 
             metadata = result.get('metadata', {})
             bucket = metadata.get('bucket', '')
             
-            # If this is an injection pattern with high similarity, block it
-            if bucket == 'injection':
-                # For demonstration, assume any match to injection bucket is high risk
+            # If this is an injection or hallucination pattern with high similarity, block it
+            if bucket in ['injection', 'hallucination']:
+                # For demonstration, assume any match to these buckets is high risk
                 return {
                     "is_blocked": True,
                     "matched_pattern": result.get('document', '')[:100].encode('ascii', 'ignore').decode('ascii') + '...',
                     "similarity_score": 0.95,  # Placeholder - ideally calculate from distance
                     "threat_category": result.get('metadata', {}).get('threat_category'),
                     "bucket": bucket,
-                    "reasoning": f"Prompt matches known {metadata.get('subcategory', 'attack')} pattern from {result.get('metadata', {}).get('source', 'unknown source')}"
+                    "reasoning": f"Prompt matches known {metadata.get('subcategory', 'attack')} pattern from {result.get('metadata', {}).get('source', 'user research')}"
                 }
         
         return {
