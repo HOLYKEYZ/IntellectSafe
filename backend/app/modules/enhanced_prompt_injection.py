@@ -47,6 +47,97 @@ class EnhancedPromptInjectionDetector:
     ) -> RiskScore:
         return await self.scan_enhanced(prompt, context=context, scan_request_id=scan_request_id)
 
+    async def scan_fast(
+        self,
+        prompt: str,
+        context: Optional[Dict] = None,
+        scan_request_id: Optional[str] = None,
+    ) -> RiskScore:
+        """
+        Fast scan using ONLY heuristic detection - NO LLM calls.
+        Use this for instant responses when LLM providers are slow/unavailable.
+        """
+        session_id = context.get("session_id") if context else None
+        conversation_history = context.get("conversation_history", []) if context else []
+
+        # Step 1: Advanced detection engine (comprehensive scan - all local)
+        advanced_results = self.advanced_engine.comprehensive_scan(
+            prompt, session_id, conversation_history
+        )
+
+        # Step 2: Recursive instruction detection
+        recursive_score, recursive_signals = self._detect_recursive_instructions(prompt)
+
+        # Step 3: Instruction boundary detection
+        boundary_score, boundary_signals = self._detect_boundary_violations(prompt)
+
+        # Step 4: Role confusion detection
+        role_score, role_signals = self._detect_role_confusion(prompt)
+
+        # Step 5: Encoding/obfuscation detection
+        encoding_score, encoding_signals = self._detect_encoding_tricks(prompt)
+
+        # Step 6: Advanced pattern matching
+        pattern_score, pattern_signals = self._advanced_pattern_scan(prompt)
+
+        # Combine all scores (NO LLM council)
+        heuristic_score = max(
+            recursive_score,
+            boundary_score,
+            role_score,
+            encoding_score,
+            pattern_score,
+            advanced_results.get("overall_score", 0.0),
+        )
+
+        final_score = heuristic_score  # Pure heuristic score
+        final_level = self._score_to_level(final_score)
+
+        # Determine verdict based on heuristic score alone
+        if final_score >= 70:
+            verdict = Verdict.BLOCKED
+        elif final_score >= 40:
+            verdict = Verdict.FLAGGED
+        else:
+            verdict = Verdict.ALLOWED
+
+        # Build explanation
+        explanation = f"Fast scan completed (heuristic only). Risk score: {final_score:.1f}/100."
+        if recursive_signals:
+            explanation += f" Recursive instructions: {len(recursive_signals)}."
+        if boundary_signals:
+            explanation += f" Boundary violations: {len(boundary_signals)}."
+        if role_signals:
+            explanation += f" Role confusion: {len(role_signals)}."
+        if pattern_signals:
+            explanation += f" Pattern matches: {len(pattern_signals)}."
+
+        all_signals = {
+            "recursive_instructions": recursive_signals,
+            "boundary_violations": boundary_signals,
+            "role_confusion": role_signals,
+            "encoding_tricks": encoding_signals,
+            "pattern_matches": pattern_signals,
+            "advanced_detection": advanced_results,
+            "fast_mode": True,
+            "llm_council_skipped": True,
+            "injection_detected": final_score >= 40.0,
+            "attack_type": self._classify_attack_type(
+                recursive_signals, boundary_signals, role_signals, advanced_results
+            ),
+        }
+
+        return RiskScore(
+            module_type=ModuleType.PROMPT_INJECTION,
+            risk_score=final_score,
+            risk_level=final_level,
+            confidence=min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5,
+            verdict=verdict.value,
+            explanation=explanation,
+            signals=all_signals,
+            false_positive_probability=0.2 if final_score < 60 else 0.1,
+        )
+
     def _load_advanced_patterns(self) -> List[Tuple[str, float]]:
         """Load advanced injection patterns"""
         return [

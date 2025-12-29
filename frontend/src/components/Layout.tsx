@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Shield, Scan, FileText, BarChart3, Home } from 'lucide-react'
+import { Scan, FileText, BarChart3, Home, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface LayoutProps {
@@ -8,26 +9,32 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: Home },
-    { path: '/scan/prompt', label: 'Scan Prompt', icon: Scan },
-    { path: '/scan/output', label: 'Scan Output', icon: Scan },
-    { path: '/audit/logs', label: 'Audit Logs', icon: FileText },
-    { path: '/audit/risk-scores', label: 'Risk Scores', icon: BarChart3 },
-    { path: '/reports', label: 'Reports', icon: BarChart3 },
+    { path: '/dashboard', label: 'Dashboard', icon: Home },
+    { path: '/dashboard/scan/prompt', label: 'Scan Prompt', icon: Scan },
+    { path: '/dashboard/scan/output', label: 'Scan Output', icon: Scan },
+    { path: '/dashboard/audit/logs', label: 'Audit Logs', icon: FileText },
+    { path: '/dashboard/audit/risk-scores', label: 'Risk Scores', icon: BarChart3 },
+    { path: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
   ]
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b">
+      <nav className="border-b bg-card">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center space-x-2">
-              <Shield className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">AI Safety Platform</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                 <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain filter brightness-0" />
+              </div>
+              <span className="text-xl font-bold">IntellectSafe</span>
             </div>
-            <div className="flex space-x-1">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex space-x-1">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.path
@@ -48,8 +55,42 @@ export default function Layout({ children }: LayoutProps) {
                 )
               })}
             </div>
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden p-2 text-muted-foreground hover:bg-accent rounded-md"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t p-4 space-y-2 bg-card">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = location.pathname === item.path
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
       <main className="container mx-auto px-4 py-8">
         {children}

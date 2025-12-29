@@ -104,8 +104,9 @@ async def scan_prompt(
         db.commit()
         db.refresh(scan_request)
 
-        # Run enhanced detection
-        risk_score = await prompt_detector.scan_enhanced(
+        # Run FAST detection (heuristic only - no LLM calls for speed)
+        # Use scan_enhanced() instead if you need full LLM Council analysis
+        risk_score = await prompt_detector.scan_fast(
             request.prompt,
             context={
                 "user_id": request.user_id,

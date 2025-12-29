@@ -49,6 +49,18 @@
   }
 }
 
+@layer utilities {
+  @keyframes scan {
+    0% { top: -20%; opacity: 0; }
+    50% { opacity: 1; }
+    100% { top: 120%; opacity: 0; }
+  }
+  @keyframes width {
+    0%, 100% { width: 70%; }
+    50% { width: 90%; }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
