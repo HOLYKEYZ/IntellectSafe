@@ -102,10 +102,9 @@ const Welcome = () => {
       {/* Navigation */}
       <nav className={`fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-md border-b border-zinc-100' : 'bg-transparent'}`}>
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-           <div className="w-8 h-8 flex items-center justify-center">
+           <div className="w-12 h-12 flex items-center justify-center">
              <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain" />
            </div>
-           <span className="text-lg font-bold tracking-tight group-hover:opacity-70 transition-opacity">IntellectSafe</span>
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide">
@@ -144,13 +143,13 @@ const Welcome = () => {
             </div>
 
             <h1 className="text-5xl md:text-7xl font-serif font-medium leading-[0.95] mb-8 tracking-tight">
-              The Complete <br/>
+              Securing <br/>
               <span className="italic relative">
-                Trust Layer
+                intelligence
                 <svg className="absolute -bottom-2 left-0 w-full h-3 text-emerald-500/20" viewBox="0 0 100 10" preserveAspectRatio="none">
                   <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
-              </span> for AGI.
+              </span> layers.
             </h1>
             
             <p className="text-lg text-zinc-600 leading-relaxed max-w-lg mb-10 animate-in slide-in-from-bottom-5 fade-in duration-1000 delay-200">
