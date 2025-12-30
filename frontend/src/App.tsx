@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import ScanPrompt from './pages/ScanPrompt'
@@ -9,8 +10,7 @@ import Reports from './pages/Reports'
 import Welcome from './pages/Welcome'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import Research from './pages/Research'
-import Docs from './pages/Docs'
+
 
 function App() {
   return (
@@ -20,22 +20,22 @@ function App() {
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/research" element={<Research />} />
-        <Route path="/docs" element={<Docs />} />
 
         {/* Protected Dashboard Routes */}
-        <Route path="/dashboard/*" element={
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/scan/prompt" element={<ScanPrompt />} />
-              <Route path="/scan/output" element={<ScanOutput />} />
-              <Route path="/audit/logs" element={<AuditLogs />} />
-              <Route path="/audit/risk-scores" element={<RiskScores />} />
-              <Route path="/reports" element={<Reports />} />
-            </Routes>
-          </Layout>
-        } />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard/*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/scan/prompt" element={<ScanPrompt />} />
+                <Route path="/scan/output" element={<ScanOutput />} />
+                <Route path="/audit/logs" element={<AuditLogs />} />
+                <Route path="/audit/risk-scores" element={<RiskScores />} />
+                <Route path="/reports" element={<Reports />} />
+              </Routes>
+            </Layout>
+          } />
+        </Route>
       </Routes>
     </Router>
   )
