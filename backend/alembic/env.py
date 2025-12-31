@@ -16,7 +16,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
 
 # Load .env file explicitly
-# Load .env file explicitly
 env_path = Path(__file__).parents[2] / ".env"
 load_dotenv(env_path)
 
@@ -26,7 +25,6 @@ from app.models.database import Base
 # this is the Alembic Config object
 config = context.config
 
-# Override sqlalchemy.url with environment variable
 # Override sqlalchemy.url with environment variable
 settings = get_settings()
 if settings.DATABASE_URL:
