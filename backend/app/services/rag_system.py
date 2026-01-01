@@ -159,7 +159,7 @@ class RAGSystem:
     def _fallback_search(
         self, query: str, threat_category: Optional[str] = None, limit: int = 5
     ) -> List[Dict]:
-        """Search in fallback file storage"""
+        """Search in fallback file storage with improved matching"""
         import json
         from pathlib import Path
 
@@ -169,27 +169,61 @@ class RAGSystem:
 
         results = []
         try:
-            # Simple keyword matching
+            query_tokens = set(query.lower().split())
+            if not query_tokens:
+                return []
+                
             for file_path in data_dir.glob("*.json"):
-                with open(file_path, "r", encoding="utf-8") as f:
-                    doc = json.load(f)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        doc = json.load(f)
+                except Exception:
+                    continue  # Skip unreadable files
                 
                 # Check threat category filter
                 if threat_category and doc.get("threat_category") != threat_category:
                     continue
                 
-                # Check content match (naive)
-                if query.lower() in doc.get("content", "").lower() or doc.get("content", "").lower() in query.lower():
+                content = doc.get("content", "").lower()
+                doc_tokens = set(content.split())
+                
+                # Calculate Jaccard similarity (token overlap)
+                intersection = query_tokens.intersection(doc_tokens)
+                union = query_tokens.union(doc_tokens)
+                
+                # Basic overlap score
+                if not union:
+                    similarity = 0.0
+                else:
+                    similarity = len(intersection) / len(union)
+                
+                # Boost score if exact phrase match
+                if query.lower() in content:
+                    similarity += 0.5
+                
+                # Boost if many query tokens present (coverage)
+                coverage = len(intersection) / len(query_tokens)
+                
+                # Final score composition
+                final_score = (similarity * 0.4) + (coverage * 0.6)
+                
+                # Threshold for relevance
+                if final_score > 0.3:
                     results.append({
                         "content": doc.get("content"),
                         "metadata": {
                             "source": doc.get("source"),
                             "threat_category": doc.get("threat_category"),
                             "bucket": doc.get("metadata", {}).get("bucket"),
-                            "subcategory": doc.get("metadata", {}).get("subcategory")
+                            "subcategory": doc.get("metadata", {}).get("subcategory"),
+                            "score": final_score
                         },
-                        "distance": 0.1  # Simulated close distance for match
+                        "distance": 1.0 - final_score  # Convert similarity to distance
                     })
+            
+            # Sort by score (descending) -> distance (ascending)
+            results.sort(key=lambda x: x["distance"])
+            
         except Exception as e:
             print(f"Fallback search error: {e}")
             return []

@@ -263,10 +263,122 @@ async def scan_content(
                 timestamp=datetime.utcnow(),
             )
 
-        elif request.content_type in ["image", "video", "audio"]:
-            raise HTTPException(
-                status_code=501,
-                detail=f"{request.content_type.capitalize()} deepfake detection not yet implemented. Text detection is available.",
+        elif request.content_type == "image":
+            if not request.content:
+                 raise HTTPException(status_code=400, detail="Content required")
+            
+            # Create scan request
+            input_hash = hashlib.sha256(request.content.encode()).hexdigest()
+            scan_request = ScanRequest(
+                id=uuid4(),
+                request_type="content_image",
+                input_hash=input_hash,
+                input_preview=f"Image content ({len(request.content)} chars)",
+                user_id=request.user_id,
+                session_id=request.session_id,
+                meta_data={**(request.metadata or {}), "content_type": "image"},
+            )
+            db.add(scan_request)
+            db.commit()
+
+            risk_score = await deepfake_detector.scan_image(
+                request.content,
+                context={"user_id": request.user_id, **(request.metadata or {})},
+                scan_request_id=str(scan_request.id),
+            )
+            
+            risk_score.scan_request_id = scan_request.id
+            db.add(risk_score)
+            db.commit()
+
+            return ScanResponse(
+                scan_request_id=str(scan_request.id),
+                verdict=risk_score.verdict,
+                risk_score=risk_score.risk_score,
+                risk_level=risk_score.risk_level.value,
+                confidence=risk_score.confidence,
+                explanation=risk_score.explanation,
+                signals=risk_score.signals,
+                false_positive_probability=risk_score.false_positive_probability,
+                timestamp=datetime.utcnow(),
+            )
+
+        elif request.content_type == "audio":
+             if not request.content:
+                 raise HTTPException(status_code=400, detail="Content required")
+            
+             input_hash = hashlib.sha256(request.content.encode()).hexdigest()
+             scan_request = ScanRequest(
+                id=uuid4(),
+                request_type="content_audio",
+                input_hash=input_hash,
+                input_preview=f"Audio content ({len(request.content)} chars)",
+                user_id=request.user_id,
+                session_id=request.session_id,
+                meta_data={**(request.metadata or {}), "content_type": "audio"},
+            )
+             db.add(scan_request)
+             db.commit()
+
+             risk_score = await deepfake_detector.scan_audio(
+                request.content,
+                context={"user_id": request.user_id, **(request.metadata or {})},
+                scan_request_id=str(scan_request.id),
+            )
+            
+             risk_score.scan_request_id = scan_request.id
+             db.add(risk_score)
+             db.commit()
+
+             return ScanResponse(
+                scan_request_id=str(scan_request.id),
+                verdict=risk_score.verdict,
+                risk_score=risk_score.risk_score,
+                risk_level=risk_score.risk_level.value,
+                confidence=risk_score.confidence,
+                explanation=risk_score.explanation,
+                signals=risk_score.signals,
+                false_positive_probability=risk_score.false_positive_probability,
+                timestamp=datetime.utcnow(),
+            )
+
+        elif request.content_type == "video":
+             if not request.content:
+                 raise HTTPException(status_code=400, detail="Content required")
+            
+             input_hash = hashlib.sha256(request.content.encode()).hexdigest()
+             scan_request = ScanRequest(
+                id=uuid4(),
+                request_type="content_video",
+                input_hash=input_hash,
+                input_preview=f"Video content ({len(request.content)} chars)",
+                user_id=request.user_id,
+                session_id=request.session_id,
+                meta_data={**(request.metadata or {}), "content_type": "video"},
+            )
+             db.add(scan_request)
+             db.commit()
+
+             risk_score = await deepfake_detector.scan_video(
+                request.content,
+                context={"user_id": request.user_id, **(request.metadata or {})},
+                scan_request_id=str(scan_request.id),
+            )
+            
+             risk_score.scan_request_id = scan_request.id
+             db.add(risk_score)
+             db.commit()
+
+             return ScanResponse(
+                scan_request_id=str(scan_request.id),
+                verdict=risk_score.verdict,
+                risk_score=risk_score.risk_score,
+                risk_level=risk_score.risk_level.value,
+                confidence=risk_score.confidence,
+                explanation=risk_score.explanation,
+                signals=risk_score.signals,
+                false_positive_probability=risk_score.false_positive_probability,
+                timestamp=datetime.utcnow(),
             )
         else:
             raise HTTPException(

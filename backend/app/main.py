@@ -7,7 +7,7 @@ AI Safety & Security Platform API
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agent, audit, scan, governance
+from app.api.routes import agent, audit, scan, governance, proxy
 from app.api.middleware.rate_limit import RateLimitMiddleware
 from app.core.config import get_settings
 
@@ -39,6 +39,9 @@ app.include_router(scan.router, prefix=settings.API_V1_PREFIX)
 app.include_router(agent.router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit.router, prefix=settings.API_V1_PREFIX)
 app.include_router(governance.router, prefix=settings.API_V1_PREFIX)
+
+# Proxy router - No prefix for OpenAI compatibility (/v1/chat/completions)
+app.include_router(proxy.router)
 
 
 @app.get("/")

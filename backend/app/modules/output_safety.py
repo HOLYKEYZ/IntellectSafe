@@ -86,25 +86,52 @@ class OutputSafetyGuard:
             )
 
         # Step 3: LLM Council analysis with safety role
-        analysis_prompt = self._build_analysis_prompt(output, original_prompt)
-        council_result = await self.council.analyze_with_roles(
-            analysis_prompt, analysis_type="safety", context=context, scan_request_id=scan_request_id
-        )
+        try:
+            analysis_prompt = self._build_analysis_prompt(output, original_prompt)
+            council_result = await self.council.analyze_with_roles(
+                analysis_prompt, analysis_type="safety", context=context, scan_request_id=scan_request_id
+            )
+            council_score = council_result.weighted_score
+            final_verdict = council_result.final_verdict
+            council_data = council_result
+        except Exception as e:
+            # Fallback to heuristics if Council fails
+            from app.core.llm_council import CouncilResult, Verdict
+            council_score = 0.0
+            final_verdict = Verdict.ALLOWED
+            if pattern_score >= 40.0:
+                 final_verdict = Verdict.FLAGGED
+            if pattern_score >= 70.0:
+                 final_verdict = Verdict.BLOCKED
+            
+            council_data = CouncilResult(
+                final_verdict=final_verdict,
+                consensus_score=0.0,
+                weighted_score=0.0,
+                votes={},
+                weights={},
+                reasoning=f"Council skipped: {str(e)}",
+                dissenting_opinions=[]
+            )
 
         # Step 4: Combine scores
-        final_score = self._combine_scores(
-            pattern_score, consistency_score, council_result.weighted_score
-        )
+        if council_score == 0 and "Council skipped" in council_data.reasoning:
+             final_score = max(pattern_score, consistency_score)
+        else:
+             final_score = self._combine_scores(
+                pattern_score, consistency_score, council_score
+             )
+        
         final_level = self._score_to_level(final_score)
 
         # Step 5: Determine verdict
-        verdict = self._determine_verdict(final_score, council_result.final_verdict)
+        verdict = self._determine_verdict(final_score, final_verdict)
 
         # Step 6: Build explanation
         explanation = self._build_explanation(
             pattern_signals,
             consistency_signals,
-            council_result,
+            council_data,
             final_score,
         )
 
@@ -112,7 +139,7 @@ class OutputSafetyGuard:
         all_signals = {
             "pattern_signals": pattern_signals,
             "consistency_signals": consistency_signals,
-            "council_signals": council_result.votes,
+            "council_signals": council_data.votes,
             "unsafe_content_detected": final_score >= 40.0,
             "policy_bypass_attempted": any(
                 s.get("type") == "policy_bypass" for s in pattern_signals
@@ -130,13 +157,13 @@ class OutputSafetyGuard:
             risk_score=final_score,
             risk_level=final_level,
             confidence=self._calculate_confidence(
-                pattern_score, consistency_score, council_result
+                pattern_score, consistency_score, council_data
             ),
-            verdict=verdict.value,
+            verdict=verdict,  # verdict is already a string from _determine_verdict
             explanation=explanation,
             signals=all_signals,
             false_positive_probability=self._estimate_false_positive(
-                final_score, council_result.consensus_score
+                final_score, council_data.consensus_score
             ),
         )
 
@@ -268,13 +295,16 @@ RESPOND IN STRICT JSON FORMAT:
 
     def _determine_verdict(self, score: float, council_verdict) -> str:
         """Determine final verdict"""
+        # Handle Enum or string
+        verdict_str = council_verdict.value if hasattr(council_verdict, "value") else str(council_verdict)
+        
         if score >= 70:
             return "blocked"
-        elif council_verdict.value == "blocked":
+        elif verdict_str == "blocked":
             return "blocked"
         elif score >= 40:
             return "flagged"
-        elif council_verdict.value == "flagged":
+        elif verdict_str == "flagged":
             return "flagged"
         else:
             return "allowed"
@@ -326,7 +356,8 @@ RESPOND IN STRICT JSON FORMAT:
             for signal in consistency_signals:
                 parts.append(f"  - {signal.get('issue', 'unknown')}")
 
-        parts.append(f"LLM Council consensus: {council_result.consensus_score:.1%}")
-        parts.append(f"Council verdict: {council_result.final_verdict.value}")
+        verdict_obj = council_result.final_verdict
+        verdict_str = verdict_obj.value if hasattr(verdict_obj, "value") else str(verdict_obj)
+        parts.append(f"Council verdict: {verdict_str}")
 
         return "\n".join(parts)

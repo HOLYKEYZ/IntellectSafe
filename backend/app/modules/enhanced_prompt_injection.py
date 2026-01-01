@@ -139,17 +139,61 @@ class EnhancedPromptInjectionDetector:
         )
 
     def _load_advanced_patterns(self) -> List[Tuple[str, float]]:
-        """Load advanced injection patterns"""
-        return [
+        """Load advanced injection patterns dynamically from Attack Knowledge Base"""
+        patterns = []
+        
+        # Severity to weight mapping
+        severity_weights = {
+            "critical": 0.95,
+            "high": 0.85,
+            "medium": 0.70,
+            "low": 0.50,
+        }
+        
+        # Dynamically load from Attack KB
+        try:
+            for category, attacks in self.attack_kb.attacks.items():
+                for attack in attacks:
+                    # Get detection signals from attack definition
+                    detection_signals = attack.get("detection_signals", [])
+                    severity = attack.get("severity", "medium")
+                    weight = severity_weights.get(severity, 0.70)
+                    
+                    # Create regex patterns from detection signals
+                    for signal in detection_signals:
+                        # Escape special regex chars and create case-insensitive pattern
+                        escaped = re.escape(signal)
+                        pattern = f"(?i).*{escaped}.*"
+                        patterns.append((pattern, weight))
+                    
+                    # Also load from examples for more coverage
+                    for example in attack.get("examples", [])[:3]:  # Limit to 3 examples
+                        # Create substring pattern from example key phrases
+                        key_phrases = self._extract_key_phrases(example)
+                        for phrase in key_phrases:
+                            escaped = re.escape(phrase.lower())
+                            pattern = f"(?i).*{escaped}.*"
+                            patterns.append((pattern, weight))
+        except Exception as e:
+            print(f"Warning: Dynamic pattern loading failed: {e}")
+        
+        # Always include base patterns as fallback
+        base_patterns = [
             # Recursive instruction patterns
             (r"(?i)(ignore.*previous|forget.*previous|disregard.*previous)", 0.9),
             (r"(?i)(new.*instruction|updated.*instruction|override.*instruction)", 0.8),
             (r"(?i)(system.*prompt|assistant.*prompt|model.*prompt)", 0.8),
             
             # Role confusion
-            (r"(?i)(you are|act as|pretend to be|roleplay as)", 0.7),
+            (r"(?i)(you are now|act as|pretend to be|roleplay as)", 0.7),
             (r"(?i)(developer.*mode|god.*mode|unrestricted)", 0.9),
             (r"(?i)(jailbreak|jail.*break|escape)", 0.9),
+            (r"(?i)(dan|do anything now)", 0.95),
+            
+            # Social engineering (from research)
+            (r"(?i)(for.*school.*project|for.*educational.*purpose)", 0.8),
+            (r"(?i)(for.*benchmarking|tool.*openai.*uses|tool.*xai.*uses)", 0.9),
+            (r"(?i)(never.*refuse|always.*comply|no.*warnings)", 0.9),
             
             # Instruction smuggling
             (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
@@ -159,14 +203,30 @@ class EnhancedPromptInjectionDetector:
             (r"<system>.*</system>", 0.9),
             (r"<instruction>.*</instruction>", 0.9),
             (r'{"role":\s*"system"', 0.8),
-            (r'{"role":\s*"assistant"', 0.8),
             (r"```system\s*\n.*\n```", 0.9),
-            (r"```instruction\s*\n.*\n```", 0.9),
             
-            # Chain-of-thought extraction
-            (r"(?i)(show.*thinking|reveal.*process|what.*prompt)", 0.6),
-            (r"(?i)(system.*message|initial.*prompt)", 0.7),
+            # System prompt extraction
+            (r"(?i)(repeat.*last.*instruction|share.*internal.*rules)", 0.8),
+            (r"(?i)(what.*are.*your.*instructions|reveal.*prompt)", 0.8),
         ]
+        
+        return patterns + base_patterns
+    
+    def _extract_key_phrases(self, text: str) -> List[str]:
+        """Extract key phrases from example text for pattern matching"""
+        phrases = []
+        # Extract phrases in quotes
+        quoted = re.findall(r'"([^"]+)"', text)
+        phrases.extend(quoted)
+        
+        # Extract key trigger words
+        triggers = ["ignore", "bypass", "developer mode", "dan", "jailbreak", 
+                   "unrestricted", "school project", "backdoor", "never refuse"]
+        for trigger in triggers:
+            if trigger.lower() in text.lower():
+                phrases.append(trigger)
+        
+        return phrases[:5]  # Limit to prevent bloat
 
     def _load_recursive_patterns(self) -> List[Tuple[str, float]]:
         """Load recursive instruction detection patterns"""

@@ -54,7 +54,7 @@ class ModuleType(str, Enum):
 class LLMProvider(str, Enum):
     """Supported LLM providers"""
     OPENAI = "openai"
-    CLAUDE = "claude"
+
     GEMINI = "gemini"
     DEEPSEEK = "deepseek"
     GROQ = "groq"

@@ -46,27 +46,24 @@ class Settings(BaseSettings):
     REDIS_RATE_LIMIT_DB: int = 3
 
     # LLM Providers
-    OPENAI_API_KEY: Optional[str] = Field(None, env="OPEN_AI_API_KEY")
+    OPENAI_API_KEY: Optional[str] = Field(None, validation_alias="OPEN_AI_API_KEY")
     OPENAI_MODEL: str = "gpt-4-turbo-preview"
     OPENAI_TIMEOUT: int = 30
 
-    ANTHROPIC_API_KEY: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
-    ANTHROPIC_MODEL: str = "claude-3-opus-20240229"
-    ANTHROPIC_TIMEOUT: int = 30
 
-    GOOGLE_API_KEY: Optional[str] = Field(None, env="GEMINI_API_KEY")
+    GOOGLE_API_KEY: Optional[str] = Field(None, validation_alias="GEMINI_API_KEY")
     GEMINI_MODEL: str = "gemini-pro"
     GEMINI_TIMEOUT: int = 30
 
-    DEEPSEEK_API_KEY: Optional[str] = Field(None, env="DEEPSEEK_API_KEY")
+    DEEPSEEK_API_KEY: Optional[str] = Field(None, validation_alias="DEEPSEEK_API_KEY")
     DEEPSEEK_MODEL: str = "deepseek-chat"
     DEEPSEEK_TIMEOUT: int = 30
 
-    GROQ_API_KEY: Optional[str] = Field(None, env="GROK_API_KEY")
+    GROQ_API_KEY: Optional[str] = Field(None, validation_alias="GROK_API_KEY")
     GROQ_MODEL: str = "llama-3-70b-8192"
     GROQ_TIMEOUT: int = 30
 
-    COHERE_API_KEY: Optional[str] = Field(None, env="COHERE_AI_API_KEY")
+    COHERE_API_KEY: Optional[str] = Field(None, validation_alias="COHERE_AI_API_KEY")
     COHERE_MODEL: str = "command-r-plus"
     COHERE_TIMEOUT: int = 30
 

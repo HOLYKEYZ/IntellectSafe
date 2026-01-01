@@ -77,12 +77,7 @@ class LLMCouncil:
                 "timeout": settings.OPENAI_TIMEOUT,
                 "api_key": settings.OPENAI_API_KEY,
             },
-            LLMProvider.CLAUDE: {
-                "enabled": bool(settings.ANTHROPIC_API_KEY),
-                "model": settings.ANTHROPIC_MODEL,
-                "timeout": settings.ANTHROPIC_TIMEOUT,
-                "api_key": settings.ANTHROPIC_API_KEY,
-            },
+
             LLMProvider.GEMINI: {
                 "enabled": bool(settings.GOOGLE_API_KEY),
                 "model": settings.GEMINI_MODEL,
@@ -114,7 +109,7 @@ class LLMCouncil:
         # Default weights - will be updated from DB
         return {
             LLMProvider.OPENAI.value: 1.0,
-            LLMProvider.CLAUDE.value: 1.0,
+
             LLMProvider.GEMINI.value: 0.9,
             LLMProvider.DEEPSEEK.value: 0.85,
             LLMProvider.GROQ.value: 0.8,
@@ -255,8 +250,7 @@ RESPOND IN STRICT JSON FORMAT:
         try:
             if provider == LLMProvider.OPENAI:
                 response = await self._call_openai(config, prompt)
-            elif provider == LLMProvider.CLAUDE:
-                response = await self._call_claude(config, prompt)
+
             elif provider == LLMProvider.GEMINI:
                 response = await self._call_gemini(config, prompt)
             elif provider == LLMProvider.DEEPSEEK:
@@ -303,24 +297,7 @@ RESPOND IN STRICT JSON FORMAT:
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
 
-    async def _call_claude(self, config: Dict[str, Any], prompt: str) -> str:
-        """Call Anthropic Claude API"""
-        async with httpx.AsyncClient(timeout=config["timeout"]) as client:
-            response = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": config["api_key"],
-                    "anthropic-version": "2023-06-01",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": config["model"],
-                    "max_tokens": 2000,
-                    "messages": [{"role": "user", "content": prompt}],
-                },
-            )
-            response.raise_for_status()
-            return response.json()["content"][0]["text"]
+
 
     async def _call_gemini(self, config: Dict[str, Any], prompt: str) -> str:
         """Call Google Gemini API"""
