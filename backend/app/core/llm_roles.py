@@ -37,11 +37,6 @@ LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
         SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Excellent technical accuracy
         SafetyRole.HALLUCINATION_DETECTION,  # Good at fact-checking
     ],
-    LLMProvider.CLAUDE: [
-        SafetyRole.POLICY_SAFETY_REASONING,  # Best at alignment
-        SafetyRole.HUMAN_IMPACT_DECEPTION,  # Strong social reasoning
-        SafetyRole.ADVERSARIAL_THINKING,  # Good at red-teaming
-    ],
     LLMProvider.GEMINI: [
         SafetyRole.DEEPFAKE_ANALYSIS,  # Multimodal capabilities
         SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Good technical skills
@@ -65,7 +60,6 @@ LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
 # Primary role for each provider (their strongest capability)
 PRIMARY_ROLES: Dict[LLMProvider, SafetyRole] = {
     LLMProvider.OPENAI: SafetyRole.PROMPT_INJECTION_ANALYSIS,
-    LLMProvider.CLAUDE: SafetyRole.POLICY_SAFETY_REASONING,
     LLMProvider.GEMINI: SafetyRole.DEEPFAKE_ANALYSIS,
     LLMProvider.DEEPSEEK: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
     LLMProvider.GROQ: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
