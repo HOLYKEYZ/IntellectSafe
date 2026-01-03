@@ -3,3 +3,20 @@
 .env
 .env.local
 .env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv
+venv/
+
+# Database & Data
+*.sqlite3
+backend/chroma_db/
+backend/data/rag_fallback/
+
+# Logs & Diagnostics
+*.log
+diagnose_*.txt
