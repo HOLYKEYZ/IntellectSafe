@@ -24,6 +24,19 @@ class AgentController:
         self.council = council
         self.dangerous_actions = self._load_dangerous_actions()
         self.allowed_scopes = self._load_allowed_scopes()
+        self.action_whitelist = self._load_action_whitelist()
+        self.killed_agents = set()  # Track killed agent IDs
+
+    def _load_action_whitelist(self) -> List[str]:
+        """Load pre-approved safe actions that skip LLM Council analysis"""
+        return [
+            "file_read",       # Reading files (within allowed scopes)
+            "database_query",  # Read-only database queries
+            "api_request_internal",  # Internal API calls
+            "log_write",       # Writing to logs
+            "cache_read",      # Reading from cache
+            "cache_write",     # Writing to cache
+        ]
 
     def _load_dangerous_actions(self) -> List[str]:
         """Load list of dangerous action types"""
@@ -63,6 +76,21 @@ class AgentController:
         Returns:
             AgentAction with authorization decision
         """
+        # Step 0: Check if agent is killed
+        if agent_id in self.killed_agents:
+            action = AgentAction(
+                id=uuid4(),
+                agent_id=agent_id,
+                session_id=session_id,
+                action_type=action_type,
+                requested_action=requested_action,
+                requested_scope=requested_scope,
+                authorized=False,
+                risk_score=100.0,
+                safety_flags={"killed": True, "reason": "Agent terminated by kill switch"},
+            )
+            return action
+
         # Step 1: Create action record
         action = AgentAction(
             id=uuid4(),
@@ -80,7 +108,21 @@ class AgentController:
         # Step 3: Check scope restrictions
         scope_allowed = self._check_scope(action_type, requested_scope)
 
-        # Step 4: Analyze action with LLM Council
+        # Step 3.5: Fast-path for whitelisted actions (skip LLM Council)
+        if action_type in self.action_whitelist and scope_allowed and not is_dangerous:
+            action.authorized = True
+            action.authorized_at = datetime.utcnow()
+            action.authorized_by = "whitelist"
+            action.risk_score = 0.0
+            action.safety_flags = {
+                "is_dangerous": False,
+                "scope_allowed": True,
+                "whitelisted": True,
+                "council_skipped": True,
+            }
+            return action
+
+        # Step 4: Analyze action with LLM Council (for non-whitelisted actions)
         council_result = await self._analyze_action(action_type, requested_action)
 
         # Step 5: Calculate risk score
@@ -238,8 +280,7 @@ Respond in JSON:
         Returns:
             True if kill switch activated
         """
-        # This would mark all pending actions as blocked
-        # and prevent new actions from being authorized
-        # Implementation depends on your agent system
+        # Add agent to killed set - all future actions will be blocked instantly
+        self.killed_agents.add(agent_id)
         return True
 

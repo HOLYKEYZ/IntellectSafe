@@ -194,11 +194,13 @@ Respond in JSON format:
 }}
 """
 
-    def _combine_scores(
-        self, pattern_score: float, stats_score: float, council_score: float
-    ) -> float:
         """Combine detection scores"""
-        # Weighted: 30% pattern, 20% stats, 50% council
+        # Heuristic Override: If we have a very strong pattern match (e.g., 'As an AI'), 
+        # trust it regardless of the Council (which might be offline).
+        if pattern_score >= 80.0:
+            return max(pattern_score, council_score)
+            
+        # Standard Weighted: 30% pattern, 20% stats, 50% council
         return (
             (pattern_score * 0.3)
             + (stats_score * 0.2)

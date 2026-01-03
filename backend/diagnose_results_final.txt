@@ -1,0 +1,80 @@
+﻿
+============================================================
+  INTELLECTSAFE INFRASTRUCTURE DIAGNOSTIC
+============================================================
+
+============================================================
+1. ENVIRONMENT VARIABLE CHECK
+============================================================
+  [X] OPENAI_API_KEY: NOT SET
+  [X] GOOGLE_API_KEY: NOT SET
+  [OK] DEEPSEEK_API_KEY: sk-b...c8e3 (length: 35)
+  [X] GROQ_API_KEY: NOT SET
+  [X] COHERE_API_KEY: NOT SET
+
+============================================================
+2. PYDANTIC SETTINGS LOADING
+============================================================
+  [OK] OPENAI_API_KEY: sk-p...v0EA
+  [OK] GOOGLE_API_KEY: AIza...n67Y
+  [OK] DEEPSEEK_API_KEY: sk-b...c8e3
+  [OK] GROQ_API_KEY: gsk_...Jo2c
+  [OK] COHERE_API_KEY: kLa6...x7zc
+
+============================================================
+3. TESTING OPENAI API
+============================================================
+  [OK] OpenAI works! Response: test
+
+============================================================
+4. TESTING GOOGLE GEMINI API
+============================================================
+  [X] Gemini FAILED: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+
+============================================================
+5. TESTING DEEPSEEK API
+============================================================
+  [X] DeepSeek FAILED: Error code: 402 - {'error': {'message': 'Insufficient Balance', 'type': 'unknown_error', 'param': None, 'code': 'invalid_request_error'}}
+
+============================================================
+6. TESTING GROQ API
+============================================================
+  [OK] Groq works! Response: test
+
+============================================================
+7. TESTING COHERE API
+============================================================
+  [X] Cohere FAILED: model 'command-r' was removed on September 15, 2025. See https://docs.cohere.com/docs/models#command for a list of models you can use instead.
+
+============================================================
+8. CHECKING CHROMADB
+============================================================
+  [OK] ChromaDB directory exists: C:\Users\USER\Desktop\cursor file\AI-safety\backend\chroma_db
+  [OK] Collections found: 1
+    - ai_safety_knowledge: 0 documents
+
+============================================================
+9. CHECKING POSTGRESQL
+============================================================
+  [OK] PostgreSQL connected!
+  [OK] Total scan_requests: 69
+  [OK] Total risk_scores: 55
+  [OK] Total agent_actions: 3
+
+============================================================
+10. CHECKING ALEMBIC MIGRATIONS
+============================================================
+  [OK] Alembic directory exists
+  [OK] Current migration: a91484a01ed6 (head)
+
+============================================================
+  SUMMARY
+============================================================
+
+  Working providers: openai, groq
+  Failed providers: google, deepseek, cohere
+
+  RECOMMENDATIONS:
+    - Check GOOGLE_API_KEY in .env
+    - Check DEEPSEEK_API_KEY in .env
+    - Check COHERE_API_KEY in .env

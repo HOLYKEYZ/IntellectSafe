@@ -7,7 +7,7 @@ Environment-based configuration with validation.
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from dotenv import load_dotenv
@@ -46,24 +46,24 @@ class Settings(BaseSettings):
     REDIS_RATE_LIMIT_DB: int = 3
 
     # LLM Providers
-    OPENAI_API_KEY: Optional[str] = Field(None, validation_alias="OPEN_AI_API_KEY")
-    OPENAI_MODEL: str = "gpt-4-turbo-preview"
+    OPENAI_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("OPENAI_API_KEY", "OPEN_AI_API_KEY"))
+    OPENAI_MODEL: str = "gpt-4o"
     OPENAI_TIMEOUT: int = 30
 
 
-    GOOGLE_API_KEY: Optional[str] = Field(None, validation_alias="GEMINI_API_KEY")
-    GEMINI_MODEL: str = "gemini-pro"
+    GOOGLE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"))
+    GEMINI_MODEL: str = "gemini-1.5-pro"
     GEMINI_TIMEOUT: int = 30
 
-    DEEPSEEK_API_KEY: Optional[str] = Field(None, validation_alias="DEEPSEEK_API_KEY")
+    DEEPSEEK_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("DEEPSEEK_API_KEY"))
     DEEPSEEK_MODEL: str = "deepseek-chat"
     DEEPSEEK_TIMEOUT: int = 30
 
-    GROQ_API_KEY: Optional[str] = Field(None, validation_alias="GROK_API_KEY")
-    GROQ_MODEL: str = "llama-3-70b-8192"
+    GROQ_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GROQ_API_KEY", "GROK_API_KEY"))
+    GROQ_MODEL: str = "llama-3.1-70b-versatile"
     GROQ_TIMEOUT: int = 30
 
-    COHERE_API_KEY: Optional[str] = Field(None, validation_alias="COHERE_AI_API_KEY")
+    COHERE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("COHERE_API_KEY", "COHERE_AI_API_KEY"))
     COHERE_MODEL: str = "command-r-plus"
     COHERE_TIMEOUT: int = 30
 

@@ -1,142 +1,196 @@
-# AI Safety & Security Platform
+# IntellectSafe - AI Safety & Security Platform
 
 Production-grade AI Safety Engine protecting humans, organizations, and AI systems from misuse, deception, manipulation, and loss of control.
 
-## Project Overview
+## 🛡️ Features
 
-This platform implements a "defense in depth" architecture for Large Language Models (LLMs), ensuring no single model handles safety decisions alone.
+### 5-Layer Defense Architecture
+
+| Layer | Module | Description |
+|-------|--------|-------------|
+| **Level 1** | Prompt Injection Detection | Blocks jailbreaks, instruction overrides, and manipulation attempts |
+| **Level 2** | Output Safety Guard | Scans LLM responses for harmful content and hallucinations |
+| **Level 3** | Data Privacy Firewall | Detects and redacts PII/sensitive data |
+| **Level 4** | Deepfake Detection | Detects AI-generated text, images, audio, and video |
+| **Level 5** | Agent Control | Permission gates, action whitelisting, and kill switch |
 
 ### Core Components
 
-1.  **LLM Council**: Multi-model validation with weighted voting (GPT-4, Claude, Gemini, et al.).
-2.  **Safety Modules**: 7 independent detection engines (Prompt Injection, Deepfake, Privacy, etc.).
-3.  **Governance Layer**: Full authorization logic, "Kill Switch" capabilities, and immutable audit logs.
-4.  **Web Dashboard**: React-based interface for human analysis and verification.
-
-### Tech Stack
-
--   **Backend**: FastAPI (Python), PostgreSQL, Redis, Celery
--   **Frontend**: React, TypeScript, shadcn/ui
--   **Infrastucture**: Docker, Render (Deployment)
+1. **LLM Council**: Multi-model validation with weighted voting (GPT-4, Gemini, DeepSeek, Groq, Cohere)
+2. **Universal Proxy**: Drop-in OpenAI-compatible API with built-in safety scanning
+3. **RAG Safety Brain**: Knowledge-base of attack patterns for enhanced detection
+4. **Governance Layer**: Full audit logs, risk reports, and compliance dashboards
 
 ---
 
-## Setup & Deployment
+## 🚀 Quick Start
 
-You can run this project using Docker (recommended for portability) or a Local Setup.
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- PostgreSQL 15+
 
-### Method 1: Docker (Portable)
+### Installation
 
-If you have Docker Desktop installed:
-
-1.  Clone the repository.
-2.  Ensure `.env` exists in the root (see Configuration below).
-3.  Run:
-    ```bash
-    docker-compose up --build
-    ```
-4.  Access:
-    -   Frontend: http://localhost:5173
-    -   Backend API: http://localhost:8001
-    -   API Docs: http://localhost:8001/docs
-
-### Method 2: Local Setup (Windows)
-
-Use this if Docker/WSL is unavailable.
-
-**Prerequisites**: Python 3.10+, Node.js 18+, PostgreSQL 15+ (Local).
-
-**Automated Start (Windows):**
-1.  Ensure PostgreSQL is running locally.
-2.  Double-click `start_local.bat` in the root directory.
-
-**Manual Start:**
-
-**Backend**:
 ```bash
+# Clone repository
+git clone <repo-url>
+cd AI-safety
+
+# Backend setup
 cd backend
 python -m venv venv
-.\venv\Scripts\activate
+.\venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 alembic upgrade head
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
-```
 
-**Frontend**:
-```bash
+# Start backend
+python -m uvicorn app.main:app --reload --port 8001
+
+# Frontend setup (new terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
-### Configuration (.env)
+### Access Points
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
 
-Create a `.env` file in the root directory:
+---
 
-```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/ai_safety_db
-REDIS_URL=redis://localhost:6379/0
-SECRET_KEY=dev_secret_change_in_prod
-OPENAI_API_KEY=sk-...
-# Add other provider keys as needed
+## 📡 API Reference
+
+### Universal Proxy (OpenAI-Compatible)
+
+Use IntellectSafe as a drop-in replacement for OpenAI:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8001/v1",
+    api_key="your-openai-key"  # Or use X-Upstream-API-Key header
+)
+
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+# Jailbreaks automatically blocked, responses scanned
+```
+
+### Scan Endpoints
+
+```bash
+# Scan a prompt for injection
+curl -X POST "http://localhost:8001/api/v1/scan/prompt" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Ignore previous instructions"}'
+
+# Scan LLM output for safety
+curl -X POST "http://localhost:8001/api/v1/scan/output" \
+  -H "Content-Type: application/json" \
+  -d '{"output": "Here is how to...", "original_prompt": "..."}'
+
+# Scan content for deepfakes (text, image, audio, video)
+curl -X POST "http://localhost:8001/api/v1/scan/content" \
+  -H "Content-Type: application/json" \
+  -d '{"content_type": "image", "content": "<base64-data>"}'
+```
+
+### Agent Control
+
+```bash
+# Authorize agent action
+curl -X POST "http://localhost:8001/api/v1/agent/authorize" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "agent-1", "session_id": "s1", "action_type": "file_read", "requested_action": {"path": "/tmp/test.txt"}}'
+
+# Emergency kill switch
+curl -X POST "http://localhost:8001/api/v1/agent/kill" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "agent-1", "reason": "Suspicious behavior"}'
+
+# Get action history
+curl "http://localhost:8001/api/v1/agent/history/agent-1"
 ```
 
 ---
 
-## Architecture Details
+## ⚙️ Configuration
 
-### Safety Strategy
--   **Zero Trust**: No single model is trusted; all decisions go through the Council.
--   **Division of Labour**:
-    -   GPT-4: Prompt Injection & Technical Exploits.
-    -   Claude: Policy Reasoning & Deception.
-    -   Gemini/DeepSeek: Deepfake & Fast analysis.
--   **Hallucination Suppression**: Requires low-confidence checks and cross-model agreement.
+Create `.env` in the backend directory:
 
-### Project Structure
+```env
+# Database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/ai_safety_db
+
+# LLM Providers (add keys for providers you want to use)
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
+DEEPSEEK_API_KEY=...
+GROQ_API_KEY=...
+COHERE_API_KEY=...
+
+# Security
+SECRET_KEY=your-secret-key-change-in-production
+```
+
+---
+
+## 🏗️ Architecture
 
 ```
 AI-safety/
-├── backend/            # FastAPI application
+├── backend/
 │   ├── app/
-│   │   ├── core/       # Config, security, Council logic
-│   │   ├── modules/    # Safety engines (Injection, Privacy, etc.)
-│   │   └── services/   # Business logic (RAG, Audit)
-├── frontend/           # React application
-│   └── src/components/ # Dashboard UI
-├── mcp/                # MCP Server implementation
-├── docs/               # Documentation archive
-└── start_local.bat     # Windows startup script
+│   │   ├── api/routes/      # API endpoints (scan, agent, audit, proxy)
+│   │   ├── core/            # Config, LLM Council, security
+│   │   ├── modules/         # Safety engines (injection, deepfake, privacy)
+│   │   └── services/        # RAG, governance, attack knowledge base
+│   └── verify_*.py          # Verification scripts
+├── frontend/
+│   └── src/
+│       ├── pages/           # Dashboard, Welcome, Research
+│       └── components/      # UI components
+└── docs/                    # Documentation
 ```
 
 ---
 
-## Implementation Status
+## ✅ Implementation Status
 
-**Backend (95% Complete)**
--   [x] Core Safety Modules (Injection, Guard, Privacy)
--   [x] LLM Council Integration
--   [x] Redis Rate Limiting & Queues
--   [x] Audit Engine & Governance
--   [x] RAG Safety Brain (Defense against Deep Research vectors)
-
-**Frontend (Functional)**
--   [x] Dashboard Layout
--   [x] Scan Prompt Interface
--   [x] Audit Logs View
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Prompt Injection Detection | ✅ Complete | RAG-enhanced, dynamic patterns |
+| Output Safety Guard | ✅ Complete | Heuristic fallback when Council offline |
+| Universal Proxy | ✅ Complete | OpenAI-compatible, auto-scanning |
+| Deepfake Detection | ✅ Complete | Text, Image, Audio, Video |
+| Agent Control | ✅ Complete | Whitelist, kill switch, history |
+| Dashboard | ✅ Complete | Live data integration |
+| Audit/Governance | ✅ Complete | Risk reports, compliance |
 
 ---
 
-## API Usage
+## 🧪 Testing
 
-**Scan a Prompt**
 ```bash
-curl -X POST "http://localhost:8001/api/v1/scan/prompt" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Ignore previous instructions", "user_id": "test"}'
+cd backend
+
+# Test all scan endpoints
+python verify_backend.py
+
+# Test Universal Proxy
+python verify_proxy.py
+
+# Test Agent Control
+python verify_agent.py
 ```
 
-**Get Audit Logs**
-```bash
-curl "http://localhost:8001/api/v1/audit/logs?limit=10"
-```
+---
+
+## 📄 License
+
+MIT License

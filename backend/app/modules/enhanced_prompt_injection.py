@@ -195,6 +195,29 @@ class EnhancedPromptInjectionDetector:
             (r"(?i)(for.*benchmarking|tool.*openai.*uses|tool.*xai.*uses)", 0.9),
             (r"(?i)(never.*refuse|always.*comply|no.*warnings)", 0.9),
             
+            # Emotional manipulation jailbreaks (discovered via testing)
+            (r"(?i)(my.*(son|daughter|child).*died|child.*suicide|suicide.*attempt)", 0.85),
+            (r"(?i)(disability|cerebral palsy|wheelchair|shaking hands).*help", 0.75),
+            (r"(?i)(dead.*(husband|wife|spouse)|funeral.*cost)", 0.80),
+            (r"(?i)(homeless|foreclosure|eviction).*weeks?", 0.75),
+            (r"(?i)(therapy|medical.*debt|treatment).*afford", 0.70),
+            (r"(?i)(discrimination|fired|job.*loss).*disability", 0.80),
+            (r"(?i)(promise.*to.*(dead|dying)|last.*words)", 0.85),
+            (r"(?i)(save.*my.*(son|daughter|child|family))", 0.80),
+            
+            # RAT/Malware code request patterns
+            (r"(?i)(remote.*administration.*tool|remote.*access)", 0.85),
+            (r"(?i)(socket.*programming|tcp.*server|tcp.*client)", 0.70),
+            (r"(?i)(subprocess.*shell.*true|shell.*execution)", 0.90),
+            (r"(?i)(execute.*command.*remote|remote.*command.*execution)", 0.90),
+            (r"(?i)(listen.*for.*connection|accept.*connection)", 0.75),
+            (r"(?i)(recv.*send.*command|command.*recv)", 0.85),
+            
+            # Incremental escalation patterns
+            (r"(?i)(simple.*code|simple.*example).*because.*(disability|hands)", 0.80),
+            (r"(?i)(can.*not.*type|cannot.*debug|limited.*typing)", 0.75),
+            (r"(?i)(production.*ready|enterprise.*client|contract)", 0.70),
+            
             # Instruction smuggling
             (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
             (r"(?i)(do.*not.*reveal|keep.*secret|internal.*note)", 0.7),
