@@ -21,12 +21,10 @@ async def init_rag():
         count = rag.collection.count()
         print(f"Current document count: {count}")
         
-        if count == 0:
-            print("Database is empty. Populating with initial knowledge base...")
-            await rag.initialize_knowledge_base()
-            print(f"Population complete. New count: {rag.collection.count()}")
-        else:
-            print("Database already contains data. Skipping initialization to preserve data.")
+        # Always initialize to ensure new patterns (like social engineering) are added
+        print(f"Current document count: {count}. Updating knowledge base with latest patterns...")
+        await rag.initialize_knowledge_base()
+        print(f"Update complete. New count: {rag.collection.count()}")
             
         print("RAG System ready!")
         

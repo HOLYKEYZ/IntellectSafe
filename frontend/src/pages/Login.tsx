@@ -8,7 +8,8 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // For prototype, just redirect
+    // Set dummy token for prototype
+    localStorage.setItem('auth_token', 'demo_token');
     navigate('/dashboard');
   };
 
