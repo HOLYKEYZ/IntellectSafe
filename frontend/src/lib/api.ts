@@ -66,6 +66,17 @@ export const scanOutput = async (request: {
   return response.data
 }
 
+export const scanContent = async (request: {
+  content: string
+  content_type: 'text' | 'image' | 'video' | 'audio'
+  user_id?: string
+  session_id?: string
+  metadata?: Record<string, any>
+}): Promise<ScanResponse> => {
+  const response = await api.post<ScanResponse>('/scan/content', request)
+  return response.data
+}
+
 export const getRiskScores = async (params?: {
   scan_request_id?: string
   module_type?: string

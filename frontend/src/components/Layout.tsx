@@ -15,10 +15,17 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/dashboard/scan/prompt', label: 'Scan Prompt', icon: Scan },
     { path: '/dashboard/scan/output', label: 'Scan Output', icon: Scan },
+    { path: '/dashboard/deepfake', label: 'Deepfake Detector', icon: FileText },
     { path: '/dashboard/audit/logs', label: 'Audit Logs', icon: FileText },
     { path: '/dashboard/audit/risk-scores', label: 'Risk Scores', icon: BarChart3 },
     { path: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
+    { path: '/dashboard/settings', label: 'Settings', icon: Menu },
   ]
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,7 +41,7 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-1">
+            <div className="hidden md:flex space-x-1 items-center">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.path
@@ -43,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
                     key={item.path}
                     to={item.path}
                     className={cn(
-                      "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                      "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -54,6 +61,12 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 )
               })}
+              <button 
+                onClick={handleLogout}
+                className="ml-4 flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <span>Logout</span>
+              </button>
             </div>
 
             {/* Mobile Menu Toggle */}

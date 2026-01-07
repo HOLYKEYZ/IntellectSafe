@@ -7,6 +7,8 @@ import ScanOutput from './pages/ScanOutput'
 import AuditLogs from './pages/AuditLogs'
 import RiskScores from './pages/RiskScores'
 import Reports from './pages/Reports'
+import DeepfakeScan from './pages/DeepfakeScan'
+import Settings from './pages/Settings'
 import Welcome from './pages/Welcome'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -29,9 +31,11 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/scan/prompt" element={<ScanPrompt />} />
                 <Route path="/scan/output" element={<ScanOutput />} />
+                <Route path="/deepfake" element={<DeepfakeScan />} />
                 <Route path="/audit/logs" element={<AuditLogs />} />
                 <Route path="/audit/risk-scores" element={<RiskScores />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>
           } />
