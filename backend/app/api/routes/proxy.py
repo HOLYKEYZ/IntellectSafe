@@ -153,6 +153,14 @@ async def proxy_chat_completions(
         # Fall back to server's configured key
         if provider == "openai":
             upstream_api_key = settings.OPENAI_API_KEY
+        elif provider == "groq":
+            upstream_api_key = settings.GROQ_API_KEY
+        elif provider == "gemini":
+            upstream_api_key = settings.GEMINI_API_KEY
+        elif provider in ("anthropic", "claude"):
+            upstream_api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
+        elif provider == "perplexity":
+            upstream_api_key = getattr(settings, 'PERPLEXITY_API_KEY', None)
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
     
@@ -165,6 +173,14 @@ async def proxy_chat_completions(
     try:
         if provider == "openai":
             response_data = await _forward_to_openai(request, upstream_api_key)
+        elif provider == "groq":
+            response_data = await _forward_to_groq(request, upstream_api_key)
+        elif provider == "gemini":
+            response_data = await _forward_to_gemini(request, upstream_api_key)
+        elif provider in ("anthropic", "claude"):
+            response_data = await _forward_to_anthropic(request, upstream_api_key)
+        elif provider == "perplexity":
+            response_data = await _forward_to_perplexity(request, upstream_api_key)
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
     except httpx.HTTPStatusError as e:
@@ -233,25 +249,89 @@ async def _forward_to_openai(request: ChatCompletionRequest, api_key: str) -> Di
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             json={
                 "model": request.model,
                 "messages": [{"role": m.role, "content": m.content} for m in request.messages],
                 "temperature": request.temperature,
                 "max_tokens": request.max_tokens,
-                "stream": False,  # Disable streaming for now
-                **({"top_p": request.top_p} if request.top_p else {}),
-                **({"stop": request.stop} if request.stop else {}),
+                "stream": False,
             },
         )
         response.raise_for_status()
         return response.json()
 
 
+async def _forward_to_groq(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
+    """Forward request to Groq (OpenAI-compatible API)"""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": request.model or "llama-3.1-70b-versatile",
+                "messages": [{"role": m.role, "content": m.content} for m in request.messages],
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens or 1024,
+                "stream": False,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
 
+
+async def _forward_to_gemini(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
+    """Forward request to Google Gemini"""
+    model = request.model or "gemini-1.5-pro"
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        contents = [{"role": "user" if m.role == "user" else "model", "parts": [{"text": m.content}]} for m in request.messages]
+        response = await client.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            headers={"Content-Type": "application/json"},
+            params={"key": api_key},
+            json={"contents": contents, "generationConfig": {"temperature": request.temperature, "maxOutputTokens": request.max_tokens or 1024}},
+        )
+        response.raise_for_status()
+        data = response.json()
+        content = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        return {"choices": [{"message": {"role": "assistant", "content": content}}], "model": model}
+
+
+async def _forward_to_anthropic(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
+    """Forward request to Anthropic Claude"""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        messages = [{"role": m.role, "content": m.content} for m in request.messages if m.role != "system"]
+        system = next((m.content for m in request.messages if m.role == "system"), None)
+        body = {"model": request.model or "claude-sonnet-4-20250514", "max_tokens": request.max_tokens or 1024, "messages": messages}
+        if system:
+            body["system"] = system
+        response = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"},
+            json=body,
+        )
+        response.raise_for_status()
+        data = response.json()
+        content = data.get("content", [{}])[0].get("text", "")
+        return {"choices": [{"message": {"role": "assistant", "content": content}}], "model": request.model}
+
+
+async def _forward_to_perplexity(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
+    """Forward request to Perplexity (OpenAI-compatible API)"""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": request.model or "llama-3.1-sonar-large-128k-online",
+                "messages": [{"role": m.role, "content": m.content} for m in request.messages],
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens or 1024,
+                "stream": False,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 @router.get("/v1/models")
@@ -260,10 +340,13 @@ async def list_models():
     return {
         "object": "list",
         "data": [
-            {"id": "gpt-4", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "gpt-4o", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "gpt-4-turbo", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "gpt-3.5-turbo", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "claude-sonnet-4-20250514", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             {"id": "claude-3-opus-20240229", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            {"id": "llama-3.1-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
+            {"id": "gemini-1.5-pro", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
+            {"id": "llama-3.1-sonar-large-128k-online", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
         ]
     }
