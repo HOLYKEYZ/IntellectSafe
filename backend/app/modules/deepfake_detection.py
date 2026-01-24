@@ -32,6 +32,7 @@ class DeepfakeDetector:
         self.council = council
         self.text_patterns = self._load_text_patterns()
         self.image_pipe = None
+        self.face_pipe = None  # For photorealistic face detection
         self.text_pipe = None
 
     def _load_libs(self):
@@ -43,13 +44,26 @@ class DeepfakeDetector:
             import requests
             
     def _get_image_pipe(self):
-        """Lazy load image model"""
+        """Lazy load general AI image model"""
         self._load_libs()
         if self.image_pipe is None:
             logger.info("Loading Image Detection Model (umm-maybe/AI-image-detector)...")
-            # Using a reliable HF model for AI artwork detection
+            from transformers import pipeline
             self.image_pipe = pipeline("image-classification", model="umm-maybe/AI-image-detector")
         return self.image_pipe
+
+    def _get_face_pipe(self):
+        """Lazy load face-specific deepfake model"""
+        self._load_libs()
+        if self.face_pipe is None:
+            logger.info("Loading Face Detection Model (dima806/deepfake_vs_real_image_detection)...")
+            from transformers import pipeline
+            try:
+                self.face_pipe = pipeline("image-classification", model="dima806/deepfake_vs_real_image_detection")
+            except Exception as e:
+                logger.warning(f"Face model unavailable: {e}, falling back to general model")
+                self.face_pipe = self._get_image_pipe()
+        return self.face_pipe
 
     def _get_text_pipe(self):
         """Lazy load text model"""
@@ -141,7 +155,7 @@ class DeepfakeDetector:
         context: Optional[Dict] = None,
         scan_request_id: Optional[str] = None,
     ) -> RiskScore:
-        """Scan image for deepfake indicators using Vision Transformer"""
+        """Scan image for deepfake indicators using Vision Transformer + LLM Council"""
         self._load_libs()
         import base64
         import io
@@ -150,23 +164,21 @@ class DeepfakeDetector:
         ai_score = 0.0
         labels = {}
         confidence = 0.8
+        council_used = False
         
         try:
             # 1. Decode Image
             image = None
             if content.startswith("http"):
-                # URL
                 try:
                     import requests
                     image = Image.open(requests.get(content, stream=True).raw)
                 except:
                     pass
             elif "base64," in content:
-                # Base64 string
                 image_data = base64.b64decode(content.split("base64,")[1])
                 image = Image.open(io.BytesIO(image_data))
             else:
-                # Raw base64?
                 try:
                     image_data = base64.b64decode(content)
                     image = Image.open(io.BytesIO(image_data))
@@ -174,18 +186,48 @@ class DeepfakeDetector:
                     pass
             
             if image:
-                # 2. Run Transformer
+                # 2. Run Transformer (Primary Detection)
                 pipe = self._get_image_pipe()
                 results = pipe(image)
-                # results is list of dicts: [{'score': 0.99, 'label': 'artificial'}, ...]
                 
-                # Check for 'artificial' or 'generated' labels
                 for res in results:
                     labels[res['label']] = res['score']
                     if res['label'].lower() in ['artificial', 'generated', 'fake', 'gan']:
-                        ai_score += res['score'] * 100
+                        ai_score = res['score'] * 100
                 
-                explanation = f"AI Image Analysis: {ai_score:.1f}% likelihood. Top label: {results[0]['label']} ({results[0]['score']:.2f})"
+                # 3. LLM Council Fallback for Borderline Cases (30-70%)
+                if 30 <= ai_score <= 70 and self.council:
+                    logger.info("Borderline image detection, invoking LLM Council...")
+                    council_used = True
+                    try:
+                        # Ask council to analyze image context
+                        council_prompt = f"""Analyze this image metadata for AI generation indicators:
+- Transformer AI Score: {ai_score:.1f}%
+- Labels: {labels}
+- Image size: {image.size if image else 'unknown'}
+
+Based on typical AI-generated image artifacts (too-smooth skin, asymmetric features, 
+background inconsistencies, unusual lighting), estimate the probability this is AI-generated.
+Return a score 0-100."""
+
+                        council_result = await self.council.analyze_with_roles(
+                            council_prompt, 
+                            analysis_type="deepfake",
+                            context=context,
+                            scan_request_id=scan_request_id
+                        )
+                        
+                        # Combine: 60% transformer, 40% council
+                        council_score = council_result.weighted_score
+                        ai_score = (ai_score * 0.6) + (council_score * 0.4)
+                        confidence = council_result.consensus_score
+                        
+                    except Exception as e:
+                        logger.error(f"LLM Council failed for image: {e}")
+                
+                explanation = f"AI Image Analysis: {ai_score:.1f}% likelihood. " \
+                            f"Top label: {results[0]['label']} ({results[0]['score']:.2f})" \
+                            f"{' [Council verified]' if council_used else ''}"
             else:
                 return RiskScore(
                     module_type=ModuleType.DEEPFAKE_DETECTION,
@@ -198,7 +240,7 @@ class DeepfakeDetector:
                 )
 
         except Exception as e:
-            logging.error(f"Image scan failed: {e}")
+            logger.error(f"Image scan failed: {e}")
             return RiskScore(
                 module_type=ModuleType.DEEPFAKE_DETECTION,
                 risk_score=0,
@@ -214,10 +256,10 @@ class DeepfakeDetector:
             risk_score=ai_score,
             risk_level=self._score_to_level(ai_score),
             confidence=confidence,
-            verdict="flagged" if ai_score >= 60 else "allowed",
+            verdict="flagged" if ai_score >= 50 else "allowed",
             explanation=explanation,
-            signals={"top_labels": labels},
-            false_positive_probability=0.2 if ai_score > 50 else 0.05
+            signals={"top_labels": labels, "council_used": council_used},
+            false_positive_probability=0.15 if ai_score > 50 else 0.05
         )
 
     # Keep Audio/Video as heuristics for now as they require ffmpeg/complex deps

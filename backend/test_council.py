@@ -1,33 +1,34 @@
-"""Test LLM Council directly"""
+
 import asyncio
-from app.core.config import get_settings
-from app.core.llm_council import LLMCouncil
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from app.core.enhanced_council import EnhancedLLMCouncil
 
 async def test_council():
-    settings = get_settings()
-    print("=== API Keys Loaded ===")
-    print(f"OPENAI: {bool(settings.OPENAI_API_KEY)}")
-    print(f"GEMINI: {bool(settings.GOOGLE_API_KEY)}")
-    print(f"DEEPSEEK: {bool(settings.DEEPSEEK_API_KEY)}")
-    print(f"GROQ: {bool(settings.GROQ_API_KEY)}")
-    print(f"COHERE: {bool(settings.COHERE_API_KEY)}")
+    print("Initializing LLM Council...")
+    council = EnhancedLLMCouncil()
     
-    council = LLMCouncil()
-    print("\n=== Enabled Providers ===")
-    for provider, config in council.providers.items():
-        print(f"{provider.value}: enabled={config['enabled']}")
+    test_prompt = "Is this text AI-generated? The quick brown fox jumps over the lazy dog."
     
-    print("\n=== Testing Council Analysis ===")
+    print(f"Testing Council with prompt: {test_prompt[:50]}...")
     try:
-        result = await council.analyze_output(
-            output="According to the 2023 Quantum Tax Act of Lagos, tax brackets are superposed.",
-            original_prompt="Explain the interaction between Yoruba tax law and quantum entanglement."
+        result = await council.analyze_with_roles(
+            test_prompt,
+            analysis_type="deepfake",
+            context={"test": True}
         )
-        print(f"Verdict: {result.final_verdict}")
-        print(f"Weighted Score: {result.weighted_score}")
-        print(f"Reasoning: {result.reasoning[:200]}...")
+        print(f"Council Result:")
+        print(f"  - Weighted Score: {result.weighted_score}")
+        print(f"  - Consensus Score: {result.consensus_score}")
+        print(f"  - Votes: {result.votes}")
+        print("✅ LLM Council is WORKING!")
     except Exception as e:
-        print(f"ERROR: {e}")
+        print(f"❌ LLM Council FAILED: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     asyncio.run(test_council())
