@@ -1,13 +1,13 @@
 """
 Universal AI Safety Proxy
 
-OpenAI-compatible endpoints that intercept, scan, and forward requests.
+Multi-provider endpoints that intercept, scan, and forward requests.
 Users just change their base_url to point to IntellectSafe.
 
 Flow:
-1. Receive request at /v1/chat/completions
+1. Receive request at /v1/chat/completions (OpenAI-compatible interface)
 2. Scan prompt for injection (Level 1)
-3. If safe, forward to upstream provider (OpenAI/Anthropic)
+3. If safe, forward to upstream provider (OpenAI, Groq, Anthropic, Gemini, Perplexity)
 4. Scan response for safety (Level 2)
 5. Return response or block if unsafe
 """

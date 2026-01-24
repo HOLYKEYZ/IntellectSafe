@@ -17,7 +17,7 @@ Production-grade AI Safety Engine protecting humans, organizations, and AI syste
 ### Core Components
 
 1. **LLM Council**: Multi-model validation with weighted voting (GPT-4, Gemini, DeepSeek, Groq, Cohere)
-2. **Universal Proxy**: Drop-in OpenAI-compatible API with built-in safety scanning
+2. **Universal Proxy**: Multi-provider API with built-in safety scanning (OpenAI-compatible interface)
 3. **RAG Safety Brain**: Knowledge-base of attack patterns for enhanced detection
 4. **Governance Layer**: Full audit logs, risk reports, and compliance dashboards
 

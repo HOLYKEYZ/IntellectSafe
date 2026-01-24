@@ -90,7 +90,7 @@ Scan content for deepfakes.
 ## Universal Proxy
 
 ### POST /v1/chat/completions
-OpenAI-compatible proxy with built-in safety scanning.
+Universal multi-provider proxy with built-in safety scanning (OpenAI-compatible interface).
 
 **Headers:**
 ```
