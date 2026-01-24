@@ -186,14 +186,34 @@ class DeepfakeDetector:
                     pass
             
             if image:
-                # 2. Run Transformer (Primary Detection)
-                pipe = self._get_image_pipe()
-                results = pipe(image)
+                # 2. Run BOTH Models (Art + Face Detection)
+                art_score = 0.0
+                face_score = 0.0
                 
-                for res in results:
-                    labels[res['label']] = res['score']
-                    if res['label'].lower() in ['artificial', 'generated', 'fake', 'gan']:
-                        ai_score = res['score'] * 100
+                # Art detection model
+                try:
+                    pipe = self._get_image_pipe()
+                    results = pipe(image)
+                    for res in results:
+                        labels[f"art_{res['label']}"] = res['score']
+                        if res['label'].lower() in ['artificial', 'generated', 'fake', 'gan']:
+                            art_score = res['score'] * 100
+                except Exception as e:
+                    logger.warning(f"Art model failed: {e}")
+                
+                # Face detection model (for photorealistic deepfakes)
+                try:
+                    face_pipe = self._get_face_pipe()
+                    face_results = face_pipe(image)
+                    for res in face_results:
+                        labels[f"face_{res['label']}"] = res['score']
+                        if res['label'].lower() in ['fake', 'deepfake', 'generated', 'synthetic']:
+                            face_score = res['score'] * 100
+                except Exception as e:
+                    logger.warning(f"Face model failed: {e}")
+                
+                # Take the higher of the two scores
+                ai_score = max(art_score, face_score)
                 
                 # 3. LLM Council Fallback for Borderline Cases (30-70%)
                 if 30 <= ai_score <= 70 and self.council:
