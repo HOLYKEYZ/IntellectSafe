@@ -26,7 +26,7 @@ class EnhancedLLMCouncil(LLMCouncil):
     def __init__(self):
         super().__init__()
         self.hallucination_detector = HallucinationDetector()
-        self.fallback_provider = LLMProvider.OPENAI  # Fallback to GPT-4
+        self.fallback_provider = LLMProvider.GROQ  # Fallback to Groq while OpenAI is down
 
     async def analyze_with_roles(
         self,
@@ -128,10 +128,8 @@ class EnhancedLLMCouncil(LLMCouncil):
         ]
 
         if not enabled_providers:
-            print(f"[DEBUG] No enabled providers for {content_type}. Role prompts: {list(role_prompts.keys())}")
             raise ValueError("No LLM providers enabled for roles")
 
-        print(f"[DEBUG] Gathering votes from: {[p.value for p in enabled_providers]}")
         if settings.COUNCIL_ENABLE_PARALLEL:
             tasks = [
                 self._get_vote_with_prompt(provider, role_prompts[provider], content_type)
@@ -151,8 +149,9 @@ class EnhancedLLMCouncil(LLMCouncil):
         ]
 
         if not valid_votes:
-            print(f"[DEBUG] All votes failed. Raw results: {[(v.provider.value if hasattr(v, 'provider') else 'ERR', v.error if hasattr(v, 'error') else str(v)) for v in votes]}")
-            raise RuntimeError("All LLM providers failed to respond")
+            # Check if any providers were even attempted
+            providers_attempted = [p.value for p in enabled_providers]
+            raise RuntimeError(f"All LLM providers failed to respond. Attempted: {providers_attempted}")
 
         return valid_votes
 

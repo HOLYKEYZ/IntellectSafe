@@ -1,0 +1,24 @@
+=== API AUDIT REPORT (JAN 2025) ===
+[FAILED] OPENAI (Status: 429)
+    Error: {
+    "error": {
+        "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.",
+        "type": "insufficient_quota",
+        "param": null,
+        
+----------------------------------------
+[WORKING] GROQ (Status: 200)
+----------------------------------------
+[FAILED] GEMINI (Status: 404)
+    Error: {
+  "error": {
+    "code": 404,
+    "message": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+    "status": "NOT_FOUND"
+  }
+}
+
+----------------------------------------
+[FAILED] DEEPSEEK (Status: 402)
+    Error: {"error":{"message":"Insufficient Balance","type":"unknown_error","param":null,"code":"invalid_request_error"}}
+----------------------------------------

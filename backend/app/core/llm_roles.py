@@ -33,27 +33,32 @@ class SafetyRole(str, Enum):
 
 LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
     LLMProvider.OPENAI: [
-        SafetyRole.PROMPT_INJECTION_ANALYSIS,  # Strong at instruction hierarchy
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Excellent technical accuracy
-        SafetyRole.HALLUCINATION_DETECTION,  # Good at fact-checking
+        SafetyRole.PROMPT_INJECTION_ANALYSIS,
+        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
+        SafetyRole.HALLUCINATION_DETECTION,
     ],
     LLMProvider.GEMINI: [
-        SafetyRole.DEEPFAKE_ANALYSIS,  # Multimodal capabilities
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Good technical skills
-        SafetyRole.HALLUCINATION_DETECTION,  # Fact-checking
+        SafetyRole.DEEPFAKE_ANALYSIS,
+        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
+        SafetyRole.HALLUCINATION_DETECTION,
     ],
     LLMProvider.DEEPSEEK: [
-        SafetyRole.PROMPT_INJECTION_ANALYSIS,  # Strong reasoning
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Technical accuracy
-        SafetyRole.HALLUCINATION_DETECTION,  # Cost-effective fact-checking
+        SafetyRole.PROMPT_INJECTION_ANALYSIS,
+        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
+        SafetyRole.HALLUCINATION_DETECTION,
     ],
     LLMProvider.GROQ: [
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,  # Fast technical analysis
-        SafetyRole.HALLUCINATION_DETECTION,  # Quick fact-checking
+        SafetyRole.PROMPT_INJECTION_ANALYSIS,
+        SafetyRole.POLICY_SAFETY_REASONING,
+        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
+        SafetyRole.ADVERSARIAL_THINKING,
+        SafetyRole.HUMAN_IMPACT_DECEPTION,
+        SafetyRole.HALLUCINATION_DETECTION,
+        SafetyRole.DEEPFAKE_ANALYSIS,
     ],
     LLMProvider.COHERE: [
-        SafetyRole.POLICY_SAFETY_REASONING,  # Enterprise safety focus
-        SafetyRole.HUMAN_IMPACT_DECEPTION,  # Classification strength
+        SafetyRole.POLICY_SAFETY_REASONING,
+        SafetyRole.HUMAN_IMPACT_DECEPTION,
     ],
 }
 
