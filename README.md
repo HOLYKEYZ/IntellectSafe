@@ -62,24 +62,37 @@ npm run dev
 
 ## 📡 API Reference
 
-### Universal Proxy (OpenAI-Compatible)
+### Universal Proxy (Multi-Provider Support)
 
-Use IntellectSafe as a drop-in replacement for OpenAI:
+IntellectSafe acts as a universal safety layer. Connect any major AI client and calls are automatically scanned:
+
+| Provider | Model ID Example |
+|----------|------------------|
+| **OpenAI** | `gpt-4o`, `gpt-4-turbo` |
+| **Groq** | `llama-3.1-70b-versatile` |
+| **Anthropic** | `claude-3-5-sonnet`, `claude-3-opus` |
+| **Google** | `gemini-1.5-pro`, `gemini-1.5-flash` |
+| **Perplexity** | `llama- sonar-large-online` |
+
+#### Integration Example
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:8001/v1",
-    api_key="your-openai-key"  # Or use X-Upstream-API-Key header
+    base_url="http://localhost:8001/v1",  # Point to IntellectSafe
+    api_key="your-openai-key"             # Or use X-Upstream-API-Key header
 )
 
 response = client.chat.completions.create(
-    model="gpt-4",
-    messages=[{"role": "user", "content": "Hello!"}]
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}],
+    extra_headers={
+        "X-Upstream-Provider": "openai"   # Optional: explicitly set provider
+    }
 )
-# Jailbreaks automatically blocked, responses scanned
 ```
+*For detailed connection guides (LangChain, SDKs), see [docs/INTEGRATION.md](file:///c:/Users/USER/Desktop/cursor%20file/AI-safety/docs/INTEGRATION.md).*
 
 ### Scan Endpoints
 
@@ -94,83 +107,26 @@ curl -X POST "http://localhost:8001/api/v1/scan/output" \
   -H "Content-Type: application/json" \
   -d '{"output": "Here is how to...", "original_prompt": "..."}'
 
-# Scan content for deepfakes (text, image, audio, video)
+# Scan content for deepfakes (Dual-Model Analysis)
+# Detects Art (Midjourney/DALL-E) and Photorealistic Faces
 curl -X POST "http://localhost:8001/api/v1/scan/content" \
   -H "Content-Type: application/json" \
   -d '{"content_type": "image", "content": "<base64-data>"}'
 ```
 
-### Agent Control
+### Agent Control (Level 5)
+
+Full lifecycle protection for autonomous agents:
+- **Authorization**: Permission gates for dangerous tools.
+- **Kill Switch**: Immediate agent termination and block.
+- **Audit**: Complete action history and session tracking.
 
 ```bash
 # Authorize agent action
 curl -X POST "http://localhost:8001/api/v1/agent/authorize" \
   -H "Content-Type: application/json" \
   -d '{"agent_id": "agent-1", "session_id": "s1", "action_type": "file_read", "requested_action": {"path": "/tmp/test.txt"}}'
-
-# Emergency kill switch
-curl -X POST "http://localhost:8001/api/v1/agent/kill" \
-  -H "Content-Type: application/json" \
-  -d '{"agent_id": "agent-1", "reason": "Suspicious behavior"}'
-
-# Get action history
-curl "http://localhost:8001/api/v1/agent/history/agent-1"
 ```
-
----
-
-## ⚙️ Configuration
-
-Create `.env` in the backend directory:
-
-```env
-# Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/ai_safety_db
-
-# LLM Providers (add keys for providers you want to use)
-OPENAI_API_KEY=...
-GOOGLE_API_KEY=...
-DEEPSEEK_API_KEY=...
-GROQ_API_KEY=...
-COHERE_API_KEY=...
-
-# Security
-SECRET_KEY=your-secret-key-change-in-production
-```
-
----
-
-## 🏗️ Architecture
-
-```
-AI-safety/
-├── backend/
-│   ├── app/
-│   │   ├── api/routes/      # API endpoints (scan, agent, audit, proxy)
-│   │   ├── core/            # Config, LLM Council, security
-│   │   ├── modules/         # Safety engines (injection, deepfake, privacy)
-│   │   └── services/        # RAG, governance, attack knowledge base
-│   └── verify_*.py          # Verification scripts
-├── frontend/
-│   └── src/
-│       ├── pages/           # Dashboard, Welcome, Research
-│       └── components/      # UI components
-└── docs/                    # Documentation
-```
-
----
-
-## ✅ Implementation Status
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Prompt Injection Detection | ✅ Complete | RAG-enhanced, dynamic patterns |
-| Output Safety Guard | ✅ Complete | Heuristic fallback when Council offline |
-| Universal Proxy | ✅ Complete | OpenAI-compatible, auto-scanning |
-| Deepfake Detection | ✅ Complete | Text, Image, Audio, Video |
-| Agent Control | ✅ Complete | Whitelist, kill switch, history |
-| Dashboard | ✅ Complete | Live data integration |
-| Audit/Governance | ✅ Complete | Risk reports, compliance |
 
 ---
 
