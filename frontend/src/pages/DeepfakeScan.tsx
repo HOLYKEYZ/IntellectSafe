@@ -178,7 +178,9 @@ const DeepfakeScan = () => {
                        {Object.entries(result.signals).map(([key, value]) => (
                          <div key={key} className="bg-background border p-2 rounded text-xs flex justify-between">
                             <span className="font-mono text-gray-600">{key}</span>
-                            <span className="font-bold">{String(value)}</span>
+                            <span className="font-bold text-right truncate max-w-[150px]" title={typeof value === 'object' ? JSON.stringify(value) : String(value)}>
+                              {typeof value === 'object' ? JSON.stringify(value).slice(0, 20) + '...' : String(value)}
+                            </span>
                          </div>
                        ))}
                     </div>

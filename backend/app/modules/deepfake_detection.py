@@ -215,8 +215,8 @@ class DeepfakeDetector:
                 # Take the higher of the two scores
                 ai_score = max(art_score, face_score)
                 
-                # 3. LLM Council Fallback for Borderline Cases (30-70%)
-                if 30 <= ai_score <= 70 and self.council:
+                # 3. LLM Council Fallback for Borderline Cases (20-80%)
+                if 20 <= ai_score <= 80 and self.council:
                     logger.info("Borderline image detection, invoking LLM Council...")
                     council_used = True
                     try:
