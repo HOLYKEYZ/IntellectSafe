@@ -68,11 +68,11 @@ IntellectSafe acts as a universal safety layer. Connect any major AI client and 
 
 | Provider | Model ID Example |
 |----------|------------------|
-| **OpenAI** | `gpt-4o`, `gpt-4-turbo` |
-| **Groq** | `llama-3.1-70b-versatile` |
-| **Anthropic** | `claude-3-5-sonnet`, `claude-3-opus` |
-| **Google** | `gemini-1.5-pro`, `gemini-1.5-flash` |
-| **Perplexity** | `llama- sonar-large-online` |
+| **OpenAI** | `gpt-4o`, `o1-mini` |
+| **Groq** | `llama-3.3-70b-versatile` |
+| **Anthropic** | `claude-3-5-sonnet-20241022` |
+| **Google** | `gemini-1.5-pro`, `gemini-2.0-flash-exp` |
+| **Perplexity** | `sonar`, `sonar-pro` |
 
 #### Integration Example
 

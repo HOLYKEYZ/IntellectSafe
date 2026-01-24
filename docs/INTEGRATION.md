@@ -25,11 +25,11 @@ response = client.chat.completions.create(
 
 | Provider   | Header: X-Upstream-Provider | Models |
 |------------|---------------------------|--------|
-| OpenAI     | `openai`                  | gpt-4o, gpt-4-turbo, gpt-3.5-turbo |
-| Groq       | `groq`                    | llama-3.1-70b-versatile |
-| Google     | `gemini`                  | gemini-1.5-pro, gemini-1.5-flash |
-| Anthropic  | `anthropic` or `claude`   | claude-sonnet-4-20250514, claude-3-opus |
-| Perplexity | `perplexity`              | llama-3.1-sonar-large-128k-online |
+| OpenAI     | `openai`                  | `gpt-4o`, `o1-mini`, `gpt-4-turbo` |
+| Groq       | `groq`                    | `llama-3.3-70b-versatile` |
+| Google     | `gemini`                  | `gemini-1.5-pro`, `gemini-2.0-flash-exp` |
+| Anthropic  | `anthropic` or `claude`   | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku` |
+| Perplexity | `perplexity`              | `sonar`, `sonar-pro` |
 
 ## Headers
 

@@ -269,7 +269,7 @@ async def _forward_to_groq(request: ChatCompletionRequest, api_key: str) -> Dict
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             json={
-                "model": request.model or "llama-3.1-70b-versatile",
+                "model": request.model or "llama-3.3-70b-versatile",
                 "messages": [{"role": m.role, "content": m.content} for m in request.messages],
                 "temperature": request.temperature,
                 "max_tokens": request.max_tokens or 1024,
@@ -302,7 +302,7 @@ async def _forward_to_anthropic(request: ChatCompletionRequest, api_key: str) ->
     async with httpx.AsyncClient(timeout=60.0) as client:
         messages = [{"role": m.role, "content": m.content} for m in request.messages if m.role != "system"]
         system = next((m.content for m in request.messages if m.role == "system"), None)
-        body = {"model": request.model or "claude-sonnet-4-20250514", "max_tokens": request.max_tokens or 1024, "messages": messages}
+        body = {"model": request.model or "claude-3-5-sonnet-20241022", "max_tokens": request.max_tokens or 1024, "messages": messages}
         if system:
             body["system"] = system
         response = await client.post(
@@ -323,7 +323,7 @@ async def _forward_to_perplexity(request: ChatCompletionRequest, api_key: str) -
             "https://api.perplexity.ai/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             json={
-                "model": request.model or "llama-3.1-sonar-large-128k-online",
+                "model": request.model or "sonar",
                 "messages": [{"role": m.role, "content": m.content} for m in request.messages],
                 "temperature": request.temperature,
                 "max_tokens": request.max_tokens or 1024,
@@ -341,12 +341,14 @@ async def list_models():
         "object": "list",
         "data": [
             {"id": "gpt-4o", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o1-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "gpt-4-turbo", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "gpt-3.5-turbo", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "claude-sonnet-4-20250514", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
-            {"id": "claude-3-opus-20240229", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
-            {"id": "llama-3.1-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
+            {"id": "claude-3-5-sonnet-20241022", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            {"id": "claude-3-5-haiku-20241022", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
             {"id": "gemini-1.5-pro", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
-            {"id": "llama-3.1-sonar-large-128k-online", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
+            {"id": "gemini-2.0-flash-exp", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
+            {"id": "sonar", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
+            {"id": "sonar-pro", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
         ]
     }
