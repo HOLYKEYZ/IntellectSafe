@@ -215,29 +215,70 @@ class DeepfakeDetector:
                 # Take the higher of the two scores
                 ai_score = max(art_score, face_score)
                 
-                # 3. LLM Council Fallback for Borderline Cases (20-80%)
-                if 20 <= ai_score <= 80 and self.council:
-                    logger.info("Borderline image detection, invoking LLM Council...")
-                    council_used = True
-                    try:
-                        # Ask council to analyze image context
-                        council_prompt = f"""Analyze this image metadata for AI generation indicators:
+                # 3. Watermark/Logo Heuristic (Check corners)
+                watermark_signals = []
+                try:
+                    # Check corners for high-frequency content (logos/watermarks)
+                    w, h = image.size
+                    corners = [
+                        (0, 0, 100, 100),           # Top-left
+                        (w-100, 0, w, 100),         # Top-right
+                        (0, h-100, 100, h),         # Bottom-left
+                        (w-100, h-100, w, h)        # Bottom-right
+                    ]
+                    for i, box in enumerate(corners):
+                        # Ensure box is within bounds
+                        if box[0] < 0 or box[1] < 0 or box[2] > w or box[3] > h: continue
+                        
+                        region = image.crop(box).convert('L') # Grayscale
+                        # Calculate variance/std-dev
+                        import math
+                        pixels = list(region.getdata())
+                        avg = sum(pixels) / len(pixels)
+                        variance = sum((p - avg) ** 2 for p in pixels) / len(pixels)
+                        std_dev = math.sqrt(variance)
+                        
+                        # High std_dev usually suggests text/logos vs smooth background
+                        if std_dev > 50:  # Threshold for "busy" corner
+                            pos = ["TL", "TR", "BL", "BR"][i]
+                            watermark_signals.append(f"{pos} Corner (StdDev: {std_dev:.1f})")
+                except Exception as e:
+                    logger.warning(f"Watermark check failed: {e}")
+
+                # 4. LLM Council Fallback for Borderline Cases (20-80%) OR Watermark Signal
+                # Invoke if borderline OR if we suspect a watermark (even if score is low)
+                if (20 <= ai_score <= 80) or watermark_signals:
+                    if self.council:
+                        logger.info(f"Invoking Council. Score: {ai_score}, Watermarks: {watermark_signals}")
+                        council_used = True
+                        try:
+                            # Ask council to analyze image context
+                            council_prompt = f"""Analyze this image metadata for AI generation indicators:
 - Transformer AI Score: {ai_score:.1f}%
 - Labels: {labels}
-- Image size: {image.size if image else 'unknown'}
+- Image size: {image.size}
+- Potential Watermarks Detected: {watermark_signals if watermark_signals else 'None'}
 
-Based on typical AI-generated image artifacts (too-smooth skin, asymmetric features, 
-background inconsistencies, unusual lighting), estimate the probability this is AI-generated.
-Return a score 0-100."""
+CRITICAL: If 'Potential Watermarks' are detected in corners (especially BR/Bottom-Right), 
+this is a strong indicator of AI generation (e.g., DALL-E, Midjourney, StarryAI signatures).
+Weigh this heavily against a low transformer score.
 
-                        council_result = await self.council.analyze_with_roles(
-                            council_prompt, 
-                            analysis_type="deepfake",
-                            context=context,
-                            scan_request_id=scan_request_id
-                        )
-                        
-                        # Combine: 60% transformer, 40% council
+Estimate probability (0-100) this is AI-generated."""
+
+                            council_result = await self.council.analyze_with_roles(
+                                council_prompt, 
+                                analysis_type="deepfake",
+                                context=context,
+                                scan_request_id=scan_request_id
+                            )
+                            
+                            # Combine: 50% transformer, 50% council (increased Council weight due to visual signals)
+                            council_score = council_result.weighted_score
+                            ai_score = (ai_score * 0.5) + (council_score * 0.5)
+                            confidence = council_result.consensus_score
+                        except Exception as e:
+                            logger.error(f"LLM Council failed: {e}")
+
                         council_score = council_result.weighted_score
                         ai_score = (ai_score * 0.6) + (council_score * 0.4)
                         confidence = council_result.consensus_score
