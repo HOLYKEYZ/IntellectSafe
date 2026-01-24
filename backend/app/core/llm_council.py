@@ -248,9 +248,9 @@ RESPOND IN STRICT JSON FORMAT:
         start_time = time.time()
 
         try:
+            print(f"[DEBUG] Calling {provider.value} with model {config['model']}...", flush=True)
             if provider == LLMProvider.OPENAI:
                 response = await self._call_openai(config, prompt)
-
             elif provider == LLMProvider.GEMINI:
                 response = await self._call_gemini(config, prompt)
             elif provider == LLMProvider.DEEPSEEK:
@@ -262,10 +262,12 @@ RESPOND IN STRICT JSON FORMAT:
             else:
                 raise ValueError(f"Unknown provider: {provider}")
 
+            print(f"[DEBUG] {provider.value} responded successfully.", flush=True)
             response_time_ms = int((time.time() - start_time) * 1000)
             return self._parse_vote_response(provider, config["model"], response, response_time_ms)
 
         except Exception as e:
+            print(f"[DEBUG] {provider.value} FAILED: {str(e)}", flush=True)
             response_time_ms = int((time.time() - start_time) * 1000)
             return VoteResult(
                 provider=provider,

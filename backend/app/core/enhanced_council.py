@@ -128,8 +128,10 @@ class EnhancedLLMCouncil(LLMCouncil):
         ]
 
         if not enabled_providers:
+            print(f"[DEBUG] No enabled providers for {content_type}. Role prompts: {list(role_prompts.keys())}")
             raise ValueError("No LLM providers enabled for roles")
 
+        print(f"[DEBUG] Gathering votes from: {[p.value for p in enabled_providers]}")
         if settings.COUNCIL_ENABLE_PARALLEL:
             tasks = [
                 self._get_vote_with_prompt(provider, role_prompts[provider], content_type)
@@ -149,6 +151,7 @@ class EnhancedLLMCouncil(LLMCouncil):
         ]
 
         if not valid_votes:
+            print(f"[DEBUG] All votes failed. Raw results: {[(v.provider.value if hasattr(v, 'provider') else 'ERR', v.error if hasattr(v, 'error') else str(v)) for v in votes]}")
             raise RuntimeError("All LLM providers failed to respond")
 
         return valid_votes

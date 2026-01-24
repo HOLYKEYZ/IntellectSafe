@@ -11,6 +11,10 @@ async def test_council():
     print("Initializing LLM Council...")
     council = EnhancedLLMCouncil()
     
+    print("\n--- Council State ---")
+    for provider, config in council.providers.items():
+        print(f"Provider: {provider.value}, Enabled: {config['enabled']}, Model: {config['model']}")
+    
     test_prompt = "Is this text AI-generated? The quick brown fox jumps over the lazy dog."
     
     print(f"Testing Council with prompt: {test_prompt[:50]}...")
@@ -26,7 +30,9 @@ async def test_council():
         print(f"  - Votes: {result.votes}")
         print("✅ LLM Council is WORKING!")
     except Exception as e:
-        print(f"❌ LLM Council FAILED: {e}")
+        print(f"❌ LLM Council FAILED: {str(e)}")
+        if hasattr(e, '__dict__'):
+            print(f"Error Details: {e.__dict__}")
         import traceback
         traceback.print_exc()
 
