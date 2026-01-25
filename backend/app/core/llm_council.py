@@ -102,6 +102,12 @@ class LLMCouncil:
                 "timeout": settings.COHERE_TIMEOUT,
                 "api_key": settings.COHERE_API_KEY,
             },
+            LLMProvider.OPENROUTER: {
+                "enabled": bool(settings.OPENROUTER_API_KEY),
+                "model": settings.OPENROUTER_MODEL,
+                "timeout": settings.OPENROUTER_TIMEOUT,
+                "api_key": settings.OPENROUTER_API_KEY,
+            },
         }
 
     def _load_provider_weights(self) -> Dict[str, float]:
@@ -258,6 +264,8 @@ RESPOND IN STRICT JSON FORMAT:
                 response = await self._call_groq(config, prompt)
             elif provider == LLMProvider.COHERE:
                 response = await self._call_cohere(config, prompt)
+            elif provider == LLMProvider.OPENROUTER:
+                response = await self._call_openrouter(config, prompt)
             else:
                 raise ValueError(f"Unknown provider: {provider}")
 
@@ -364,6 +372,26 @@ RESPOND IN STRICT JSON FORMAT:
             )
             response.raise_for_status()
             return response.json()["generations"][0]["text"]
+
+    async def _call_openrouter(self, config: Dict[str, Any], prompt: str) -> str:
+        """Call OpenRouter API (OpenAI-compatible)"""
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {config['api_key']}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://intellectsafe.ai",
+                    "X-Title": "IntellectSafe AI Safety",
+                },
+                json={
+                    "model": config["model"],
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.1,
+                },
+            )
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
 
     def _parse_vote_response(
         self, provider: LLMProvider, model_name: str, response: str, response_time_ms: int

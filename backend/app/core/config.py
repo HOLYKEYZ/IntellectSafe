@@ -64,8 +64,12 @@ class Settings(BaseSettings):
     GROQ_TIMEOUT: int = 30
 
     COHERE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("COHERE_API_KEY", "COHERE_AI_API_KEY"))
-    COHERE_MODEL: str = "command-r-plus"
+    COHERE_MODEL: str = "command-r"
     COHERE_TIMEOUT: int = 30
+
+    OPENROUTER_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("FALLBACK_API_KEY", "OPENROUTER_API_KEY"))
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
+    OPENROUTER_TIMEOUT: int = 30
 
     # LLM Council
     COUNCIL_TIMEOUT: int = 60  # Max time for council decision

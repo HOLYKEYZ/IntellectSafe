@@ -60,6 +60,15 @@ LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
         SafetyRole.POLICY_SAFETY_REASONING,
         SafetyRole.HUMAN_IMPACT_DECEPTION,
     ],
+    LLMProvider.OPENROUTER: [
+        SafetyRole.PROMPT_INJECTION_ANALYSIS,
+        SafetyRole.POLICY_SAFETY_REASONING,
+        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
+        SafetyRole.ADVERSARIAL_THINKING,
+        SafetyRole.HUMAN_IMPACT_DECEPTION,
+        SafetyRole.HALLUCINATION_DETECTION,
+        SafetyRole.DEEPFAKE_ANALYSIS,
+    ],
 }
 
 # Primary role for each provider (their strongest capability)
@@ -69,6 +78,7 @@ PRIMARY_ROLES: Dict[LLMProvider, SafetyRole] = {
     LLMProvider.DEEPSEEK: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
     LLMProvider.GROQ: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
     LLMProvider.COHERE: SafetyRole.POLICY_SAFETY_REASONING,
+    LLMProvider.OPENROUTER: SafetyRole.FALLBACK_GENERALIST,
 }
 
 # Role-specific prompt templates

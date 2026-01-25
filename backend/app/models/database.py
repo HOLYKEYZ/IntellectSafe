@@ -59,6 +59,7 @@ class LLMProvider(str, Enum):
     DEEPSEEK = "deepseek"
     GROQ = "groq"
     COHERE = "cohere"
+    OPENROUTER = "openrouter"
 
 
 class IncidentStatus(str, Enum):

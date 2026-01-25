@@ -26,7 +26,7 @@ class EnhancedLLMCouncil(LLMCouncil):
     def __init__(self):
         super().__init__()
         self.hallucination_detector = HallucinationDetector()
-        self.fallback_provider = LLMProvider.GROQ  # Fallback to Groq while OpenAI is down
+        self.fallback_provider = LLMProvider.OPENROUTER  # Use OpenRouter as the ultimate fallback
 
     async def analyze_with_roles(
         self,
