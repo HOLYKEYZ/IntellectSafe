@@ -21,15 +21,14 @@ response = client.chat.completions.create(
 )
 ```
 
-## Supported Providers
-
-| Provider   | Header: X-Upstream-Provider | Models |
-|------------|---------------------------|--------|
+| Provider   | Header: X-Upstream-Provider | Example Models |
+|------------|---------------------------|----------------|
 | OpenAI     | `openai`                  | `gpt-4o`, `o1-mini`, `gpt-4-turbo` |
-| Groq       | `groq`                    | `llama-3.3-70b-versatile` |
-| Google     | `gemini`                  | `gemini-1.5-pro`, `gemini-2.0-flash-exp` |
-| Anthropic  | `anthropic` or `claude`   | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku` |
-| Perplexity | `perplexity`              | `sonar`, `sonar-pro` |
+| Groq       | `groq`                    | `llama-3.3-70b-versatile`, `grok-2` |
+| Google     | `gemini`                  | `gemini-1.5-pro`, `gemini-2.0-flash` |
+| Anthropic  | `anthropic`               | `claude-3-5-sonnet`, `claude-3-opus` |
+| Perplexity | `perplexity`              | `sonar-pro`, `sonar-reasoning` |
+| **Copilot**| `openrouter`              | `copilot-secure-bridge` |
 
 ## Headers
 
@@ -50,19 +49,21 @@ llm = ChatOpenAI(
 )
 ```
 
-## Agent SDK (Claude Code, Antigravity, etc.)
+## IDE Integration (Copilot & Cursor)
 
-For agent frameworks, configure the base URL in your agent's config:
+IntellectSafe can act as a safety gate for your coding tools.
 
-```yaml
-# .agent/config.yaml
-llm:
-  base_url: http://localhost:8001
-  provider: openai
-  model: gpt-4o
-```
+### Cursor Setup
+1. Open **Cursor Settings** > **Models**.
+2. Under **OpenAI API Key**, enter your key (or `is-key`).
+3. Toggle "Override OpenAI Base URL".
+4. Set URL to: `http://localhost:8001/v1`
+5. IntellectSafe will now scan every prompt and code generation.
 
-All agent actions will be automatically scanned before execution.
+### GitHub Copilot (via OpenAI Bridge)
+If you use extensions like *Continue* or *Chat with Copilot* that allow custom endpoints:
+- **Base URL**: `http://localhost:8001/v1`
+- **Model**: `copilot-secure-bridge` (optimized for fast coding safety)
 
 ## What Gets Scanned
 

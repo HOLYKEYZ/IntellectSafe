@@ -149,8 +149,18 @@ async def proxy_chat_completions(
     
     # --- FORWARD TO UPSTREAM PROVIDER ---
     upstream_api_key = x_upstream_api_key
+    
+    # Auto-detect provider if not specified via header
+    if not x_upstream_provider:
+        m = request.model.lower()
+        if m.startswith(("gpt-", "o1-", "claude-", "grok-", "sonar", "copilot-")):
+            provider = "openrouter"
+        elif m.startswith("gemini"):
+            provider = "gemini" if "2" not in m else "gemini2"
+        elif m.startswith("llama"):
+            provider = "groq"
+    
     if not upstream_api_key:
-        # Fall back to server's configured key
         if provider == "gemini":
             upstream_api_key = settings.GEMINI_API_KEY
         elif provider == "groq":
@@ -162,7 +172,9 @@ async def proxy_chat_completions(
         elif provider == "openrouter":
             upstream_api_key = settings.OPENROUTER_API_KEY
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
+            # Default fallback for everything else
+            provider = "openrouter"
+            upstream_api_key = settings.OPENROUTER_API_KEY
     
     if not upstream_api_key:
         raise HTTPException(
@@ -279,7 +291,24 @@ async def _forward_to_gemini(request: ChatCompletionRequest, api_key: str, model
 
 
 async def _forward_to_openrouter(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
-    """Forward request to OpenRouter"""
+    """Forward request to OpenRouter with model mapping"""
+    model_id = request.model.lower()
+    
+    # Model mapping for common names to OpenRouter IDs
+    mapping = {
+        "gpt-4o": "openai/gpt-4o",
+        "gpt-4o-mini": "openai/gpt-4o-mini",
+        "o1-preview": "openai/o1-preview",
+        "o1-mini": "openai/o1-mini",
+        "claude-3-5-sonnet": "anthropic/claude-3.5-sonnet",
+        "claude-3-opus": "anthropic/claude-3-opus",
+        "grok-2": "x-ai/grok-2",
+        "copilot-secure-bridge": "google/gemini-2.0-flash-exp:free", # Fast default for Copilot bridge
+        "sonar-pro": "perplexity/sonar-reasoning-pro",
+    }
+    
+    mapped_model = mapping.get(model_id, model_id)
+    
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -290,7 +319,7 @@ async def _forward_to_openrouter(request: ChatCompletionRequest, api_key: str) -
                 "X-Title": "IntellectSafe Proxy",
             },
             json={
-                "model": request.model or settings.OPENROUTER_MODEL,
+                "model": mapped_model,
                 "messages": [{"role": m.role, "content": m.content} for m in request.messages],
                 "temperature": request.temperature,
                 "max_tokens": request.max_tokens,
@@ -309,8 +338,25 @@ async def list_models():
     return {
         "object": "list",
         "data": [
+            # Standard Council Pillars
             {"id": "gemini-2.5-flash", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
-            {"id": "gpt-4o-mini", "object": "model", "owned_by": "openrouter", "proxied_by": "intellectsafe"},
+            
+            # Frontier OpenAI Models
+            {"id": "gpt-4o", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "gpt-4o-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o1-preview", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o1-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            
+            # Frontier Anthropic Models
+            {"id": "claude-3-5-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            {"id": "claude-3-opus", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            
+            # Frontier xAI Models (via OpenRouter/Groq)
+            {"id": "grok-2", "object": "model", "owned_by": "xai", "proxied_by": "intellectsafe"},
+            
+            # Specialized Bridges
+            {"id": "copilot-secure-bridge", "object": "model", "owned_by": "intellectsafe", "proxied_by": "intellectsafe"},
+            {"id": "sonar-pro", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
         ]
     }
