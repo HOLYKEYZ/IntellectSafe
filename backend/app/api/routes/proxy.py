@@ -300,40 +300,6 @@ async def _forward_to_openrouter(request: ChatCompletionRequest, api_key: str) -
         return response.json()
 
 
-async def _forward_to_groq(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
-    """Forward request to Groq (OpenAI-compatible API)"""
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": request.model or "llama-3.3-70b-versatile",
-                "messages": [{"role": m.role, "content": m.content} for m in request.messages],
-                "temperature": request.temperature,
-                "max_tokens": request.max_tokens or 1024,
-                "stream": False,
-            },
-        )
-        response.raise_for_status()
-        return response.json()
-
-
-async def _forward_to_gemini(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
-    """Forward request to Google Gemini"""
-    model = request.model or "gemini-2.5-flash"
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        contents = [{"role": "user" if m.role == "user" else "model", "parts": [{"text": m.content}]} for m in request.messages]
-        response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-            headers={"Content-Type": "application/json"},
-            params={"key": api_key},
-            json={"contents": contents, "generationConfig": {"temperature": request.temperature, "maxOutputTokens": request.max_tokens or 1024}},
-        )
-        response.raise_for_status()
-        data = response.json()
-        content = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-        return {"choices": [{"message": {"role": "assistant", "content": content}}], "model": model}
-
 
 
 

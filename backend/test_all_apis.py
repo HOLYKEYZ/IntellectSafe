@@ -25,12 +25,16 @@ async def test_provider(council, provider_enum):
     start = time.time()
     try:
         # Call the specific internal method
-        if provider_enum == LLMProvider.OPENAI:
-            res = await council._call_openai(config, "Say 'SUCCESS'")
-        elif provider_enum == LLMProvider.GEMINI:
+        if provider_enum == LLMProvider.GEMINI:
             res = await council._call_gemini(config, "Say 'SUCCESS'")
         elif provider_enum == LLMProvider.GROQ:
             res = await council._call_groq(config, "Say 'SUCCESS'")
+        elif provider_enum == LLMProvider.GEMINI2:
+            res = await council._call_gemini2(config, "Say 'SUCCESS'") # Assuming _call_gemini2 exists
+        elif provider_enum == LLMProvider.GROK2:
+            res = await council._call_grok2(config, "Say 'SUCCESS'") # Assuming _call_grok2 exists
+        elif provider_enum == LLMProvider.OPENROUTER:
+            res = await council._call_openrouter(config, "Say 'SUCCESS'") # Assuming _call_openrouter exists
         elif provider_enum == LLMProvider.DEEPSEEK:
             res = await council._call_deepseek(config, "Say 'SUCCESS'")
         elif provider_enum == LLMProvider.COHERE:

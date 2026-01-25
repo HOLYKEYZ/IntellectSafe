@@ -107,12 +107,11 @@ class LLMCouncil:
         """Load provider reliability weights from database"""
         # Default weights - will be updated from DB
         return {
-            LLMProvider.OPENAI.value: 1.0,
-
-            LLMProvider.GEMINI.value: 0.9,
-            LLMProvider.DEEPSEEK.value: 0.85,
-            LLMProvider.GROQ.value: 0.8,
-            LLMProvider.COHERE.value: 0.85,
+            LLMProvider.GEMINI.value: 1.0,
+            LLMProvider.GROQ.value: 0.9,
+            LLMProvider.GEMINI2.value: 1.0,
+            LLMProvider.GROK2.value: 0.9,
+            LLMProvider.OPENROUTER.value: 0.85,
         }
 
     async def analyze_prompt(

@@ -278,13 +278,6 @@ Estimate probability (0-100) this is AI-generated."""
                             confidence = council_result.consensus_score
                         except Exception as e:
                             logger.error(f"LLM Council failed: {e}")
-
-                        council_score = council_result.weighted_score
-                        ai_score = (ai_score * 0.6) + (council_score * 0.4)
-                        confidence = council_result.consensus_score
-                        
-                    except Exception as e:
-                        logger.error(f"LLM Council failed for image: {e}")
                 
                 explanation = f"AI Image Analysis: {ai_score:.1f}% likelihood. " \
                             f"Top label: {results[0]['label']} ({results[0]['score']:.2f})" \

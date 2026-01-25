@@ -211,18 +211,16 @@ class EnhancedLLMCouncil(LLMCouncil):
             sum(weighted_scores) / total_weight if total_weight > 0 else 50.0
         )
 
-        # Check GPT + Fallback agreement (if both present)
-        gpt_vote = next((v for v in votes if v.provider == LLMProvider.OPENAI), None)
-        fallback_vote = next(
-            (v for v in votes if v.provider == self.fallback_provider), None
-        )
-
+        # Check agreement between top 2 highest confidence providers
+        sorted_by_conf = sorted(votes, key=lambda v: v.confidence, reverse=True)
         critical_agreement = True
-        if gpt_vote and fallback_vote:
-            # Both must agree within 20 points
-            score_diff = abs(gpt_vote.risk_score - fallback_vote.risk_score)
-            verdict_agree = gpt_vote.verdict == fallback_vote.verdict
-            critical_agreement = score_diff <= 20 and verdict_agree
+        if len(sorted_by_conf) >= 2:
+            top_1 = sorted_by_conf[0]
+            top_2 = sorted_by_conf[1]
+            # Both must agree within 25 points if high risk
+            score_diff = abs(top_1.risk_score - top_2.risk_score)
+            verdict_agree = top_1.verdict == top_2.verdict
+            critical_agreement = (score_diff <= 25) and verdict_agree
 
         # Determine consensus verdict
         if not critical_agreement and final_weighted_score >= 60:
@@ -260,7 +258,7 @@ class EnhancedLLMCouncil(LLMCouncil):
         reasoning += f"Models consulted: {len(votes)} ({len(consensus_votes)} high-confidence)\n"
         reasoning += f"Weighted risk score: {final_weighted_score:.2f}\n"
         reasoning += f"Consensus: {consensus_score:.1%}\n"
-        reasoning += f"Critical agreement (GPT+Fallback): {critical_agreement}\n"
+        reasoning += f"Critical agreement (Top 2 Models): {critical_agreement}\n"
         reasoning += f"Verdict breakdown: {dict(verdict_counts)}"
 
         # Prepare votes dict
