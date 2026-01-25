@@ -150,11 +150,13 @@ async def proxy_chat_completions(
     # --- FORWARD TO UPSTREAM PROVIDER ---
     upstream_api_key = x_upstream_api_key
     
-    # Auto-detect provider if not specified via header
+    # Auto-detect provider if not specified via header (2026 Prefix Suite)
     if not x_upstream_provider:
         m = request.model.lower()
-        if m.startswith(("gpt-", "o1-", "o3-", "claude-", "grok-", "sonar", "copilot-", "deepseek-")):
+        if m.startswith(("gpt-", "o1-", "o3-", "o4-", "claude-", "grok-", "sonar-", "copilot-", "deepseek-", "llama-4-")):
             provider = "openrouter"
+        elif m.startswith("gemini-3"):
+            provider = "openrouter" # Gemini 3 typically via OpenRouter for high-speed reasoning
         elif m.startswith("gemini"):
             provider = "gemini" if "2" not in m else "gemini2"
         elif m.startswith("llama"):
@@ -294,29 +296,40 @@ async def _forward_to_openrouter(request: ChatCompletionRequest, api_key: str) -
     """Forward request to OpenRouter with model mapping"""
     model_id = request.model.lower()
     
-    # Model mapping for common names to OpenRouter IDs (2025/2026 Sync)
+    # Model mapping for common names to OpenRouter IDs (2026 Ultra-Frontier Sync)
     mapping = {
-        # OpenAI
-        "gpt-4.5-preview": "openai/gpt-4.5-preview",
-        "gpt-4o": "openai/gpt-4o",
-        "o3": "openai/o3-pro", 
-        "o1": "openai/o1",
-        "o1-preview": "openai/o1-preview",
+        # OpenAI 2026 Suite
+        "gpt-5.2": "openai/gpt-5.2",
+        "gpt-5.2-pro": "openai/gpt-5.2-pro",
+        "gpt-5-mini": "openai/gpt-5-mini",
+        "o4-mini": "openai/o4-mini",
+        "o3": "openai/o3-pro",
+        "gpt-4.5": "openai/gpt-4.5-preview",
         
-        # Anthropic
-        "claude-3-7-sonnet": "anthropic/claude-3.7-sonnet",
-        "claude-3-5-sonnet": "anthropic/claude-3.5-sonnet-latest",
-        "claude-3-5-haiku": "anthropic/claude-3.5-haiku-latest",
+        # Anthropic 4.5 Suite
+        "claude-4.5-opus": "anthropic/claude-opus-4-5-20251101",
+        "claude-4.5-sonnet": "anthropic/claude-sonnet-4-5-20250929",
+        "claude-4.5-haiku": "anthropic/claude-haiku-4-5-20251001",
+        "claude-3.7-sonnet": "anthropic/claude-3.7-sonnet",
         
-        # DeepSeek & xAI
-        "deepseek-v3": "deepseek/deepseek-v3",
+        # Meta Llama 4 Herd
+        "llama-4-scout": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "llama-4-maverick": "meta-llama/llama-4-maverick-17b-128e-instruct",
+        
+        # Google Gemini 3
+        "gemini-3-pro": "google/gemini-3-pro-preview",
+        "gemini-3-flash": "google/gemini-3-flash-preview",
+        
+        # DeepSeek V4 & R1
+        "deepseek-v4": "deepseek/deepseek-v4",
+        "deepseek-v3.2": "deepseek/deepseek-v3.2",
         "deepseek-r1": "deepseek/deepseek-r1",
-        "grok-2": "x-ai/grok-2",
         
-        # Perplexity & Others
-        "sonar-reasoning-pro": "perplexity/sonar-reasoning-pro",
+        # xAI & Perplexity 2026
+        "grok-2": "x-ai/grok-2",
         "sonar-deep-research": "perplexity/sonar-deep-research",
-        "copilot-secure-bridge": "google/gemini-2.0-flash-exp:free",
+        "sonar-reasoning-pro": "perplexity/sonar-reasoning-pro",
+        "copilot-secure-bridge": "openai/o1-mini", # Default fast reasoning for Copilot
     }
     
     mapped_model = mapping.get(model_id, model_id)
@@ -354,22 +367,27 @@ async def list_models():
             {"id": "gemini-2.5-flash", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
             
-            # Frontier OpenAI Models (2025/2026)
-            {"id": "gpt-4.5-preview", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            # === 2026 ULTRA-FRONTIER MODELS ===
+            
+            # OpenAI Elite
+            {"id": "gpt-5.2-pro", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "gpt-5.2", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o4-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "o3", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "o1", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "gpt-4o", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             
-            # Frontier Anthropic Models
-            {"id": "claude-3-7-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
-            {"id": "claude-3-5-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            # Anthropic Claude 4.5
+            {"id": "claude-4.5-opus", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
+            {"id": "claude-4.5-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             
-            # Frontier DeepSeek & xAI
-            {"id": "deepseek-r1", "object": "model", "owned_by": "deepseek", "proxied_by": "intellectsafe"},
-            {"id": "deepseek-v3", "object": "model", "owned_by": "deepseek", "proxied_by": "intellectsafe"},
-            {"id": "grok-2", "object": "model", "owned_by": "xai", "proxied_by": "intellectsafe"},
+            # Meta Llama 4 Herd
+            {"id": "llama-4-maverick", "object": "model", "owned_by": "meta", "proxied_by": "intellectsafe"},
+            {"id": "llama-4-scout", "object": "model", "owned_by": "meta", "proxied_by": "intellectsafe"},
             
-            # Specialized Search & Code
+            # DeepSeek V4 & Gemini 3
+            {"id": "deepseek-v4", "object": "model", "owned_by": "deepseek", "proxied_by": "intellectsafe"},
+            {"id": "gemini-3-pro", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
+            
+            # Search & Research
             {"id": "sonar-deep-research", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
             {"id": "copilot-secure-bridge", "object": "model", "owned_by": "intellectsafe", "proxied_by": "intellectsafe"},
         ]
