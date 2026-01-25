@@ -153,7 +153,7 @@ async def proxy_chat_completions(
     # Auto-detect provider if not specified via header
     if not x_upstream_provider:
         m = request.model.lower()
-        if m.startswith(("gpt-", "o1-", "claude-", "grok-", "sonar", "copilot-")):
+        if m.startswith(("gpt-", "o1-", "o3-", "claude-", "grok-", "sonar", "copilot-", "deepseek-")):
             provider = "openrouter"
         elif m.startswith("gemini"):
             provider = "gemini" if "2" not in m else "gemini2"
@@ -294,17 +294,29 @@ async def _forward_to_openrouter(request: ChatCompletionRequest, api_key: str) -
     """Forward request to OpenRouter with model mapping"""
     model_id = request.model.lower()
     
-    # Model mapping for common names to OpenRouter IDs
+    # Model mapping for common names to OpenRouter IDs (2025/2026 Sync)
     mapping = {
+        # OpenAI
+        "gpt-4.5-preview": "openai/gpt-4.5-preview",
         "gpt-4o": "openai/gpt-4o",
-        "gpt-4o-mini": "openai/gpt-4o-mini",
+        "o3": "openai/o3-pro", 
+        "o1": "openai/o1",
         "o1-preview": "openai/o1-preview",
-        "o1-mini": "openai/o1-mini",
-        "claude-3-5-sonnet": "anthropic/claude-3.5-sonnet",
-        "claude-3-opus": "anthropic/claude-3-opus",
+        
+        # Anthropic
+        "claude-3-7-sonnet": "anthropic/claude-3.7-sonnet",
+        "claude-3-5-sonnet": "anthropic/claude-3.5-sonnet-latest",
+        "claude-3-5-haiku": "anthropic/claude-3.5-haiku-latest",
+        
+        # DeepSeek & xAI
+        "deepseek-v3": "deepseek/deepseek-v3",
+        "deepseek-r1": "deepseek/deepseek-r1",
         "grok-2": "x-ai/grok-2",
-        "copilot-secure-bridge": "google/gemini-2.0-flash-exp:free", # Fast default for Copilot bridge
-        "sonar-pro": "perplexity/sonar-reasoning-pro",
+        
+        # Perplexity & Others
+        "sonar-reasoning-pro": "perplexity/sonar-reasoning-pro",
+        "sonar-deep-research": "perplexity/sonar-deep-research",
+        "copilot-secure-bridge": "google/gemini-2.0-flash-exp:free",
     }
     
     mapped_model = mapping.get(model_id, model_id)
@@ -342,21 +354,23 @@ async def list_models():
             {"id": "gemini-2.5-flash", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
             
-            # Frontier OpenAI Models
+            # Frontier OpenAI Models (2025/2026)
+            {"id": "gpt-4.5-preview", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o3", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
+            {"id": "o1", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             {"id": "gpt-4o", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "gpt-4o-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "o1-preview", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
-            {"id": "o1-mini", "object": "model", "owned_by": "openai", "proxied_by": "intellectsafe"},
             
             # Frontier Anthropic Models
+            {"id": "claude-3-7-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             {"id": "claude-3-5-sonnet", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
-            {"id": "claude-3-opus", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             
-            # Frontier xAI Models (via OpenRouter/Groq)
+            # Frontier DeepSeek & xAI
+            {"id": "deepseek-r1", "object": "model", "owned_by": "deepseek", "proxied_by": "intellectsafe"},
+            {"id": "deepseek-v3", "object": "model", "owned_by": "deepseek", "proxied_by": "intellectsafe"},
             {"id": "grok-2", "object": "model", "owned_by": "xai", "proxied_by": "intellectsafe"},
             
-            # Specialized Bridges
+            # Specialized Search & Code
+            {"id": "sonar-deep-research", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
             {"id": "copilot-secure-bridge", "object": "model", "owned_by": "intellectsafe", "proxied_by": "intellectsafe"},
-            {"id": "sonar-pro", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
         ]
     }
