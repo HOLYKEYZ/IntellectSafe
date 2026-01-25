@@ -71,7 +71,7 @@ IntellectSafe acts as a universal safety layer. Connect any major AI client and 
 | **OpenAI** | `gpt-4o`, `o1-mini` |
 | **Groq** | `llama-3.3-70b-versatile` |
 | **Anthropic** | `claude-3-5-sonnet-20241022` |
-| **Google** | `gemini-1.5-pro`, `gemini-2.0-flash-exp` |
+| **Google** | `gemini-2.5-flash`, `gemini-1.5-pro` |
 | **Perplexity** | `sonar`, `sonar-pro` |
 
 #### Integration Example

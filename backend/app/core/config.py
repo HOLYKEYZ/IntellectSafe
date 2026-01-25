@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
 
     GOOGLE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"))
-    GEMINI_MODEL: str = "gemini-1.5-pro"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     GEMINI_TIMEOUT: int = 30
 
     DEEPSEEK_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("DEEPSEEK_API_KEY"))

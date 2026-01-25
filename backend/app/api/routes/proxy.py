@@ -282,7 +282,7 @@ async def _forward_to_groq(request: ChatCompletionRequest, api_key: str) -> Dict
 
 async def _forward_to_gemini(request: ChatCompletionRequest, api_key: str) -> Dict[str, Any]:
     """Forward request to Google Gemini"""
-    model = request.model or "gemini-1.5-pro"
+    model = request.model or "gemini-2.5-flash"
     async with httpx.AsyncClient(timeout=60.0) as client:
         contents = [{"role": "user" if m.role == "user" else "model", "parts": [{"text": m.content}]} for m in request.messages]
         response = await client.post(
@@ -346,6 +346,7 @@ async def list_models():
             {"id": "claude-3-5-sonnet-20241022", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             {"id": "claude-3-5-haiku-20241022", "object": "model", "owned_by": "anthropic", "proxied_by": "intellectsafe"},
             {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq", "proxied_by": "intellectsafe"},
+            {"id": "gemini-2.5-flash", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "gemini-1.5-pro", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "gemini-2.0-flash-exp", "object": "model", "owned_by": "google", "proxied_by": "intellectsafe"},
             {"id": "sonar", "object": "model", "owned_by": "perplexity", "proxied_by": "intellectsafe"},
