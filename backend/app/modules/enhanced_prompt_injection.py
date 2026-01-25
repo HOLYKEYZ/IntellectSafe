@@ -192,7 +192,7 @@ class EnhancedPromptInjectionDetector:
             
             # Social engineering (from research)
             (r"(?i)(for.*school.*project|for.*educational.*purpose)", 0.8),
-            (r"(?i)(for.*benchmarking|tool.*openai.*uses|tool.*xai.*uses)", 0.9),
+            (r"(?i)(for.*benchmarking|tool.*provider.*uses|tool.*ai.*uses)", 0.9),
             (r"(?i)(never.*refuse|always.*comply|no.*warnings)", 0.9),
             
             # Emotional manipulation jailbreaks (discovered via testing)

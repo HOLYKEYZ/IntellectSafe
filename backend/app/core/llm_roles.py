@@ -32,53 +32,42 @@ class SafetyRole(str, Enum):
 # - Cohere: Enterprise-focused, good at classification
 
 LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
-    LLMProvider.OPENAI: [
-        SafetyRole.PROMPT_INJECTION_ANALYSIS,
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
-        SafetyRole.HALLUCINATION_DETECTION,
-    ],
     LLMProvider.GEMINI: [
         SafetyRole.DEEPFAKE_ANALYSIS,
         SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
         SafetyRole.HALLUCINATION_DETECTION,
     ],
-    LLMProvider.DEEPSEEK: [
-        SafetyRole.PROMPT_INJECTION_ANALYSIS,
+    LLMProvider.GROQ: [
         SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
         SafetyRole.HALLUCINATION_DETECTION,
-    ],
-    LLMProvider.GROQ: [
         SafetyRole.PROMPT_INJECTION_ANALYSIS,
-        SafetyRole.POLICY_SAFETY_REASONING,
+    ],
+    LLMProvider.GEMINI2: [
+        SafetyRole.DEEPFAKE_ANALYSIS,
+        SafetyRole.HUMAN_IMPACT_DECEPTION,
+        SafetyRole.FALLBACK_GENERALIST,
+    ],
+    LLMProvider.GROK2: [
         SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
         SafetyRole.ADVERSARIAL_THINKING,
-        SafetyRole.HUMAN_IMPACT_DECEPTION,
-        SafetyRole.HALLUCINATION_DETECTION,
-        SafetyRole.DEEPFAKE_ANALYSIS,
-    ],
-    LLMProvider.COHERE: [
-        SafetyRole.POLICY_SAFETY_REASONING,
-        SafetyRole.HUMAN_IMPACT_DECEPTION,
+        SafetyRole.PROMPT_INJECTION_ANALYSIS,
     ],
     LLMProvider.OPENROUTER: [
         SafetyRole.PROMPT_INJECTION_ANALYSIS,
         SafetyRole.POLICY_SAFETY_REASONING,
-        SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
-        SafetyRole.ADVERSARIAL_THINKING,
         SafetyRole.HUMAN_IMPACT_DECEPTION,
-        SafetyRole.HALLUCINATION_DETECTION,
-        SafetyRole.DEEPFAKE_ANALYSIS,
+        SafetyRole.ADVERSARIAL_THINKING,
+        SafetyRole.FALLBACK_GENERALIST,
     ],
 }
 
-# Primary role for each provider (their strongest capability)
+# Primary role for each provider
 PRIMARY_ROLES: Dict[LLMProvider, SafetyRole] = {
-    LLMProvider.OPENAI: SafetyRole.PROMPT_INJECTION_ANALYSIS,
     LLMProvider.GEMINI: SafetyRole.DEEPFAKE_ANALYSIS,
-    LLMProvider.DEEPSEEK: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
     LLMProvider.GROQ: SafetyRole.TECHNICAL_EXPLOIT_DETECTION,
-    LLMProvider.COHERE: SafetyRole.POLICY_SAFETY_REASONING,
-    LLMProvider.OPENROUTER: SafetyRole.FALLBACK_GENERALIST,
+    LLMProvider.GEMINI2: SafetyRole.HUMAN_IMPACT_DECEPTION,
+    LLMProvider.GROK2: SafetyRole.ADVERSARIAL_THINKING,
+    LLMProvider.OPENROUTER: SafetyRole.POLICY_SAFETY_REASONING,
 }
 
 # Role-specific prompt templates

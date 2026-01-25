@@ -53,12 +53,10 @@ class ModuleType(str, Enum):
 
 class LLMProvider(str, Enum):
     """Supported LLM providers"""
-    OPENAI = "openai"
-
     GEMINI = "gemini"
-    DEEPSEEK = "deepseek"
     GROQ = "groq"
-    COHERE = "cohere"
+    GEMINI2 = "gemini2"
+    GROK2 = "grok2"
     OPENROUTER = "openrouter"
 
 

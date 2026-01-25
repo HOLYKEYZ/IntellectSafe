@@ -46,28 +46,23 @@ class Settings(BaseSettings):
     REDIS_RATE_LIMIT_DB: int = 3
 
     # LLM Providers
-    OPENAI_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("OPENAI_API_KEY", "OPEN_AI_API_KEY"))
-    OPENAI_MODEL: str = "gpt-4o"
-    OPENAI_TIMEOUT: int = 30
-
-
-    GOOGLE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"))
+    GEMINI_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GEMINI_API_KEY"))
     GEMINI_MODEL: str = "gemini-2.5-flash"
     GEMINI_TIMEOUT: int = 30
-
-    DEEPSEEK_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("DEEPSEEK_API_KEY"))
-    DEEPSEEK_MODEL: str = "deepseek-chat"
-    DEEPSEEK_TIMEOUT: int = 30
 
     GROQ_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GROQ_API_KEY", "GROK_API_KEY"))
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GROQ_TIMEOUT: int = 30
 
-    COHERE_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("COHERE_API_KEY", "COHERE_AI_API_KEY"))
-    COHERE_MODEL: str = "command-r"
-    COHERE_TIMEOUT: int = 30
+    GEMINI2_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GEMINI2_API_KEY"))
+    GEMINI2_MODEL: str = "gemini-2.5-flash"
+    GEMINI2_TIMEOUT: int = 30
 
-    OPENROUTER_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("FALLBACK_API_KEY", "OPENROUTER_API_KEY"))
+    GROK2_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GROK2_API_KEY"))
+    GROK2_MODEL: str = "llama-3.3-70b-versatile"
+    GROK2_TIMEOUT: int = 30
+
+    OPENROUTER_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("OPEN_ROUTER_KEY", "OPENROUTER_API_KEY"))
     OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
     OPENROUTER_TIMEOUT: int = 30
 

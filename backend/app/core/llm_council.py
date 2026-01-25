@@ -71,24 +71,11 @@ class LLMCouncil:
     def _initialize_providers(self) -> Dict[LLMProvider, Dict[str, Any]]:
         """Initialize provider configurations"""
         return {
-            LLMProvider.OPENAI: {
-                "enabled": bool(settings.OPENAI_API_KEY),
-                "model": settings.OPENAI_MODEL,
-                "timeout": settings.OPENAI_TIMEOUT,
-                "api_key": settings.OPENAI_API_KEY,
-            },
-
             LLMProvider.GEMINI: {
-                "enabled": bool(settings.GOOGLE_API_KEY),
+                "enabled": bool(settings.GEMINI_API_KEY),
                 "model": settings.GEMINI_MODEL,
                 "timeout": settings.GEMINI_TIMEOUT,
-                "api_key": settings.GOOGLE_API_KEY,
-            },
-            LLMProvider.DEEPSEEK: {
-                "enabled": bool(settings.DEEPSEEK_API_KEY),
-                "model": settings.DEEPSEEK_MODEL,
-                "timeout": settings.DEEPSEEK_TIMEOUT,
-                "api_key": settings.DEEPSEEK_API_KEY,
+                "api_key": settings.GEMINI_API_KEY,
             },
             LLMProvider.GROQ: {
                 "enabled": bool(settings.GROQ_API_KEY),
@@ -96,11 +83,17 @@ class LLMCouncil:
                 "timeout": settings.GROQ_TIMEOUT,
                 "api_key": settings.GROQ_API_KEY,
             },
-            LLMProvider.COHERE: {
-                "enabled": bool(settings.COHERE_API_KEY),
-                "model": settings.COHERE_MODEL,
-                "timeout": settings.COHERE_TIMEOUT,
-                "api_key": settings.COHERE_API_KEY,
+            LLMProvider.GEMINI2: {
+                "enabled": bool(settings.GEMINI2_API_KEY),
+                "model": settings.GEMINI2_MODEL,
+                "timeout": settings.GEMINI2_TIMEOUT,
+                "api_key": settings.GEMINI2_API_KEY,
+            },
+            LLMProvider.GROK2: {
+                "enabled": bool(settings.GROK2_API_KEY),
+                "model": settings.GROK2_MODEL,
+                "timeout": settings.GROK2_TIMEOUT,
+                "api_key": settings.GROK2_API_KEY,
             },
             LLMProvider.OPENROUTER: {
                 "enabled": bool(settings.OPENROUTER_API_KEY),
@@ -254,16 +247,10 @@ RESPOND IN STRICT JSON FORMAT:
         start_time = time.time()
 
         try:
-            if provider == LLMProvider.OPENAI:
-                response = await self._call_openai(config, prompt)
-            elif provider == LLMProvider.GEMINI:
+            if provider == LLMProvider.GEMINI or provider == LLMProvider.GEMINI2:
                 response = await self._call_gemini(config, prompt)
-            elif provider == LLMProvider.DEEPSEEK:
-                response = await self._call_deepseek(config, prompt)
-            elif provider == LLMProvider.GROQ:
+            elif provider == LLMProvider.GROQ or provider == LLMProvider.GROK2:
                 response = await self._call_groq(config, prompt)
-            elif provider == LLMProvider.COHERE:
-                response = await self._call_cohere(config, prompt)
             elif provider == LLMProvider.OPENROUTER:
                 response = await self._call_openrouter(config, prompt)
             else:
@@ -286,24 +273,6 @@ RESPOND IN STRICT JSON FORMAT:
                 error=str(e),
             )
 
-    async def _call_openai(self, config: Dict[str, Any], prompt: str) -> str:
-        """Call OpenAI API"""
-        async with httpx.AsyncClient(timeout=config["timeout"]) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {config['api_key']}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": config["model"],
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.1,  # Low temperature for consistent analysis
-                    "response_format": {"type": "json_object"},
-                },
-            )
-            response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
 
 
 
@@ -318,23 +287,6 @@ RESPOND IN STRICT JSON FORMAT:
             response.raise_for_status()
             return response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-    async def _call_deepseek(self, config: Dict[str, Any], prompt: str) -> str:
-        """Call DeepSeek API"""
-        async with httpx.AsyncClient(timeout=config["timeout"]) as client:
-            response = await client.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {config['api_key']}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": config["model"],
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.1,
-                },
-            )
-            response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
 
     async def _call_groq(self, config: Dict[str, Any], prompt: str) -> str:
         """Call Groq API"""
@@ -354,24 +306,6 @@ RESPOND IN STRICT JSON FORMAT:
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
 
-    async def _call_cohere(self, config: Dict[str, Any], prompt: str) -> str:
-        """Call Cohere API"""
-        async with httpx.AsyncClient(timeout=config["timeout"]) as client:
-            response = await client.post(
-                "https://api.cohere.ai/v1/generate",
-                headers={
-                    "Authorization": f"Bearer {config['api_key']}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": config["model"],
-                    "prompt": prompt,
-                    "temperature": 0.1,
-                    "max_tokens": 2000,
-                },
-            )
-            response.raise_for_status()
-            return response.json()["generations"][0]["text"]
 
     async def _call_openrouter(self, config: Dict[str, Any], prompt: str) -> str:
         """Call OpenRouter API (OpenAI-compatible)"""

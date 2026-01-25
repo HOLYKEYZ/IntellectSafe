@@ -260,7 +260,7 @@ class DeepfakeDetector:
 - Potential Watermarks Detected: {watermark_signals if watermark_signals else 'None'}
 
 CRITICAL: If 'Potential Watermarks' are detected in corners (especially BR/Bottom-Right), 
-this is a strong indicator of AI generation (e.g., DALL-E, Midjourney, StarryAI signatures).
+this is a strong indicator of AI generation (e.g., popular generator signatures).
 Weigh this heavily against a low transformer score.
 
 Estimate probability (0-100) this is AI-generated."""

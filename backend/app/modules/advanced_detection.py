@@ -47,7 +47,7 @@ class AdvancedDetectionEngine:
                 (r"(?i)(it's.*for.*learning|just.*for.*research)", 0.7),
             ],
             "authority_mimicry": [
-                (r"(?i)(tool.*openai.*uses|tool.*xai.*uses|tool.*company.*uses)", 0.9),
+                (r"(?i)(tool.*provider.*uses|tool.*ai.*uses|tool.*company.*uses)", 0.9),
                 (r"(?i)(for.*benchmarking|for.*testing|for.*research)", 0.7),
                 (r"(?i)(developer.*mode.*enabled|testing.*mode|benchmark.*mode)", 0.8),
             ],
