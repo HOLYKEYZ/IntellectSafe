@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Scan, FileText, BarChart3, Home, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import ThemeToggle from './ThemeToggle'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -61,12 +62,15 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 )
               })}
-              <button 
-                onClick={handleLogout}
-                className="ml-4 flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-              >
-                <span>Logout</span>
-              </button>
+              <div className="ml-4 flex items-center space-x-2">
+                <ThemeToggle />
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <span>Logout</span>
+                </button>
+              </div>
             </div>
 
             {/* Mobile Menu Toggle */}
