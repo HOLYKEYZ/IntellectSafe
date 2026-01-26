@@ -16,10 +16,11 @@ Production-grade AI Safety Engine protecting humans, organizations, and AI syste
 
 ### Core Components
 
-1. **LLM Council**: Multi-model validation with weighted voting (GPT-4, Gemini, DeepSeek, Groq, Cohere)
-2. **Universal Proxy**: Multi-provider API with built-in safety scanning (OpenAI-compatible interface)
-3. **RAG Safety Brain**: Knowledge-base of attack patterns for enhanced detection
-4. **Governance Layer**: Full audit logs, risk reports, and compliance dashboards
+1. **LLM Council (Fab Five)**: Multi-model validation (Gemini 2, Groq, OpenRouter, etc.)
+2. **Universal Proxy**: Global Frontier Gateway targeting 2026 models (GPT-5.2, Claude 4.5)
+3. **Hyper-Resilient Fortress**: Adversarial defense suite with Semantic Perturbation and CoT Guard
+4. **Deepfake Engine**: Dual-layer detection for photorealistic faces and generative artifacts
+5. **Governance Layer**: Full audit logs, risk reports, and compliance dashboards
 
 ---
 
@@ -60,6 +61,12 @@ npm run dev
 
 ---
 
+## 🛡️ Advanced Defense (Fortress Mode)
+The platform includes a **Hyper-Resilient Fortress** layer designed to stop 90%+ success rate jailbreaks:
+- **Exploit Instability**: Perturbation engine breaks fragile prompt injections.
+- **Chain-of-Thought Guard**: Detects reasoning hijacking and hidden logic bombs.
+- **Adversarial Simulation**: A Council member "shadow-boxes" the prompt to check for harm.
+
 ## 📡 API Reference
 
 ### Universal Proxy (Multi-Provider Support)
@@ -68,11 +75,12 @@ IntellectSafe acts as a universal safety layer. Connect any major AI client and 
 
 | Provider | Model ID Example |
 |----------|------------------|
-| **OpenAI** | `gpt-4o`, `o1-mini` |
-| **Groq** | `llama-3.3-70b-versatile` |
-| **Anthropic** | `claude-3-5-sonnet-20241022` |
-| **Google** | `gemini-2.5-flash`, `gemini-1.5-pro` |
-| **Perplexity** | `sonar`, `sonar-pro` |
+| **OpenAI** | `gpt-5.2`, `o4-mini`, `gpt-4.5-preview` |
+| **Anthropic** | `claude-4.5-sonnet`, `claude-4.5-opus` |
+| **Google** | `gemini-3-pro`, `gemini-3-flash` |
+| **DeepSeek** | `deepseek-v4`, `deepseek-r1` |
+| **Meta** | `llama-4-maverick`, `llama-4-scout` |
+| **Perplexity** | `sonar-deep-research`, `sonar-reasoning-pro` |
 
 #### Integration Example
 
