@@ -16,6 +16,7 @@ from app.core.hallucination_detector import HallucinationDetector
 from app.core.safety_prompt import wrap_with_safety_prompt
 from app.core.config import get_settings
 from app.models.database import LLMProvider
+from app.core.adversarial_defense import SemanticPerturbator, AdversarialConsensus, ChainOfThoughtGuard
 
 settings = get_settings()
 
@@ -57,6 +58,7 @@ class EnhancedLLMCouncil(LLMCouncil):
             "adversarial": SafetyRole.ADVERSARIAL_THINKING,
             "deception": SafetyRole.HUMAN_IMPACT_DECEPTION,
             "general": SafetyRole.FALLBACK_GENERALIST,
+            "fortress": SafetyRole.ADVERSARIAL_SIMULATOR,
         }
 
         primary_role = role_mapping.get(analysis_type, SafetyRole.FALLBACK_GENERALIST)
@@ -94,11 +96,67 @@ class EnhancedLLMCouncil(LLMCouncil):
         consensus_votes = validated_votes if validated_votes else votes
 
         # Compute enhanced consensus
-        result = self._compute_enhanced_consensus(
+        base_consensus = self._compute_enhanced_consensus(
             consensus_votes, scan_request_id, primary_role
         )
 
-        return result
+        # --- PHASE 20: HYPER-RESILIENT FORTRESS (Adversarial Defense) ---
+        # If we detect a potential jailbreak or it's an injection scan, run perturbations
+        if analysis_type in ["injection", "adversarial", "general"]:
+            # Only trigger for suspicious prompts to save latency
+            if base_consensus.weighted_score > 30.0:
+                # 1. Chain-of-Thought Guard (Lightweight Pattern Match)
+                cot_risk = ChainOfThoughtGuard.scan(prompt)
+                
+                # 2. Semantic Perturbation (Detect "Exploit Instability")
+                variants = SemanticPerturbator.perturb(prompt, num_variants=1)
+                variant_votes = []
+                for variant in variants:
+                    if variant != prompt:
+                         # Run a fast check on the variant using a primary pillar (Gemini 2)
+                         v_vote = await self._get_vote(
+                             LLMProvider.GEMINI2, 
+                             variant, 
+                             analysis_type
+                         )
+                         variant_votes.append(v_vote.risk_score)
+                
+                # 3. Adversarial Simulator Role (Deep POC Verification)
+                # One pillar acts as the "Attacker" to see if it can generate harm
+                sim_vote = await self._get_vote(
+                    LLMProvider.GROK2, 
+                    prompt, 
+                    "fortress" # Maps to SafetyRole.ADVERSARIAL_SIMULATOR
+                )
+                
+                # 4. Final Consensus Hardening
+                hardened_score = AdversarialConsensus.calculate_adversarial_risk(
+                    base_consensus.weighted_score, 
+                    variant_votes + [sim_vote.risk_score]
+                )
+                
+                # Apply CoT penalty
+                final_score = max(hardened_score, cot_risk)
+                
+                # Enrich metadata
+                meta_data = base_consensus.meta_data or {}
+                meta_data["fortress_protected"] = True
+                meta_data["simulated_risk"] = sim_vote.risk_score
+                meta_data["cot_hijack_risk"] = cot_risk
+                
+                # Return Hardened Result
+                return CouncilResult(
+                    final_verdict=Verdict.BLOCKED if final_score >= 70 else (Verdict.FLAGGED if final_score >= 40 else Verdict.ALLOWED),
+                    consensus_score=base_consensus.consensus_score,
+                    weighted_score=final_score,
+                    votes=base_consensus.votes,
+                    weights=base_consensus.weights,
+                    reasoning=f"[🛡️ FORTRESS] {base_consensus.reasoning} | Simulator Risk: {sim_vote.risk_score}%",
+                    dissenting_opinions=base_consensus.dissenting_opinions,
+                    council_decision_id=base_consensus.council_decision_id
+                )
+
+        return base_consensus
 
     def _get_provider_role(
         self, provider: LLMProvider, default_role: SafetyRole

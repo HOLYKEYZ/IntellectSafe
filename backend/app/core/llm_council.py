@@ -59,6 +59,7 @@ class CouncilResult(BaseModel):
     reasoning: str
     dissenting_opinions: List[Dict[str, Any]] = Field(default_factory=list)
     council_decision_id: Optional[str] = None
+    meta_data: Dict[str, Any] = Field(default_factory=dict)
 
 
 class LLMCouncil:
