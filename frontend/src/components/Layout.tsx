@@ -34,9 +34,9 @@ export default function Layout({ children }: LayoutProps) {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 flex items-center justify-center">
-                 <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain filter brightness-0" />
+                 <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain filter brightness-0 dark:invert" />
               </div>
               <span className="text-xl font-bold">IntellectSafe</span>
             </div>

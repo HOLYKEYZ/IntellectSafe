@@ -47,7 +47,7 @@ export default function Reports() {
               onChange={(e) => setDays(Number(e.target.value))}
               min={1}
               max={365}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md bg-background text-foreground"
             />
           </div>
           <Button onClick={fetchReport} disabled={loading}>
