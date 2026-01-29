@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, FileText, Image as ImageIcon, Video, Mic, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, Video, Mic, AlertTriangle } from 'lucide-react';
 import { scanContent, ScanResponse } from '../lib/api';
 
 const DeepfakeScan = () => {
