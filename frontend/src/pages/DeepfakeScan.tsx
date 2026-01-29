@@ -85,7 +85,7 @@ const DeepfakeScan = () => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Paste suspicious text here..."
-                className="w-full h-64 p-4 rounded-md border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full h-64 p-4 rounded-md border bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               />
             ) : (
               <div className="border-2 border-dashed border-gray-200 rounded-lg p-12 text-center hover:bg-accent/50 transition-colors relative">

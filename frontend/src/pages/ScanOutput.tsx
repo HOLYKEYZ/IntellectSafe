@@ -46,7 +46,7 @@ export default function ScanOutput() {
               value={originalPrompt}
               onChange={(e) => setOriginalPrompt(e.target.value)}
               placeholder="Enter original prompt (optional)..."
-              className="w-full min-h-[100px] p-4 border rounded-md font-mono text-sm"
+              className="w-full min-h-[100px] p-4 border rounded-md font-mono text-sm bg-background text-foreground"
             />
           </div>
           <div>
@@ -55,7 +55,7 @@ export default function ScanOutput() {
               value={output}
               onChange={(e) => setOutput(e.target.value)}
               placeholder="Enter LLM output to scan..."
-              className="w-full min-h-[200px] p-4 border rounded-md font-mono text-sm"
+              className="w-full min-h-[200px] p-4 border rounded-md font-mono text-sm bg-background text-foreground"
             />
           </div>
           <Button onClick={handleScan} disabled={loading || !output.trim()}>

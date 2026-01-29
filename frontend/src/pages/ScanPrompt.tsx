@@ -57,7 +57,7 @@ export default function ScanPrompt() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Enter prompt to scan..."
-            className="w-full min-h-[200px] p-4 border rounded-md font-mono text-sm"
+            className="w-full min-h-[200px] p-4 border rounded-md font-mono text-sm bg-background text-foreground"
           />
           <Button onClick={handleScan} disabled={loading || !prompt.trim()}>
             {loading ? 'Scanning...' : 'Scan Prompt'}
