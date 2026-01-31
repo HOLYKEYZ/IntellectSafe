@@ -107,5 +107,40 @@ export const getSafetyScore = async (days: number = 7) => {
   return response.data
 }
 
+// Auth API
+export interface LoginRequest {
+  username: string  // email
+  password: string
+}
+
+export interface SignupRequest {
+  email: string
+  password: string
+  full_name?: string
+}
+
+export interface AuthResponse {
+  access_token: string
+  token_type: string
+}
+
+export const login = async (request: LoginRequest): Promise<AuthResponse> => {
+  // OAuth2 form data format
+  const formData = new URLSearchParams()
+  formData.append('username', request.username)
+  formData.append('password', request.password)
+  
+  const response = await api.post<AuthResponse>('/auth/login', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  })
+  return response.data
+}
+
+export const signup = async (request: SignupRequest): Promise<any> => {
+  const response = await api.post('/auth/signup', request)
+  return response.data
+}
+
 export default api
+
 
