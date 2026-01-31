@@ -108,10 +108,12 @@ const Welcome = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide">
-          <button onClick={() => navigate('/login')} className="hover:text-zinc-500 transition-colors">Platform</button>
-          <button onClick={() => scrollToSection(docsRef)} className="hover:text-zinc-500 transition-colors">Documentation</button>
+          <button onClick={() => navigate('/dashboard')} className="hover:text-zinc-500 transition-colors">Dashboard</button>
+          <button onClick={() => navigate('/docs')} className="hover:text-zinc-500 transition-colors">Documentation</button>
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/docs`} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-500 transition-colors">API Docs</a>
           <button onClick={() => scrollToSection(researchRef)} className="hover:text-zinc-500 transition-colors">Research</button>
         </div>
+
         
         <div className="flex items-center gap-4">
            <button 

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
+
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20

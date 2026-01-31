@@ -13,10 +13,15 @@ const Docs = () => {
            </div>
            <span className="text-lg font-bold tracking-tight">IntellectSafe Docs</span>
         </div>
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-sm font-medium hover:text-zinc-600 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Home
-        </button>
+        <div className="flex items-center gap-6">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-sm font-medium hover:text-zinc-600 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Home
+          </button>
+          <button onClick={() => navigate('/dashboard')} className="text-sm font-medium hover:text-zinc-600 transition-colors">Dashboard</button>
+          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/docs`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-zinc-600 transition-colors">API Docs</a>
+        </div>
       </nav>
+
 
       <div className="flex pt-20 h-screen">
          {/* Sidebar */}

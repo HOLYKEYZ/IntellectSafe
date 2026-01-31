@@ -13,15 +13,16 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Home },
+    { path: '/', label: 'Home', icon: Home },
+    { path: '/dashboard', label: 'Dashboard', icon: Menu },
     { path: '/dashboard/scan/prompt', label: 'Scan Prompt', icon: Scan },
     { path: '/dashboard/scan/output', label: 'Scan Output', icon: Scan },
     { path: '/dashboard/deepfake', label: 'Deepfake Detector', icon: FileText },
-    { path: '/dashboard/audit/logs', label: 'Audit Logs', icon: FileText },
-    { path: '/dashboard/audit/risk-scores', label: 'Risk Scores', icon: BarChart3 },
-    { path: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
+    { path: '/docs', label: 'Docs', icon: FileText },
+    { path: `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/docs`, label: 'API Docs', icon: BarChart3, external: true },
     { path: '/dashboard/settings', label: 'Settings', icon: Menu },
   ]
+
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
@@ -46,22 +47,28 @@ export default function Layout({ children }: LayoutProps) {
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.path
+                const linkClasses = cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )
+                if (item.external) {
+                  return (
+                    <a key={item.path} href={item.path} target="_blank" rel="noopener noreferrer" className={linkClasses}>
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </a>
+                  )
+                }
                 return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
+                  <Link key={item.path} to={item.path} className={linkClasses}>
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
                   </Link>
                 )
               })}
+
               <div className="ml-4 flex items-center space-x-2">
                 <ThemeToggle />
                 <button 
@@ -89,23 +96,28 @@ export default function Layout({ children }: LayoutProps) {
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
+              const linkClasses = cn(
+                "flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )
+              if (item.external) {
+                return (
+                  <a key={item.path} href={item.path} target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className={linkClasses}>
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </a>
+                )
+              }
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
+                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={linkClasses}>
                   <Icon className="h-5 w-5" />
                   <span>{item.label}</span>
                 </Link>
               )
             })}
+
           </div>
         )}
       </nav>

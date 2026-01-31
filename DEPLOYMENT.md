@@ -31,6 +31,18 @@
     | `GROQ_API_KEY` | `<Your Groq API Key>` |
     | `OPENROUTER_API_KEY` | `<Your OpenRouter API Key>` |
 
+    **Using Neon Database?**
+    If you are using a Neon database, format your `DATABASE_URL` like this:
+    ```
+    postgresql://<user>:<password>@<host>/<database>?sslmode=require
+    ```
+    Example:
+    ```
+    postgresql://neondb_owner:npg_YOUR_PASSWORD@ep-super-shadow-xxxxx-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+    ```
+    > **Note:** Remove `channel_binding=require` from the psql connection string if present.
+
+
 ---
 
 ## Frontend → Vercel

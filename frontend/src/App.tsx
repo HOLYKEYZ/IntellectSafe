@@ -10,8 +10,10 @@ import Reports from './pages/Reports'
 import DeepfakeScan from './pages/DeepfakeScan'
 import Settings from './pages/Settings'
 import Welcome from './pages/Welcome'
+import Docs from './pages/Docs'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+
 
 
 function App() {
@@ -20,7 +22,9 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Welcome />} />
+        <Route path="/docs" element={<Docs />} />
         <Route path="/login" element={<Login />} />
+
         <Route path="/signup" element={<Signup />} />
 
         {/* Protected Dashboard Routes */}
