@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock, Activity, ChevronRight, Terminal, AlertTriangle, Eye, Server, Zap, BookOpen, Fingerprint, Book, Code, FileText, Database, Layout } from 'lucide-react';
+import { Shield, Lock, Activity, ChevronRight, Terminal, AlertTriangle, Eye, Zap, Fingerprint, Book, Code, Database } from 'lucide-react';
 
 const Welcome = () => {
   const navigate = useNavigate();

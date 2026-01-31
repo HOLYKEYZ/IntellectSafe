@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Book, Code, FileText, Database, Terminal } from 'lucide-react';
+import { ArrowLeft, Book, Code, Terminal } from 'lucide-react';
 
 const Docs = () => {
   const navigate = useNavigate();

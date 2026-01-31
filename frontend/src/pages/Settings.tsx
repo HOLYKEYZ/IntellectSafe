@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { Key, Shield, User, Copy, Check, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Key, User, Copy, Check, RefreshCw } from 'lucide-react';
+
 
 const Settings = () => {
   const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem('user_api_key'));

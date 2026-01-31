@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, AlertTriangle, Fingerprint, Lock, Zap, BookOpen } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Fingerprint, Zap, BookOpen } from 'lucide-react';
 
 const Research = () => {
   const navigate = useNavigate();
