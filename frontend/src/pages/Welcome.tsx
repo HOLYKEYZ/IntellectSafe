@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Activity, ChevronRight, Terminal, AlertTriangle, Eye, Zap, Fingerprint, Book, Code, Database } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -92,7 +93,7 @@ const Welcome = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white overflow-x-hidden relative">
+    <div className="min-h-screen bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900 overflow-x-hidden relative transition-colors">
       
       {/* Background Grid Pattern - Increased Opacity */}
       <div className="fixed inset-0 z-0 opacity-[0.08] pointer-events-none" 
@@ -100,7 +101,7 @@ const Welcome = () => {
       </div>
 
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-md border-b border-zinc-100' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800' : 'bg-transparent'}`}>
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
            <div className="w-12 h-12 flex items-center justify-center">
              <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain" />
@@ -116,18 +117,20 @@ const Welcome = () => {
 
         
         <div className="flex items-center gap-4">
+           <ThemeToggle />
            <button 
              onClick={() => navigate('/signup')} 
-             className="hidden md:block text-sm font-medium hover:text-zinc-600 transition-colors"
+             className="hidden md:block text-sm font-medium hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors"
            >
              Sign Up
            </button>
            <button 
              onClick={() => navigate('/login')}
-             className="bg-zinc-900 text-white px-5 py-2 text-sm font-medium hover:bg-zinc-800 transition-colors rounded-sm"
+             className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-5 py-2 text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors rounded-sm"
            >
              Login
            </button>
+
         </div>
       </nav>
 
