@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Production-grade AI Safety & Security Platform",
+    description="IntellectSafe - AI Safety & Security Platform",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,

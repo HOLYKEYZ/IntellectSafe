@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     """Application settings"""
 
     # App
-    APP_NAME: str = "AI Safety & Security Platform"
+    APP_NAME: str = "IntellectSafe"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     ENVIRONMENT: str = Field(default="production", env="ENVIRONMENT")
