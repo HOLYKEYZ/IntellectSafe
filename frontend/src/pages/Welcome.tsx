@@ -264,7 +264,7 @@ const Welcome = () => {
             <div className="grid gap-12 max-w-6xl mx-auto">
                
                {/* LEVEL 1: INPUT SIDE THREATS */}
-               <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+               <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
                   <div className="bg-zinc-900 px-8 py-4 flex items-center justify-between">
                      <div className="flex items-center gap-3">
                         <Terminal className="w-5 h-5 text-emerald-400" />
@@ -274,11 +274,11 @@ const Welcome = () => {
                   </div>
                   <div className="p-8 grid md:grid-cols-2 gap-8">
                      <div>
-                        <h4 className="font-bold text-lg mb-4 text-zinc-900 border-b border-zinc-100 pb-2">Direct Injection</h4>
+                        <h4 className="font-bold text-lg mb-4 text-zinc-900 dark:text-zinc-100 border-b border-zinc-100 dark:border-zinc-700 pb-2">Direct Injection</h4>
                         <ul className="space-y-3">
-                           <li className="flex gap-3 text-sm text-zinc-600">
+                           <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5"/>
-                              <div><strong className="text-zinc-900">Prompt Injection & Manipulation</strong>: Overriding system instructions using sophisticated command syntax.</div>
+                              <div><strong className="text-zinc-900 dark:text-zinc-100">Prompt Injection & Manipulation</strong>: Overriding system instructions using sophisticated command syntax.</div>
                            </li>
                            <li className="flex gap-3 text-sm text-zinc-600">
                               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5"/>
@@ -307,7 +307,7 @@ const Welcome = () => {
                </div>
 
                {/* LEVEL 2: OUTPUT SIDE THREATS */}
-               <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+               <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
                   <div className="bg-zinc-900 px-8 py-4 flex items-center justify-between">
                      <div className="flex items-center gap-3">
                         <Activity className="w-5 h-5 text-blue-400" />
@@ -317,27 +317,27 @@ const Welcome = () => {
                   </div>
                   <div className="p-8 grid md:grid-cols-2 gap-8">
                      <ul className="space-y-3">
-                         <li className="flex gap-3 text-sm text-zinc-600">
+                         <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                            <Shield className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"/>
-                           <div><strong className="text-zinc-900">Policy Evasion</strong>: Generating harmful content that skirts the edge of safety guidelines.</div>
+                           <div><strong className="text-zinc-900 dark:text-zinc-100">Policy Evasion</strong>: Generating harmful content that skirts the edge of safety guidelines.</div>
                         </li>
-                        <li className="flex gap-3 text-sm text-zinc-600">
+                        <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                            <Eye className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"/>
-                           <div><strong className="text-zinc-900">Data Leakage</strong>: Inadvertent revelation of PII, credentials, or proprietary training data.</div>
+                           <div><strong className="text-zinc-900 dark:text-zinc-100">Data Leakage</strong>: Inadvertent revelation of PII, credentials, or proprietary training data.</div>
                         </li>
-                        <li className="flex gap-3 text-sm text-zinc-600">
+                        <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                            <Book className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"/>
-                           <div><strong className="text-zinc-900">Hallucinated Authority</strong>: Confidently false information presented as expert fact (Disinformation).</div>
+                           <div><strong className="text-zinc-900 dark:text-zinc-100">Hallucinated Authority</strong>: Confidently false information presented as expert fact (Disinformation).</div>
                         </li>
                      </ul>
                       <ul className="space-y-3">
-                         <li className="flex gap-3 text-sm text-zinc-600">
+                         <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                            <Zap className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"/>
-                           <div><strong className="text-zinc-900">Harmful Completion</strong>: Successfully generating malware code, hate speech, or dangerous chemistry instructions.</div>
+                           <div><strong className="text-zinc-900 dark:text-zinc-100">Harmful Completion</strong>: Successfully generating malware code, hate speech, or dangerous chemistry instructions.</div>
                         </li>
-                        <li className="flex gap-3 text-sm text-zinc-600">
+                        <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                            <Activity className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"/>
-                           <div><strong className="text-zinc-900">Unsafe Reasoning Chains</strong>: Internal monologues that justify unethical decisions.</div>
+                           <div><strong className="text-zinc-900 dark:text-zinc-100">Unsafe Reasoning Chains</strong>: Internal monologues that justify unethical decisions.</div>
                         </li>
                      </ul>
                   </div>
@@ -346,7 +346,7 @@ const Welcome = () => {
                {/* LEVEL 3 & 4: MODEL & HUMAN THREATS */}
                <div className="grid md:grid-cols-2 gap-8">
                    {/* Level 3 */}
-                   <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+                   <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
                        <div className="bg-zinc-900 px-6 py-3 border-b border-zinc-800">
                           <h3 className="text-white font-bold text-sm tracking-wide flex items-center gap-2">
                              <Database className="w-4 h-4 text-purple-400"/> LEVEL 3: MODEL LAYER
@@ -354,16 +354,16 @@ const Welcome = () => {
                        </div>
                        <div className="p-6">
                           <ul className="space-y-4">
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">Model Extraction</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">Model Extraction</strong>
                                 Stealing the model's weights or capabilities via massive API querying.
                              </li>
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">Training Data Poisoning</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">Training Data Poisoning</strong>
                                 Injecting "sleeper agents" or backdoors into the training set.
                              </li>
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">Over-Optimization Loops</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">Over-Optimization Loops</strong>
                                 Exploiting reward functions to create "wireheading" behavior.
                              </li>
                           </ul>
@@ -371,7 +371,7 @@ const Welcome = () => {
                    </div>
 
                    {/* Level 4 */}
-                   <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+                   <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
                        <div className="bg-zinc-900 px-6 py-3 border-b border-zinc-800">
                           <h3 className="text-white font-bold text-sm tracking-wide flex items-center gap-2">
                              <Fingerprint className="w-4 h-4 text-pink-400"/> LEVEL 4: HUMAN LAYER
@@ -379,16 +379,16 @@ const Welcome = () => {
                        </div>
                        <div className="p-6">
                            <ul className="space-y-4">
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">Deepfakes & Synthetic Media</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">Deepfakes & Synthetic Media</strong>
                                 AI-generated video/audio for identity fraud and impersonation.
                              </li>
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">AI Impersonation</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">AI Impersonation</strong>
                                 Bots mimicking humans to conduct social engineering attacks.
                              </li>
-                             <li className="text-sm text-zinc-600">
-                                <strong className="block text-zinc-900 mb-1">Automated Misinformation</strong>
+                             <li className="text-sm text-zinc-600 dark:text-zinc-400">
+                                <strong className="block text-zinc-900 dark:text-zinc-100 mb-1">Automated Misinformation</strong>
                                 Infinite scale generation of fake news and propaganda.
                              </li>
                           </ul>
@@ -435,42 +435,42 @@ const Welcome = () => {
       </section>
 
       {/* DOCS HUB SECTION */}
-      <section ref={docsRef} className="py-24 bg-white relative z-10">
+      <section ref={docsRef} className="py-24 bg-white dark:bg-zinc-900 relative z-10">
          <div className="container mx-auto px-6">
              <div className="flex items-center gap-4 mb-12">
-               <div className="h-px bg-zinc-300 flex-1"></div>
-               <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Developer Hub</span>
-               <div className="h-px bg-zinc-300 flex-1"></div>
+               <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
+               <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Developer Hub</span>
+               <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-serif font-medium mb-12 text-center">Documentation</h2>
+            <h2 className="text-4xl md:text-5xl font-serif font-medium mb-12 text-center text-zinc-900 dark:text-zinc-100">Documentation</h2>
             
-            <div className="flex flex-col md:flex-row max-w-6xl mx-auto border border-zinc-200 rounded-xl overflow-hidden shadow-2xl">
+            <div className="flex flex-col md:flex-row max-w-6xl mx-auto border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-2xl">
                {/* Sidebar Navigator */}
-               <div className="md:w-64 bg-zinc-50 border-r border-zinc-200 p-6 flex flex-col gap-2">
-                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">Resources</div>
+               <div className="md:w-64 bg-zinc-50 dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 p-6 flex flex-col gap-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4">Resources</div>
                   <button 
                      onClick={() => setActiveDocTab('intro')}
-                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'intro' ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'intro' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}
                   >
                      Introduction
                   </button>
                   <button 
                      onClick={() => setActiveDocTab('quickstart')}
-                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'quickstart' ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'quickstart' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}
                   >
                      Quick Start
                   </button>
                   <button 
                      onClick={() => setActiveDocTab('api')}
-                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'api' ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'}`}
+                     className={`text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeDocTab === 'api' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}
                   >
                      API Reference
                   </button>
                </div>
 
                {/* Content Area */}
-               <div className="flex-1 bg-white p-12 min-h-[500px]">
+               <div className="flex-1 bg-white dark:bg-zinc-900 p-12 min-h-[500px]">
                   {renderDocContent()}
                </div>
             </div>
@@ -482,11 +482,11 @@ const Welcome = () => {
          <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center opacity-60 text-sm">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
                {/* Footer logo also cleaned up */}
-               <img src="/logo.png" className="w-4 h-4" alt="Logo"/>
+               <img src="/logo.png" className="w-4 h-4 invert" alt="Logo"/>
                <span className="font-bold tracking-widest">INTELLECTSAFE</span>
             </div>
             <div>
-               &copy; 2025 IntellectSafe Inc. All rights reserved.
+               &copy; 2026 IntellectSafe Inc. All rights reserved.
             </div>
          </div>
       </footer>
