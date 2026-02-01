@@ -34,8 +34,14 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans transition-colors">
-      {/* Top bar with theme toggle */}
-      <div className="flex justify-end p-4">
+      {/* Top bar with back button and theme toggle */}
+      <div className="flex justify-between p-4">
+        <button 
+          onClick={() => navigate('/')}
+          className="text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-1"
+        >
+          ← Back to Home
+        </button>
         <ThemeToggle />
       </div>
 

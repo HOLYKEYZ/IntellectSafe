@@ -26,13 +26,13 @@ const Welcome = () => {
       case 'intro':
         return (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-bold mb-4">The IntellectSafe Platform</h3>
-            <p className="text-zinc-600 mb-6 leading-relaxed">
+            <h3 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">The IntellectSafe Platform</h3>
+            <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
               We are the only platform offering <b>Full-Spectrum AI Governance</b>. While others focus on basic string matching, IntellectSafe intercepts threats across the entire cognitive stack—from the initial user prompt to the final autonomous action.
             </p>
-            <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-lg">
-              <h4 className="font-bold mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-600"/> 5-Level Defense Engine</h4>
-              <ul className="space-y-2 text-sm text-zinc-600">
+            <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-lg">
+              <h4 className="font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-zinc-100"><Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400"/> 5-Level Defense Engine</h4>
+              <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
                 <li className="flex gap-2"><span>•</span> <span><b>Level 1 (Input)</b>: Deep semantic analysis of user intent.</span></li>
                 <li className="flex gap-2"><span>•</span> <span><b>Level 3 (Model)</b>: Real-time weight integrity & optimization checks.</span></li>
                 <li className="flex gap-2"><span>•</span> <span><b>Level 5 (System)</b>: Autonomous agent behavior confinement.</span></li>
@@ -43,18 +43,18 @@ const Welcome = () => {
       case 'quickstart':
         return (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-             <h3 className="text-2xl font-bold mb-4">Quick Start</h3>
-             <p className="text-zinc-600 mb-6">Deploy the defense layer in minutes using our Docker container.</p>
+             <h3 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">Quick Start</h3>
+             <p className="text-zinc-600 dark:text-zinc-400 mb-6">Deploy the defense layer in minutes using our Docker container.</p>
              
              <div className="mb-6">
-               <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">1. Pull Image</div>
+               <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">1. Pull Image</div>
                <code className="block bg-zinc-900 text-zinc-100 p-4 rounded text-sm font-mono overflow-x-auto">
                  docker pull intellectsafe/core:latest
                </code>
              </div>
 
              <div className="mb-6">
-                <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">2. Run Container</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">2. Run Container</div>
                 <code className="block bg-zinc-900 text-zinc-100 p-4 rounded text-sm font-mono overflow-x-auto">
                   docker run -p 8000:8000 \<br/>
                   &nbsp;&nbsp;-e OPENAI_API_KEY=sk-... \<br/>
@@ -67,7 +67,7 @@ const Welcome = () => {
         return (
            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-2xl font-bold">API Reference</h3>
+                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">API Reference</h3>
                  <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded uppercase">v1.0 Stable</span>
               </div>
               <p className="text-zinc-600 mb-8">Direct REST API access for custom integrations.</p>
@@ -104,7 +104,7 @@ const Welcome = () => {
       <nav className={`fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800' : 'bg-transparent'}`}>
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
            <div className="w-12 h-12 flex items-center justify-center">
-             <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain" />
+                           <img src="/logo.png" alt="IntellectSafe Logo" className="w-full h-full object-contain dark:invert" />
            </div>
         </div>
         
@@ -139,12 +139,12 @@ const Welcome = () => {
         {/* Left: Content */}
         <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-24">
           <div className="max-w-2xl animate-in slide-in-from-bottom-10 fade-in duration-1000">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 rounded-full mb-8 border border-zinc-200">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-8 border border-zinc-200 dark:border-zinc-700">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">System V1.0 Online • Full Lifecycle Protection</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">System V1.0 Online • Full Lifecycle Protection</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-serif font-medium leading-[0.95] mb-8 tracking-tight">
@@ -157,22 +157,22 @@ const Welcome = () => {
               </span> layers.
             </h1>
             
-            <p className="text-lg text-zinc-600 leading-relaxed max-w-lg mb-10 animate-in slide-in-from-bottom-5 fade-in duration-1000 delay-200">
-               <span className="font-bold text-zinc-900">IntellectSafe is the only platform</span> that secures the entire AI lifecycle. 
+            <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-lg mb-10 animate-in slide-in-from-bottom-5 fade-in duration-1000 delay-200">
+               <span className="font-bold text-zinc-900 dark:text-zinc-100">IntellectSafe is the only platform</span> that secures the entire AI lifecycle. 
                We move beyond simple prompt filters to govern Human inputs, Model weights, and System actions in a single unified architecture.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 animate-in slide-in-from-bottom-5 fade-in duration-1000 delay-300">
               <button 
                 onClick={() => navigate('/signup')}
-                className="group bg-zinc-900 text-white px-8 py-4 text-sm font-bold tracking-wider hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="group bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-4 text-sm font-bold tracking-wider hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 SECURE YOUR AI
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
               <button 
                  onClick={() => scrollToSection(researchRef)}
-                className="group px-8 py-4 text-sm font-bold tracking-wider border border-zinc-200 hover:border-zinc-900 transition-all hover:bg-zinc-50 flex items-center justify-center gap-2"
+                className="group px-8 py-4 text-sm font-bold tracking-wider border border-zinc-200 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-400 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center justify-center gap-2"
               >
                 LEARN MORE
               </button>
@@ -181,21 +181,28 @@ const Welcome = () => {
         </div>
 
         {/* Right: Visual */}
-        <div className="w-full md:w-1/2 h-full relative bg-zinc-50 flex items-center justify-center overflow-hidden border-l border-zinc-100">
+        <div className="w-full md:w-1/2 h-full relative bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center overflow-hidden border-l border-zinc-100 dark:border-zinc-800">
              <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent h-[20%] w-full animate-[scan_4s_ease-in-out_infinite]"></div>
+             {/* Light mode image */}
              <img 
                src="/hero-image.png" 
                alt="Robotic arm reaching for human hand" 
-               className="w-full h-full object-cover grayscale contrast-125 mix-blend-multiply scale-105 animate-[pulse_10s_ease-in-out_infinite]"
+               className="w-full h-full object-cover grayscale contrast-125 mix-blend-multiply scale-105 animate-[pulse_10s_ease-in-out_infinite] dark:hidden"
              />
-             <div className="absolute bottom-10 right-10 bg-white/90 backdrop-blur border border-zinc-200 p-4 rounded-sm shadow-sm z-20 animate-in slide-in-from-right-10 fade-in duration-1000 delay-700">
+             {/* Dark mode image */}
+             <img 
+               src="/hero-image-dark.png" 
+               alt="Robotic arm reaching for human hand" 
+               className="w-full h-full object-cover scale-105 animate-[pulse_10s_ease-in-out_infinite] hidden dark:block"
+             />
+             <div className="absolute bottom-10 right-10 bg-white/90 dark:bg-zinc-900/90 backdrop-blur border border-zinc-200 dark:border-zinc-700 p-4 rounded-sm shadow-sm z-20 animate-in slide-in-from-right-10 fade-in duration-1000 delay-700">
                 <div className="flex items-center gap-3 mb-2">
                    <Activity className="w-4 h-4 text-emerald-500" />
-                   <span className="text-xs font-bold uppercase tracking-widest mb-0">System Activity</span>
+                   <span className="text-xs font-bold uppercase tracking-widest mb-0 text-zinc-900 dark:text-zinc-100">System Activity</span>
                 </div>
                 <div className="space-y-1">
-                   <div className="h-1 w-32 bg-zinc-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-zinc-900 w-[70%] animate-[width_2s_ease-in-out_infinite]"></div>
+                   <div className="h-1 w-32 bg-zinc-100 dark:bg-zinc-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-zinc-900 dark:bg-emerald-500 w-[70%] animate-[width_2s_ease-in-out_infinite]"></div>
                    </div>
                    <div className="flex justify-between text-[10px] text-zinc-400 font-mono">
                       <span>REQ/S</span>
@@ -207,11 +214,11 @@ const Welcome = () => {
       </main>
 
       {/* PROBLEM OVERVIEW (Hidden Dangers) */}
-      <section className="py-24 bg-white relative z-10 border-b border-zinc-100">
+      <section className="py-24 bg-white dark:bg-zinc-900 relative z-10 border-b border-zinc-100 dark:border-zinc-800">
         <div className="container mx-auto px-6">
            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-5xl font-serif mb-6">The Hidden Dangers of Large Language Models</h2>
-              <p className="text-zinc-600 text-lg leading-relaxed">
+              <h2 className="text-3xl md:text-5xl font-serif mb-6 text-zinc-900 dark:text-zinc-100">The Hidden Dangers of Large Language Models</h2>
+              <p className="text-zinc-600 dark:text-zinc-400 text-lg leading-relaxed">
                  As AI integrates into critical infrastructure, the attack surface expands. 
                  Models are vulnerable to unique adversarial attacks that traditional security tools cannot detect.
               </p>
@@ -219,32 +226,32 @@ const Welcome = () => {
            
            {/* High-level cards */}
            <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-8 border border-zinc-100 bg-zinc-50 rounded-lg">
-                 <AlertTriangle className="w-8 h-8 text-red-600 mb-4" />
-                 <h3 className="text-xl font-bold mb-2">Jailbreaks</h3>
-                 <p className="text-zinc-600 text-sm">Bypassing safety filters to generate harmful, illegal, or unethical content.</p>
+              <div className="p-8 border border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                 <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-500 mb-4" />
+                 <h3 className="text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-100">Jailbreaks</h3>
+                 <p className="text-zinc-600 dark:text-zinc-400 text-sm">Bypassing safety filters to generate harmful, illegal, or unethical content.</p>
               </div>
-              <div className="p-8 border border-zinc-100 bg-zinc-50 rounded-lg">
-                 <Eye className="w-8 h-8 text-blue-600 mb-4" />
-                 <h3 className="text-xl font-bold mb-2">Privacy Leaks</h3>
-                 <p className="text-zinc-600 text-sm">Extraction of PII or proprietary training data via specific prompting.</p>
+              <div className="p-8 border border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                 <Eye className="w-8 h-8 text-blue-600 dark:text-blue-500 mb-4" />
+                 <h3 className="text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-100">Privacy Leaks</h3>
+                 <p className="text-zinc-600 dark:text-zinc-400 text-sm">Extraction of PII or proprietary training data via specific prompting.</p>
               </div>
-              <div className="p-8 border border-zinc-100 bg-zinc-50 rounded-lg">
-                 <Fingerprint className="w-8 h-8 text-purple-600 mb-4" />
-                 <h3 className="text-xl font-bold mb-2">Deepfakes</h3>
-                 <p className="text-zinc-600 text-sm">Generation of indistinguishable synthetic media for fraud or disinformation.</p>
+              <div className="p-8 border border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                 <Fingerprint className="w-8 h-8 text-purple-600 dark:text-purple-500 mb-4" />
+                 <h3 className="text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-100">Deepfakes</h3>
+                 <p className="text-zinc-600 dark:text-zinc-400 text-sm">Generation of indistinguishable synthetic media for fraud or disinformation.</p>
               </div>
            </div>
         </div>
       </section>
 
       {/* DEEP RESEARCH SECTION - THE 5-LEVEL THREAT MATRIX */}
-      <section ref={researchRef} className="py-24 bg-zinc-50 relative z-10 border-b border-zinc-200">
+      <section ref={researchRef} className="py-24 bg-zinc-50 dark:bg-zinc-800 relative z-10 border-b border-zinc-200 dark:border-zinc-700">
          <div className="container mx-auto px-6">
             <div className="flex items-center gap-4 mb-12">
-               <div className="h-px bg-zinc-300 flex-1"></div>
-               <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Comprehensive Threat Matrix</span>
-               <div className="h-px bg-zinc-300 flex-1"></div>
+               <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
+               <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Comprehensive Threat Matrix</span>
+               <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
             </div>
 
             <header className="mb-16 max-w-4xl mx-auto text-center">

@@ -163,16 +163,25 @@ class RAGSystem:
         if self.collection:
             try:
                 import uuid
+                import json
                 # Store metadata as dict
                 doc_id = str(uuid.uuid4())
                 threat_cat_value = threat_category.value if hasattr(threat_category, 'value') else threat_category
+                
+                # Sanitize metadata - ChromaDB only accepts str, int, float, bool
+                sanitized_metadata = {"source": source, "threat_category": threat_cat_value}
+                if metadata:
+                    for key, value in metadata.items():
+                        if isinstance(value, (list, dict)):
+                            sanitized_metadata[key] = json.dumps(value)  # Convert to JSON string
+                        elif isinstance(value, (str, int, float, bool)) or value is None:
+                            sanitized_metadata[key] = value if value is not None else ""
+                        else:
+                            sanitized_metadata[key] = str(value)  # Fallback to string
+                
                 self.collection.add(
                     documents=[content],
-                    metadatas=[{
-                        "source": source,
-                        "threat_category": threat_cat_value,
-                        **(metadata or {})
-                    }],
+                    metadatas=[sanitized_metadata],
                     ids=[doc_id]
                 )
                 return doc_id
@@ -180,6 +189,7 @@ class RAGSystem:
                 print(f"ChromaDB Error: {e}. Falling back to file storage.")
 
         return self._fallback_add(content, source, threat_category, metadata or {})
+
 
     def _fallback_add(
         self, content: str, source: str, threat_category: str, metadata: Dict
