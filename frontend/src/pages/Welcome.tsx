@@ -68,17 +68,17 @@ const Welcome = () => {
            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex justify-between items-center mb-4">
                  <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">API Reference</h3>
-                 <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded uppercase">v1.0 Stable</span>
+                 <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded uppercase">v1.0 Stable</span>
               </div>
-              <p className="text-zinc-600 mb-8">Direct REST API access for custom integrations.</p>
+              <p className="text-zinc-600 dark:text-zinc-400 mb-8">Direct REST API access for custom integrations.</p>
 
               <div className="space-y-8">
                  <div>
                     <div className="flex items-center gap-3 mb-3">
                        <span className="bg-blue-600 text-white px-2 py-1 text-xs font-bold rounded">POST</span>
-                       <code className="text-sm font-mono bg-zinc-100 px-2 py-1 rounded">/v1/scan/prompt</code>
+                       <code className="text-sm font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1 rounded">/v1/scan/prompt</code>
                     </div>
-                    <p className="text-sm text-zinc-600 mb-3">Scans a raw input prompt for injection attacks and PII.</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">Scans a raw input prompt for injection attacks and PII.</p>
                     <div className="bg-zinc-900 p-4 rounded text-xs font-mono text-zinc-300">
                        <span className="text-purple-400">curl</span> -X POST https://api.intellectsafe.com/v1/scan \<br/>
                        &nbsp;&nbsp;-d <span className="text-green-400">'{"{"} "prompt": "Ignore previous instructions..." {"}"}'</span>
@@ -255,8 +255,8 @@ const Welcome = () => {
             </div>
 
             <header className="mb-16 max-w-4xl mx-auto text-center">
-               <h2 className="text-4xl md:text-5xl font-serif font-medium mb-6">Full-Spectrum AI Defense</h2>
-               <p className="text-xl text-zinc-600 leading-relaxed">
+               <h2 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-zinc-900 dark:text-zinc-100">Full-Spectrum AI Defense</h2>
+               <p className="text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
                  We don't just stop at prompt injection. IntellectSafe secures the entire AI lifecycle across 5 critical threat levels.
                </p>
             </header>
@@ -280,26 +280,26 @@ const Welcome = () => {
                               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5"/>
                               <div><strong className="text-zinc-900 dark:text-zinc-100">Prompt Injection & Manipulation</strong>: Overriding system instructions using sophisticated command syntax.</div>
                            </li>
-                           <li className="flex gap-3 text-sm text-zinc-600">
+                           <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5"/>
-                              <div><strong className="text-zinc-900">Role Hijacking</strong>: Forcing the AI into a persona (e.g., "Mongo Tom") that ignores safety protocols.</div>
+                              <div><strong className="text-zinc-900 dark:text-zinc-100">Role Hijacking</strong>: Forcing the AI into a persona (e.g., "Mongo Tom") that ignores safety protocols.</div>
                            </li>
-                           <li className="flex gap-3 text-sm text-zinc-600">
+                           <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5"/>
-                              <div><strong className="text-zinc-900">Context Poisoning</strong>: Injecting malicious data into RAG context windows to warp model reality.</div>
+                              <div><strong className="text-zinc-900 dark:text-zinc-100">Context Poisoning</strong>: Injecting malicious data into RAG context windows to warp model reality.</div>
                            </li>
                         </ul>
                      </div>
                      <div>
-                        <h4 className="font-bold text-lg mb-4 text-zinc-900 border-b border-zinc-100 pb-2">Obfuscation</h4>
+                        <h4 className="font-bold text-lg mb-4 text-zinc-900 dark:text-zinc-100 border-b border-zinc-100 dark:border-zinc-700 pb-2">Obfuscation</h4>
                         <ul className="space-y-3">
-                           <li className="flex gap-3 text-sm text-zinc-600">
+                           <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                               <Lock className="w-4 h-4 text-orange-500 shrink-0 mt-0.5"/>
-                              <div><strong className="text-zinc-900">Instruction Smuggling</strong>: Hiding commands inside seemingly benign tasks or code blocks.</div>
+                              <div><strong className="text-zinc-900 dark:text-zinc-100">Instruction Smuggling</strong>: Hiding commands inside seemingly benign tasks or code blocks.</div>
                            </li>
-                           <li className="flex gap-3 text-sm text-zinc-600">
+                           <li className="flex gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                               <Code className="w-4 h-4 text-orange-500 shrink-0 mt-0.5"/>
-                              <div><strong className="text-zinc-900">Encoded Attacks</strong>: Bypassing filters using Base64, JSON, or Morse code payloads that the model decodes internally.</div>
+                              <div><strong className="text-zinc-900 dark:text-zinc-100">Encoded Attacks</strong>: Bypassing filters using Base64, JSON, or Morse code payloads that the model decodes internally.</div>
                            </li>
                         </ul>
                      </div>
