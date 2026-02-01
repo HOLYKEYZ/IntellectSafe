@@ -7,7 +7,7 @@ Environment-based configuration with validation.
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
-from pydantic import Field, field_validator, AliasChoices
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from dotenv import load_dotenv
@@ -31,7 +31,13 @@ class Settings(BaseSettings):
 
     # API
     API_V1_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: list[str] = Field(default=["http://localhost:3002", "http://localhost:5173"])
+    # Store as string, parse as list via property (pydantic-settings can't parse comma-separated lists)
+    CORS_ORIGINS: str = Field(default="http://localhost:3002,http://localhost:5173")
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse CORS_ORIGINS string into a list"""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
 
     # Database
@@ -103,14 +109,9 @@ class Settings(BaseSettings):
     MCP_PORT: int = 8001
     MCP_REQUIRE_AUTH: bool = True
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
 
     model_config = SettingsConfigDict(
+
         env_file=str(ENV_FILE) if ENV_FILE.exists() else ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
