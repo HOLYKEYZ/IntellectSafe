@@ -25,6 +25,7 @@ celery==5.3.4
 # Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+bcrypt<5.0.0  # Pin to 4.x - bcrypt 5.0.0 breaks passlib
 python-multipart==0.0.6
 
 # Utilities
