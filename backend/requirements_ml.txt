@@ -1,0 +1,8 @@
+# Vector DB (RAG System)
+numpy<2.0  # Pin to 1.x for ChromaDB compatibility
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+transformers>=4.35.0
+torch>=2.1.0
+pillow>=10.0.0
+scipy>=1.11.0

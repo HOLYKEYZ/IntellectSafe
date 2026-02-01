@@ -38,15 +38,14 @@ google-generativeai==0.3.1
 cohere==4.37
 groq>=0.4.0
 
-# Vector DB (RAG System) - OPTIONAL: These are large and may cause build timeouts
-# Uncomment if you need RAG features and have a paid Render plan with more build time
-# numpy<2.0
-# chromadb>=0.4.22
-# sentence-transformers>=2.2.2
-# transformers>=4.35.0
-# torch>=2.1.0
-# pillow>=10.0.0
-# scipy>=1.11.0
+# Vector DB (RAG System)
+numpy<2.0  # Pin to 1.x for ChromaDB compatibility
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+transformers>=4.35.0
+torch>=2.1.0
+pillow>=10.0.0
+scipy>=1.11.0
 
 
 # Testing

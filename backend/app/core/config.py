@@ -31,7 +31,8 @@ class Settings(BaseSettings):
 
     # API
     API_V1_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: list[str] = Field(default=["http://localhost:3002"], env="CORS_ORIGINS")
+    CORS_ORIGINS: list[str] = Field(default=["http://localhost:3002", "http://localhost:5173"])
+
 
     # Database
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
