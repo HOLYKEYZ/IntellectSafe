@@ -80,7 +80,7 @@ const Welcome = () => {
                     </div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">Scans a raw input prompt for injection attacks and PII.</p>
                     <div className="bg-zinc-900 p-4 rounded text-xs font-mono text-zinc-300">
-                       <span className="text-purple-400">curl</span> -X POST https://api.intellectsafe.com/v1/scan \<br/>
+                       <span className="text-purple-400">curl</span> -X POST https://api.intellectsafe.onrender.com/v1/scan \<br/>
                        &nbsp;&nbsp;-d <span className="text-green-400">'{"{"} "prompt": "Ignore previous instructions..." {"}"}'</span>
                     </div>
                  </div>
