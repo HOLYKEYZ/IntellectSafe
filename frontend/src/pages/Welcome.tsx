@@ -181,20 +181,14 @@ const Welcome = () => {
         </div>
 
         {/* Right: Visual */}
-        <div className="w-full md:w-1/2 h-full relative bg-zinc-100 dark:bg-black flex items-center justify-center overflow-hidden border-l border-zinc-100 dark:border-zinc-800">
+        <div className="w-full md:w-1/2 h-full relative bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden border-l border-zinc-100 dark:border-zinc-800">
              {/* Scanning animation overlay */}
              <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent h-[20%] w-full animate-[scan_4s_ease-in-out_infinite]"></div>
-             {/* Light mode image */}
+             {/* Single hero image - scaled up to crop out frame, CSS invert for dark mode */}
              <img 
                src="/hero-image.png" 
                alt="Robotic arm reaching for human hand" 
-               className="w-full h-full object-cover object-center grayscale contrast-125 mix-blend-multiply scale-105 animate-[pulse_10s_ease-in-out_infinite] dark:hidden"
-             />
-             {/* Dark mode image - inverted colors */}
-             <img 
-               src="/hero-image-dark.png" 
-               alt="Robotic arm reaching for human hand" 
-               className="w-full h-full object-cover object-center scale-105 animate-[pulse_10s_ease-in-out_infinite] hidden dark:block"
+               className="w-full h-full object-cover object-center grayscale contrast-125 scale-150 animate-[pulse_10s_ease-in-out_infinite] mix-blend-multiply dark:mix-blend-normal dark:invert dark:hue-rotate-180"
              />
              <div className="absolute bottom-10 right-10 bg-white/90 dark:bg-zinc-900/90 backdrop-blur border border-zinc-200 dark:border-zinc-700 p-4 rounded-sm shadow-sm z-20 animate-in slide-in-from-right-10 fade-in duration-1000 delay-700">
                 <div className="flex items-center gap-3 mb-2">
