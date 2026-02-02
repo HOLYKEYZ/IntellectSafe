@@ -503,7 +503,7 @@ const Welcome = () => {
             <div className="flex items-center gap-2 mb-4 md:mb-0">
                {/* Footer logo also cleaned up */}
                <img src="/logo.png" className="w-4 h-4 invert" alt="Logo"/>
-               <span className="font-bold tracking-widest">INTELLECTSAFE</span>
+               <span className="font-bold tracking-widest">IntellectSafe</span>
             </div>
             <div>
                &copy; 2026 IntellectSafe Inc. All rights reserved.
