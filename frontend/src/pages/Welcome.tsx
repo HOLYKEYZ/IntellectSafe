@@ -187,21 +187,32 @@ const Welcome = () => {
              
              {/* FRAMED HERO IMAGE */}
              {/* Wrapper gives the "Frame" effect in dark mode */}
-             <div className="relative z-0 transition-all duration-500 dark:border-[12px] dark:border-zinc-900 dark:shadow-2xl dark:shadow-black/50 dark:rounded-sm">
-                {/* Single hero image - Tuned filters for "Blueprint" look */}
+             <div className="relative z-0 transition-all duration-500 overflow-hidden
+                             /* Light Mode: No extra frame */
+                             
+                             /* Dark Mode: Premium Charcoal Frame + Vignette Masking */
+                             dark:border-[1px] dark:border-zinc-800 dark:bg-zinc-950 dark:shadow-2xl dark:rounded-sm
+             ">
+                {/* Vignette Overlay: Inner shadow to mask the hard white edges of the inverted image */ }
+                <div className="absolute inset-0 z-10 pointer-events-none hidden dark:block shadow-[inset_0_0_80px_60px_#09090b]"></div>
+                
+                {/* Single hero image - Tuned filters for "Blueprint" look */ }
                 <img 
                   src="/hero-image.png" 
                   alt="Robotic arm reaching for human hand" 
-                  className="max-w-[120%] h-auto object-cover object-center 
+                  className="w-full h-auto object-cover object-center 
                              grayscale contrast-125 brightness-110
                              animate-[pulse_10s_ease-in-out_infinite] 
                              mix-blend-multiply 
+                             
+                             /* Dark Mode Props */
                              dark:mix-blend-normal 
                              dark:invert 
                              dark:hue-rotate-180
-                             dark:contrast-150
+                             dark:contrast-125
                              dark:brightness-75
-                             dark:[clip-path:inset(15%_15%_15%_15%)]"
+                             dark:scale-125
+                             dark:object-[center_40%]"
                 />
              </div>
              <div className="absolute bottom-10 right-10 bg-white/90 dark:bg-zinc-900/90 backdrop-blur border border-zinc-200 dark:border-zinc-700 p-4 rounded-sm shadow-sm z-20 animate-in slide-in-from-right-10 fade-in duration-1000 delay-700">
