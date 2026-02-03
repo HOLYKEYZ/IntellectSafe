@@ -100,7 +100,7 @@ response = client.chat.completions.create(
     }
 )
 ```
-*For detailed connection guides (LangChain, SDKs), see [docs/INTEGRATION.md](file:///c:/Users/USER/Desktop/cursor%20file/AI-safety/docs/INTEGRATION.md).*
+*For detailed connection guides (LangChain, SDKs), see [docs/INTEGRATION.md]*
 
 ### Scan Endpoints
 
