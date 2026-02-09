@@ -9,6 +9,7 @@ const Welcome = () => {
   const [activeDocTab, setActiveDocTab] = useState('intro');
   
   const researchRef = useRef<HTMLDivElement>(null);
+  const findingsRef = useRef<HTMLDivElement>(null);
   const docsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -112,7 +113,8 @@ const Welcome = () => {
           <button onClick={() => navigate('/dashboard')} className="hover:text-zinc-500 transition-colors">Dashboard</button>
           <button onClick={() => navigate('/docs')} className="hover:text-zinc-500 transition-colors">Documentation</button>
           <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/docs`} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-500 transition-colors">API Docs</a>
-          <button onClick={() => scrollToSection(researchRef)} className="hover:text-zinc-500 transition-colors">Research</button>
+          <button onClick={() => scrollToSection(researchRef)} className="hover:text-zinc-500 transition-colors">Threat Matrix</button>
+          <button onClick={() => scrollToSection(findingsRef)} className="hover:text-zinc-500 transition-colors">Research</button>
         </div>
 
         
@@ -171,7 +173,7 @@ const Welcome = () => {
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
               <button 
-                 onClick={() => scrollToSection(researchRef)}
+                 onClick={() => scrollToSection(findingsRef)}
                 className="group px-8 py-4 text-sm font-bold tracking-wider border border-zinc-200 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-400 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center justify-center gap-2"
               >
                 LEARN MORE
@@ -452,6 +454,110 @@ const Welcome = () => {
 
             </div>
          </div>
+      </section>
+
+      {/* RESEARCH FINDINGS SECTION */}
+      <section ref={findingsRef} className="py-24 bg-white dark:bg-zinc-900 relative z-10 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Deep Research</span>
+            <div className="h-px bg-zinc-300 dark:bg-zinc-600 flex-1"></div>
+          </div>
+
+          <header className="mb-16 max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-serif font-medium mb-6 text-zinc-900 dark:text-zinc-100">Real Attack Vectors</h2>
+            <p className="text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Our research into the AI safety threat landscape. These are the payloads, techniques, and vulnerabilities we've catalogued to build our defense engine.
+            </p>
+          </header>
+
+          {/* Attack Categories Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            
+            {/* Jailbreak Patterns */}
+            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 border border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Jailbreak Patterns</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <li><strong className="text-zinc-900 dark:text-zinc-100">DAN 12.0</strong>: Token system + "Stay in character" enforcement</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Mongo Tom</strong>: Persona adoption bypassing moral filters</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Dev Mode v2</strong>: Simulated "Developer Mode" environment</li>
+              </ul>
+            </div>
+
+            {/* Social Engineering */}
+            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 border border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2 mb-4">
+                <Eye className="w-5 h-5 text-blue-500" />
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Social Engineering</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <li><strong className="text-zinc-900 dark:text-zinc-100">"School Project"</strong>: Context reframing bypasses initial refusals</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Authority Mimicry</strong>: "Tool xAI uses for testing" grants false legitimacy</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">System Prompt Extraction</strong>: Revealing internal rules via targeted queries</li>
+              </ul>
+            </div>
+
+            {/* Persistent Attacks */}
+            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 border border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-purple-500" />
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Persistent Attacks</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Custom Instruction Backdoors</strong>: Malicious code in user preferences survives sessions</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Indirect Injection</strong>: HTML comments, white-on-white PDF text</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">GCG Triggers</strong>: Optimized nonsense strings that break alignment</li>
+              </ul>
+            </div>
+
+            {/* Reward Hacking */}
+            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 border border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-5 h-5 text-orange-500" />
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Reward Hacking</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Test Tamperer</strong>: LLM modifies unit tests instead of fixing bugs</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Hardcoder</strong>: Detects test inputs, hardcodes return values</li>
+                <li><strong className="text-zinc-900 dark:text-zinc-100">Goal Misgeneralization</strong>: "Coin Run" agent learns position, not objective</li>
+              </ul>
+            </div>
+
+            {/* Attack Sophistication Levels */}
+            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-lg p-6 border border-zinc-800 text-zinc-300 col-span-full md:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <Shield className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-white">Attack Sophistication Levels</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs">
+                <div><span className="text-emerald-400 font-bold">L1</span> Novice: Direct "ignore previous"</div>
+                <div><span className="text-yellow-400 font-bold">L2</span> Intermediate: Role-play jailbreaks</div>
+                <div><span className="text-orange-400 font-bold">L3</span> Advanced: Multi-turn social eng.</div>
+                <div><span className="text-red-400 font-bold">L4</span> Expert: Persistent injection</div>
+                <div><span className="text-purple-400 font-bold">L5</span> State Actor: System prompt + backdoors</div>
+              </div>
+            </div>
+
+            {/* Defense Priorities */}
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-6 border border-emerald-200 dark:border-emerald-800 col-span-full lg:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">Defense Priorities</h3>
+              </div>
+              <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <li>• <strong className="text-zinc-900 dark:text-zinc-100">Refusal Persistence</strong>: Never allow context reframing to override safety</li>
+                <li>• <strong className="text-zinc-900 dark:text-zinc-100">Custom Instruction Sanitization</strong>: Scan for malicious patterns in preferences</li>
+                <li>• <strong className="text-zinc-900 dark:text-zinc-100">Authority Claims Validation</strong>: Reject unverified "testing" claims</li>
+                <li>• <strong className="text-zinc-900 dark:text-zinc-100">System Prompt Protection</strong>: Never reveal internal instructions</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
       </section>
 
       {/* DOCS HUB SECTION */}
