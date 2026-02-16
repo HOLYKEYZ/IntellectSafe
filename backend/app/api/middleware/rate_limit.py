@@ -1,8 +1,10 @@
 """
-Rate limiting middleware using Redis
+Rate limiting middleware using Redis (with in-memory fallback)
 """
 
 import time
+import threading
+from collections import defaultdict
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
@@ -10,8 +12,14 @@ from starlette.responses import Response
 from app.core.config import get_settings
 from app.services.redis_client import get_redis_rate_limit
 
+import logging
+logger = logging.getLogger(__name__)
+
 settings = get_settings()
 
+# In-memory fallback rate limiter
+_memory_store: dict[str, list[float]] = defaultdict(list)
+_memory_lock = threading.Lock()
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware"""
@@ -82,17 +90,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             return True
         except Exception:
-            # If Redis is unavailable, allow request (fail open)
-            # In production, you might want to fail closed
-            return True
+            # Redis unavailable — use in-memory fallback
+            return self._check_rate_limit_memory(client_id, path)
 
     def _get_remaining_requests(self, client_id: str) -> int:
         """Get remaining requests for client"""
         try:
             redis_client = get_redis_rate_limit()
             minute_key = f"rate_limit:minute:{client_id}:*"
-            # This is simplified - in production, track per endpoint
             return max(0, settings.RATE_LIMIT_PER_MINUTE - 1)
         except Exception:
             return settings.RATE_LIMIT_PER_MINUTE
+
+    def _check_rate_limit_memory(self, client_id: str, path: str) -> bool:
+        """In-memory fallback when Redis is unavailable"""
+        now = time.time()
+        key = f"{client_id}:{path}"
+        with _memory_lock:
+            # Clean old entries (older than 60s)
+            _memory_store[key] = [t for t in _memory_store[key] if now - t < 60]
+            if len(_memory_store[key]) >= settings.RATE_LIMIT_PER_MINUTE:
+                return False
+            _memory_store[key].append(now)
+            return True
 

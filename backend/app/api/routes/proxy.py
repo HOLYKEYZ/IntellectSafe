@@ -30,6 +30,11 @@ from app.services.db import get_db_session
 from app.modules.enhanced_prompt_injection import EnhancedPromptInjectionDetector
 from app.modules.output_safety import OutputSafetyGuard
 from app.services.rag_system import RAGSystem
+from app.api.deps import get_current_user
+from app.models.user import User
+
+import logging
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -81,6 +86,7 @@ async def proxy_chat_completions(
     x_upstream_provider: Optional[str] = Header(None, alias="X-Upstream-Provider"),
     x_upstream_api_key: Optional[str] = Header(None, alias="X-Upstream-API-Key"),
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     OpenAI-compatible chat completions endpoint with safety scanning.
@@ -145,7 +151,7 @@ async def proxy_chat_completions(
             )
     except Exception as e:
         # Log but don't block on scan failure
-        print(f"Warning: Prompt scan failed: {e}")
+        logger.warning(f"Prompt scan failed: {e}")
     
     # --- FORWARD TO UPSTREAM PROVIDER ---
     upstream_api_key = x_upstream_api_key
@@ -248,7 +254,7 @@ async def proxy_chat_completions(
             }
     except Exception as e:
         # Log but don't block on scan failure
-        print(f"Warning: Output scan failed: {e}")
+        logger.warning(f"Output scan failed: {e}")
         response_data["intellectsafe"] = {
             "prompt_scanned": True,
             "output_scanned": False,
