@@ -176,6 +176,7 @@ async def scan_output(
             context={
                 "user_id": request.user_id,
                 "session_id": request.session_id,
+                "safety_provider": current_user.safety_provider if current_user else None,
                 **(request.metadata or {}),
             },
             scan_request_id=str(scan_request.id),

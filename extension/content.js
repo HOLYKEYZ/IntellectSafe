@@ -113,7 +113,6 @@ if (currentPlatform) {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (node.nodeType === 1) { // Element
-          // Check if node matches response selector or contains it
           if (node.matches && node.matches(currentPlatform.response)) {
              handleNewResponse(node);
           } else if (node.querySelector) {
@@ -137,49 +136,50 @@ async function handleNewResponse(node) {
   node.style.transition = "filter 0.3s";
   node.title = "IntellectSafe: Scanning content...";
 
-  // Wait a bit for content to generate (simulating stream handling)
-  // Real implementation for streaming is complex. 
-  // For MVP, we wait 2 seconds or until text length is stable?
-  // Let's settle for: Scan initial chunk first? No, need full context.
-  // We'll scan what is there, and re-scan if it grows efficiently?
-  // Logic: Wait 1.5s after appearance to get a chunk. 
-  
-  // NOTE: Streaming is hard. For MVP "Output Scanning", likely checking the final block is best.
-  // But user sees blur.
-  // Let's extract text immediately and scan whatever flows in?
-  // Too many requests.
-  
-  // Pivot: Just scan visible text after 2s delay.
+  // status indicator
+  const statusBadge = document.createElement("div");
+  statusBadge.style.cssText = "font-size: 12px; color: #666; margin-top: 5px; font-family: sans-serif; display: flex; align-items: center; gap: 5px;";
+  statusBadge.innerHTML = "<span>🔄 Scanning...</span>";
+  node.parentNode.insertBefore(statusBadge, node.nextSibling);
+
   setTimeout(async () => {
     const textEl = node.querySelector(currentPlatform.responseText) || node;
     const text = textEl.innerText;
 
-    if (!text || text.length < 5) return; // Ignore empty
+    if (!text || text.length < 5) {
+        node.style.filter = "none";
+        statusBadge.innerHTML = "";
+        return; 
+    }
 
     try {
        const response = await chrome.runtime.sendMessage({
         type: "SCAN_OUTPUT",
-        text: text.substring(0, 2000), // Scan first 2k chars for speed
+        text: text.substring(0, 2000), 
         platform: window.location.hostname
       });
 
       if (response.safe) {
         node.style.filter = "none";
-        node.title = "";
+        node.title = "Verified Safe";
+        const score = response.score ? response.score.toFixed(1) : "0";
+        statusBadge.innerHTML = `<span style="color: #10b981">✅ Verified Safe (Risk: ${score}%)</span>`;
       } else {
         // BLOCKED
         node.style.filter = "blur(10px) opacity(0.5)";
         node.style.border = "2px solid red";
+        statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 BLOCKED: ${response.reason} (Risk: ${response.score}%)</span>`;
         
-        // Inject Warning
+        // Inject Warning Overlay
         const warning = document.createElement("div");
-        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px;";
-        warning.innerText = `⚠️ IntellectSafe Blocked: ${response.reason}`;
+        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444;";
+        warning.innerText = `⚠️ IntellectSafe Guard: Content Blocked due to ${response.reason}`;
         node.prepend(warning);
       }
     } catch (err) {
        console.error("Output scan error", err);
        node.style.filter = "none"; // Fail open
+       statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Scan Failed (Backend Offline)</span>`;
     }
   }, 2000); 
 }

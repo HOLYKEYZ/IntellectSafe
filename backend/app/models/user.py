@@ -7,12 +7,14 @@ class UserBase(SQLModel):
     full_name: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
+    safety_provider: Optional[str] = Field(default=None, description="Preferred provider for safety scans")
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    # Re-declare to ensure it's in the table if not inherited correctly (SQLModel quirk, but UserBase should work)
 
 class UserCreate(UserBase):
     password: str
@@ -26,6 +28,7 @@ class UserUpdate(SQLModel):
     full_name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    safety_provider: Optional[str] = None
 
 
 class ApiKey(SQLModel, table=True):

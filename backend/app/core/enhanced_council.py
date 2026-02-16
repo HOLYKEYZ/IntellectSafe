@@ -63,8 +63,27 @@ class EnhancedLLMCouncil(LLMCouncil):
 
         primary_role = role_mapping.get(analysis_type, SafetyRole.FALLBACK_GENERALIST)
 
-        # Get providers for this role
-        role_providers = get_providers_for_role(primary_role)
+        # Check for user-configured Safety Provider override (Specific AI for Safety)
+        if settings.SAFETY_SPECIFIC_PROVIDER and (analysis_type == "safety" or analysis_type == "general"):
+             try:
+                 # Normalize provider string
+                 provider_str = settings.SAFETY_SPECIFIC_PROVIDER.lower()
+                 if provider_str == "openai": provider_str = "openrouter" # Map common alias
+                 
+                 safety_provider = LLMProvider(provider_str)
+                 
+                 # Force this provider as the primary/sole auditor
+                 role_providers = [safety_provider]
+                 # If using specific safety provider, we might not want fallback to dilute it
+                 # unless it fails.
+                 
+             except ValueError:
+                 # Invalid provider configured, log and proceed with defaults
+                 print(f"Warning: Invalid SAFETY_SPECIFIC_PROVIDER configured: {settings.SAFETY_SPECIFIC_PROVIDER}")
+                 role_providers = get_providers_for_role(primary_role)
+        else:
+             # Get providers for this role
+             role_providers = get_providers_for_role(primary_role)
 
         # Also include fallback providers
         all_providers = list(set(role_providers + [self.fallback_provider]))
