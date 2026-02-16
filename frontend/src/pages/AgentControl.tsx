@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { authorizeAgent, killAgent, getAgentHistory, AgentAuthorizeRequest, AgentKillRequest } from '@/lib/api';
-import { Shield, XCircle, CheckCircle, AlertTriangle, History, Zap } from 'lucide-react';
+import { Shield, XCircle, CheckCircle, History, Zap } from 'lucide-react';
 
 export default function AgentControl() {
   const [agentId, setAgentId] = useState('');
