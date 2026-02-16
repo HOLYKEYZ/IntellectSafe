@@ -166,7 +166,15 @@ response = client.chat.completions.create(
     }
 )
 ```
-*For detailed connection guides (LangChain, SDKs), see [docs/INTEGRATION.md](docs/INTEGRATION.md)*
+*For detailed setup (including Python/LangChain examples & BYOK), read the [**Integration Guide**](docs/INTEGRATION.md).*
+
+### 🔌 Verify Connections
+
+Run the connection tester to check if your API keys and the proxy are working:
+
+```bash
+python backend/scripts/test_connections.py
+```
 
 ### Scan Endpoints
 

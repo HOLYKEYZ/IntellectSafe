@@ -212,6 +212,29 @@ export const generateApiKey = async (): Promise<{ api_key: string }> => {
   return response.data
 }
 
+// Connection Management (BYOK)
+export interface Connection {
+  id: number
+  provider: string
+  key_mask: string
+  label: string
+  created_at: string
+}
+
+export const getConnections = async (): Promise<Connection[]> => {
+  const response = await api.get('/connections/')
+  return response.data
+}
+
+export const createConnection = async (data: { provider: string; api_key: string; label?: string }): Promise<Connection> => {
+  const response = await api.post('/connections/', data)
+  return response.data
+}
+
+export const deleteConnection = async (id: number): Promise<void> => {
+  await api.delete(`/connections/${id}`)
+}
+
 export default api
 
 

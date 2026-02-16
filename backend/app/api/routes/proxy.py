@@ -168,6 +168,26 @@ async def proxy_chat_completions(
         elif m.startswith("llama"):
             provider = "groq"
     
+    # If no header key, check User's stored keys (DB) or System Fallback
+    if not upstream_api_key:
+        from app.models.provider_key import ProviderKey
+        from app.core.security import decrypt_key
+        
+        # Check DB for user's key
+        db_key = db.exec(
+            select(ProviderKey).where(
+                ProviderKey.user_id == current_user.id,
+                ProviderKey.provider == provider
+            )
+        ).first()
+        
+        if db_key:
+            try:
+                upstream_api_key = decrypt_key(db_key.encrypted_key)
+            except Exception:
+                logger.error(f"Failed to decrypt key for user {current_user.id} provider {provider}")
+
+    # Fallback to System Keys (.env)
     if not upstream_api_key:
         if provider == "gemini":
             upstream_api_key = settings.GEMINI_API_KEY
@@ -187,7 +207,7 @@ async def proxy_chat_completions(
     if not upstream_api_key:
         raise HTTPException(
             status_code=400,
-            detail=f"No API key configured for {provider}. Provide X-Upstream-API-Key header or configure server."
+            detail=f"No API key configured for {provider}. Connect your account in Settings or use X-Upstream-API-Key."
         )
     
     try:

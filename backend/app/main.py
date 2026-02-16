@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 
-from app.api.routes import agent, audit, scan, governance, proxy, auth
+from app.api.routes import agent, audit, scan, governance, proxy, auth, connections
+from app.models.provider_key import ProviderKey  # Import to register table
 from app.api.middleware.rate_limit import RateLimitMiddleware
 from app.db.session import engine
 from app.models.database import Base
@@ -14,7 +15,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create tables on startup (both SQLModel and SQLAlchemy models)
-    SQLModel.metadata.create_all(engine)   # User table
+    SQLModel.metadata.create_all(engine)   # User, ApiKey, ProviderKey tables
     Base.metadata.create_all(engine)        # scan_requests, risk_scores, audit_logs, etc.
     yield
 
@@ -46,10 +47,12 @@ if settings.RATE_LIMIT_ENABLED:
 
 # Include routers
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["auth"])
+app.include_router(connections.router, prefix=f"{settings.API_V1_PREFIX}/connections", tags=["connections"])
 app.include_router(scan.router, prefix=settings.API_V1_PREFIX)
 app.include_router(agent.router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit.router, prefix=settings.API_V1_PREFIX)
 app.include_router(governance.router, prefix=settings.API_V1_PREFIX)
+
 
 # Proxy router - No prefix for OpenAI compatibility (/v1/chat/completions)
 app.include_router(proxy.router)
