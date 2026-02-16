@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlmodel import select
 from app.api import deps
+from app.api.deps import get_current_user
 from app.core import security
 from app.db.session import get_session
 from app.models.user import User, UserCreate, UserRead
@@ -74,3 +75,13 @@ def register_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.get("/me", response_model=UserRead)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get current user profile. Used by frontend to validate token.
+    """
+    return current_user

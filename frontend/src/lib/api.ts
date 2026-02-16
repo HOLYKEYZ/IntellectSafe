@@ -9,6 +9,29 @@ const api = axios.create({
   },
 })
 
+// Attach Bearer token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Handle 401 responses — auto-logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token')
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export interface ScanPromptRequest {
   prompt: string
   user_id?: string
@@ -141,6 +164,55 @@ export const signup = async (request: SignupRequest): Promise<any> => {
   return response.data
 }
 
+export const getCurrentUser = async (): Promise<any> => {
+  const response = await api.get('/auth/me')
+  return response.data
+}
+
+// Agent Control API
+export interface AgentAuthorizeRequest {
+  agent_id: string
+  session_id: string
+  action_type: string
+  requested_action: Record<string, any>
+  requested_scope?: Record<string, any>
+}
+
+export interface AgentKillRequest {
+  agent_id: string
+  session_id?: string
+  reason?: string
+}
+
+export const authorizeAgent = async (request: AgentAuthorizeRequest) => {
+  const response = await api.post('/agent/authorize', request)
+  return response.data
+}
+
+export const executeAgent = async (action_id: string) => {
+  const response = await api.post('/agent/execute', { action_id })
+  return response.data
+}
+
+export const killAgent = async (request: AgentKillRequest) => {
+  const response = await api.post('/agent/kill', request)
+  return response.data
+}
+
+export const getAgentHistory = async (agent_id: string, session_id?: string) => {
+  const response = await api.get(`/agent/history/${agent_id}`, {
+    params: session_id ? { session_id } : {},
+  })
+  return response.data
+}
+
+// API Key Management
+export const generateApiKey = async (): Promise<{ api_key: string }> => {
+  const response = await api.post('/auth/api-key')
+  return response.data
+}
+
 export default api
+
 
 

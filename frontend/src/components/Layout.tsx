@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Scan, FileText, BarChart3, Home, Menu, X } from 'lucide-react'
+import { Scan, FileText, BarChart3, Home, Menu, X, Shield, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ThemeToggle from './ThemeToggle'
 
@@ -18,8 +18,12 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/dashboard/scan/prompt', label: 'Scan Prompt', icon: Scan },
     { path: '/dashboard/scan/output', label: 'Scan Output', icon: Scan },
     { path: '/dashboard/deepfake', label: 'Deepfake Detector', icon: FileText },
+    { path: '/dashboard/agent', label: 'Agent Control', icon: Shield },
+    { path: '/dashboard/audit/logs', label: 'Audit Logs', icon: ClipboardList },
+    { path: '/dashboard/audit/risk-scores', label: 'Risk Scores', icon: BarChart3 },
+    { path: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
     { path: '/docs', label: 'Docs', icon: FileText },
-    { path: `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/docs`, label: 'API Docs', icon: BarChart3, external: true },
+    { path: `${(import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1').replace('/api/v1', '')}/docs`, label: 'API Docs', icon: BarChart3, external: true },
     { path: '/dashboard/settings', label: 'Settings', icon: Menu },
   ]
 

@@ -1,13 +1,38 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getCurrentUser } from '@/lib/api';
 
 const ProtectedRoute = () => {
-  // In a real app, this would check a token in localStorage or similar
-  // For this demo, we'll simulate it or just allow it for now, 
-  // BUT the user asked to restrict it.
-  // Let's check for a dummy token "auth_token" which we will set on Login.
-  const isAuthenticated = localStorage.getItem('auth_token');
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setStatus('unauthenticated');
+      return;
+    }
+
+    // Validate token with backend
+    getCurrentUser()
+      .then(() => setStatus('authenticated'))
+      .catch(() => {
+        localStorage.removeItem('auth_token');
+        setStatus('unauthenticated');
+      });
+  }, []);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 border-2 border-zinc-900 dark:border-white border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-muted-foreground">Validating session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
     return <Navigate to="/login" replace />;
   }
 

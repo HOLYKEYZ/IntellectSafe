@@ -9,6 +9,7 @@ import RiskScores from './pages/RiskScores'
 import Reports from './pages/Reports'
 import DeepfakeScan from './pages/DeepfakeScan'
 import Settings from './pages/Settings'
+import AgentControl from './pages/AgentControl'
 import Welcome from './pages/Welcome'
 import Docs from './pages/Docs'
 import Login from './pages/Login'
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/audit/logs" element={<AuditLogs />} />
                 <Route path="/audit/risk-scores" element={<RiskScores />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/agent" element={<AgentControl />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>

@@ -24,8 +24,11 @@ def create_access_token(subject: Union[str, int], expires_delta: Optional[timede
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    # Ensure SECRET_KEY is set, or fallback (only for dev, but better to enforce)
-    key = settings.SECRET_KEY or "dev_secret_key_insecure"
+    key = settings.SECRET_KEY
+    if not key:
+        if settings.ENVIRONMENT == "production":
+            raise RuntimeError("SECRET_KEY must be set in production")
+        key = "dev-only-insecure-key-do-not-use-in-prod"
     
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, key, algorithm=settings.ALGORITHM)

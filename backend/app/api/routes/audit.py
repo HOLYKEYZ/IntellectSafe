@@ -16,6 +16,8 @@ from sqlalchemy import desc
 
 from app.models.database import AuditLog, RiskScore, Incident
 from app.services.db import get_db_session
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
@@ -52,6 +54,7 @@ async def get_audit_logs(
     action_type: Optional[str] = None,
     resource_type: Optional[str] = None,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Retrieve audit logs with filtering"""
     query = db.query(AuditLog)
@@ -85,6 +88,7 @@ async def get_risk_scores(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Retrieve risk scores"""
     query = db.query(RiskScore)

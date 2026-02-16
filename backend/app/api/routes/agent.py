@@ -16,6 +16,8 @@ from app.core.llm_council import council
 from app.models.database import AgentAction
 from app.modules.agent_control import AgentController
 from app.services.db import get_db_session
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -46,6 +48,7 @@ class AuthorizeResponse(BaseModel):
 async def authorize_action(
     request: AuthorizeRequest,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Authorize an agent action request
@@ -107,6 +110,7 @@ class ExecuteResponse(BaseModel):
 async def execute_action(
     request: ExecuteRequest,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Execute a previously authorized agent action
@@ -164,6 +168,7 @@ class KillResponse(BaseModel):
 async def kill_agent(
     request: KillRequest,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Emergency kill switch - blocks all pending actions for an agent
@@ -223,6 +228,7 @@ async def get_action_history(
     session_id: Optional[str] = None,
     limit: int = 50,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get action history for an agent

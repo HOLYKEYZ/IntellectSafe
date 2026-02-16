@@ -22,7 +22,11 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        key = settings.SECRET_KEY or "dev_secret_key_insecure"
+        key = settings.SECRET_KEY
+        if not key:
+            if settings.ENVIRONMENT == "production":
+                raise credentials_exception
+            key = "dev-only-insecure-key-do-not-use-in-prod"
         payload = jwt.decode(token, key, algorithms=[settings.ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:

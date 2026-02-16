@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 from app.models.database import ModuleType, IncidentStatus
 from app.services.db import get_db_session
 from app.services.governance import GovernanceEngine
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/governance", tags=["governance"])
 
@@ -44,6 +46,7 @@ async def get_risk_report(
     days: int = Query(7, ge=1, le=365),
     module_type: Optional[str] = None,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Generate risk report for specified period"""
     try:
@@ -72,6 +75,7 @@ async def get_risk_report(
 async def get_safety_score(
     days: int = Query(7, ge=1, le=365),
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Calculate overall safety score"""
     try:
@@ -92,6 +96,7 @@ async def get_incident_report(
     days: int = Query(30, ge=1, le=365),
     status: Optional[str] = None,
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Generate incident report"""
     try:
@@ -121,6 +126,7 @@ async def get_compliance_artifact(
     artifact_type: str = Query(..., regex="^(audit_trail|incident_log|risk_assessment)$"),
     days: int = Query(30, ge=1, le=365),
     db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Generate compliance artifact"""
     try:
