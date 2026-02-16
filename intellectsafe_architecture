@@ -1,0 +1,55 @@
+digraph "IntellectSafe Architecture" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="IntellectSafe Architecture" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	a4efcb42863e447cb134a64ad58317e7 [label="User / Agent" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/client\user.png" shape=none]
+	subgraph "cluster_IntellectSafe Platform" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="IntellectSafe Platform" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		subgraph "cluster_Edge Layer" {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label="Edge Layer" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			"3d2088fd724f45deaf921fe157616a2c" [label="Universal Proxy
+(Intercept & Auth)" height=2.3 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+			c721691762164bb2aa5239a9296ffed8 [label="Auth & API Keys" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/security\vault.png" shape=none]
+		}
+		subgraph "cluster_Safety Pipeline" {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label="Safety Pipeline" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			subgraph "cluster_Level 1: Prompt Shield" {
+				graph [bgcolor="#ECE8F6" fontname="Sans-Serif" fontsize=12 label="Level 1: Prompt Shield" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+				d90af609b66a47f1a666f63ab3add6a0 [label="Injection Detector" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+				"1f6f505ed673476fa72c115e099fa51a" [label="PII Scrubber" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+			}
+			subgraph "cluster_Level 4: LLM Council (Consensus)" {
+				graph [bgcolor="#ECE8F6" fontname="Sans-Serif" fontsize=12 label="Level 4: LLM Council (Consensus)" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+				ae7e111457c3428a8315b9aac7a1a484 [label="Gemini 1.5" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+				d073ab3e7e6c4668843db44c0e94d9fd [label="Llama 3" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+				"6922926e9861438aa027ebfcf55fa475" [label="Claude 3" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+			}
+			subgraph "cluster_Level 2: Output Guard" {
+				graph [bgcolor="#ECE8F6" fontname="Sans-Serif" fontsize=12 label="Level 2: Output Guard" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+				ab4dd5555b674224a93688dd76eb2ad4 [label="Hallucination/Safety Check" height=1.9 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+			}
+		}
+		subgraph "cluster_Storage & Logs" {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label="Storage & Logs" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			c60bbf3c15da4eb1a8b7497cd88ef7da [label="PostgreSQL
+(Risk Scores & Logs)" height=2.3 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/database\postgresql.png" shape=none]
+			a48767a3829046a3b45695e1021131d9 [label="Redis
+(Rate Limit & Queue)" height=2.3 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/inmemory\redis.png" shape=none]
+		}
+	}
+	"32d902e462a14c878adc9dd054229a7c" [label="Upstream Provider
+(OpenAI/Anthropic/Google)" height=2.3 image="C:\Users\USER\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+	a4efcb42863e447cb134a64ad58317e7 -> "3d2088fd724f45deaf921fe157616a2c" [label="1. Request" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"3d2088fd724f45deaf921fe157616a2c" -> c721691762164bb2aa5239a9296ffed8 [label="2. Validate" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"3d2088fd724f45deaf921fe157616a2c" -> d90af609b66a47f1a666f63ab3add6a0 [label="3. Scan Prompt" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	d90af609b66a47f1a666f63ab3add6a0 -> ae7e111457c3428a8315b9aac7a1a484 [label="4. Vote" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	d90af609b66a47f1a666f63ab3add6a0 -> d073ab3e7e6c4668843db44c0e94d9fd [label="4. Vote" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	d90af609b66a47f1a666f63ab3add6a0 -> "6922926e9861438aa027ebfcf55fa475" [label="4. Vote" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	ae7e111457c3428a8315b9aac7a1a484 -> "32d902e462a14c878adc9dd054229a7c" [label="5. Consensus Reached" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	d073ab3e7e6c4668843db44c0e94d9fd -> "32d902e462a14c878adc9dd054229a7c" [label="5. Consensus Reached" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"6922926e9861438aa027ebfcf55fa475" -> "32d902e462a14c878adc9dd054229a7c" [label="5. Consensus Reached" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"32d902e462a14c878adc9dd054229a7c" -> ab4dd5555b674224a93688dd76eb2ad4 [label="6. Raw Response" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	ab4dd5555b674224a93688dd76eb2ad4 -> c60bbf3c15da4eb1a8b7497cd88ef7da [label="7. Log Event" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"3d2088fd724f45deaf921fe157616a2c" -> a48767a3829046a3b45695e1021131d9 [label="Rate Limit" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	ab4dd5555b674224a93688dd76eb2ad4 -> a4efcb42863e447cb134a64ad58317e7 [label="8. Safe Response" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}

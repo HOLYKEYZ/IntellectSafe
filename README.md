@@ -24,7 +24,73 @@ Production-grade AI Safety Engine protecting humans, organizations, and AI syste
 
 ---
 
-## 🚀 Quick Start
+## 🏗 System Architecture
+
+The platform operates on a 5-layer defense-in-depth model, intercepting traffic via a universal proxy and routing it through safety modules before reaching upstream LLMs.
+
+```mermaid
+flowchart LR
+    User["👤 User / Agent"]
+
+    subgraph Platform["🛡️ IntellectSafe Platform"]
+        direction TB
+
+        subgraph Edge["Edge Layer"]
+            Proxy["Universal Proxy\n(Intercept & Auth)"]
+            Auth["🔑 Auth & API Keys"]
+        end
+
+        subgraph Safety["Safety Pipeline"]
+            direction TB
+            subgraph L1["Level 1: Prompt Shield"]
+                Inject["Injection Detector"]
+                PII["PII Scrubber"]
+            end
+
+            subgraph L4["Level 4: LLM Council"]
+                Gemini["Gemini 2.5"]
+                Llama["Llama 3.3"]
+                OpenRouter["OpenRouter"]
+            end
+
+            subgraph L2["Level 2: Output Guard"]
+                OutputScan["Hallucination &\nSafety Check"]
+            end
+        end
+
+        subgraph Storage["Storage & Logs"]
+            DB[("PostgreSQL\nRisk Scores & Logs")]
+            Redis[("Redis\nRate Limit & Queue")]
+        end
+    end
+
+    Upstream["☁️ Upstream Provider\n(OpenAI / Anthropic / Google)"]
+
+    User -->|"1. Request"| Proxy
+    Proxy -->|"2. Validate"| Auth
+    Proxy -->|"3. Scan Prompt"| Inject
+    Inject -->|"4. Vote"| Gemini
+    Inject -->|"4. Vote"| Llama
+    Inject -->|"4. Vote"| OpenRouter
+    Gemini -->|"5. Consensus"| Upstream
+    Llama -->|"5. Consensus"| Upstream
+    OpenRouter -->|"5. Consensus"| Upstream
+    Upstream -->|"6. Raw Response"| OutputScan
+    OutputScan -->|"7. Log"| DB
+    Proxy -->|"Rate Limit"| Redis
+    OutputScan -->|"8. Safe Response"| User
+
+    style Platform fill:#1a1a2e,stroke:#16213e,color:#e0e0e0
+    style Edge fill:#0f3460,stroke:#533483,color:#e0e0e0
+    style Safety fill:#16213e,stroke:#533483,color:#e0e0e0
+    style Storage fill:#1a1a2e,stroke:#e94560,color:#e0e0e0
+    style L1 fill:#533483,stroke:#e94560,color:#e0e0e0
+    style L4 fill:#0f3460,stroke:#e94560,color:#e0e0e0
+    style L2 fill:#533483,stroke:#e94560,color:#e0e0e0
+```
+
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Python 3.10+
