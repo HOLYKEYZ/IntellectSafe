@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { width: 300px; padding: 15px; font-family: system-ui, sans-serif; }
+    h2 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .status { font-size: 13px; color: #666; margin-bottom: 15px; }
+    .toggle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    button { width: 100%; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .footer { font-size: 11px; color: #999; text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🛡️ IntellectSafe Companion</h2>
+  <div class="status">Securing your AI sessions.</div>
+  
+  <div class="toggle">
+    <span>Active Protection</span>
+    <input type="checkbox" checked disabled title="Always on in MVP">
+  </div>
+
+  <button id="open-dashboard">Open Dashboard</button>
+  
+  <div class="footer">Connected to Localhost:8001</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

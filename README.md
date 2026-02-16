@@ -168,7 +168,18 @@ response = client.chat.completions.create(
 ```
 *For detailed setup (including Python/LangChain examples & BYOK), read the [**Integration Guide**](docs/INTEGRATION.md).*
 
+### 🛡️ Secure Your Real AI Sessions (Extension)
+
+To secure your sessions on **ChatGPT, Claude, Gemini, and Groq**, install the **IntellectSafe Companion** Chrome Extension:
+
+1. Open Chrome and go to `chrome://extensions`.
+2. Enable **Developer Mode** (top right).
+3. Click **Load Unpacked**.
+4. Select the `extension/` folder from this repository.
+5. Browse `chatgpt.com` or `groq.com`. Your prompts are now scanned locally! 🚀
+
 ### 🔌 Verify Connections
+
 
 Run the connection tester to check if your API keys and the proxy are working:
 

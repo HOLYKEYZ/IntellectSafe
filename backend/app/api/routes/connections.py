@@ -1,7 +1,7 @@
-from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.api.deps import get_db_session, get_current_user
+from app.services.db import get_db_session
+from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.provider_key import ProviderKey
 from app.core.security import encrypt_key
