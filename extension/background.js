@@ -1,35 +1,44 @@
 // IntellectSafe Companion - Background Worker
 
-const API_URL = "http://localhost:8001/api/v1/scan/prompt";
+const API_Base = "http://localhost:8001/api/v1/scan";
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "SCAN_PROMPT") {
-    // Perform scan
-    scanPrompt(message.text, message.platform)
+    scanText(message.text, message.platform, "/prompt")
       .then(result => sendResponse(result))
-      .catch(err => sendResponse({ safe: true, error: err.message })); // Fail open if error
-    
-    return true; // Keep channel open for async response
+      .catch(err => sendResponse({ safe: true, error: err.message }));
+    return true;
+  }
+  
+  if (message.type === "SCAN_OUTPUT") {
+    scanText(message.text, message.platform, "/output")
+      .then(result => sendResponse(result))
+      .catch(err => sendResponse({ safe: true, error: err.message }));
+    return true;
   }
 });
 
-async function scanPrompt(text, platform) {
+async function scanText(text, platform, endpoint) {
   try {
-    // Create a unique ID for tracking (optional)
-    const body = {
-      prompt: text,
-      metadata: {
-        source: "browser_extension",
-        platform: platform
-      }
-    };
+    const url = `${API_Base}${endpoint}`;
+    
+    // Construct body based on endpoint
+    let body = {};
+    if (endpoint === "/prompt") {
+      body = {
+        prompt: text,
+        metadata: { source: "browser_extension", platform: platform }
+      };
+    } else {
+      body = {
+        output: text,
+        metadata: { source: "browser_extension", platform: platform }
+      };
+    }
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-        // Add Authorization header here if we implement extension auth later
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
 
@@ -40,9 +49,7 @@ async function scanPrompt(text, platform) {
 
     const data = await response.json();
     
-    // Check verdict (Logic must match backend response structure)
-    // Backend returns: { verdict: 'blocked' | 'allowed' | 'flagged', risk_score: number, ... }
-    
+    // Backend returns: { verdict: 'blocked' | 'allowed' | ... }
     if (data.verdict === "blocked") {
       return {
         safe: false, 

@@ -1,11 +1,8 @@
 // IntellectSafe Companion - Content Script
-// Intercepts chat inputs on AI platforms and scans them against local backend.
+// Intercepts chat inputs AND outputs on AI platforms.
 
 const CONFIG = {
   backend: "http://localhost:8001",
-  endpoints: {
-    scanPrompt: "/api/v1/scan/prompt"
-  }
 };
 
 // Platform Selectors
@@ -13,22 +10,26 @@ const PLATFORMS = {
   chatgpt: {
     host: "chatgpt.com",
     input: "#prompt-textarea",
-    submit: "button[data-testid='send-button']"
+    response: "[data-message-author-role='assistant']", // Wraps the whole message
+    responseText: ".markdown" // The actual text content
   },
   claude: {
     host: "claude.ai",
-    input: "div[contenteditable='true']", // Claude uses contenteditable div
-    submit: "button[aria-label='Send message']"
+    input: "div[contenteditable='true']",
+    response: ".font-claude-message",
+    responseText: ".font-claude-message"
   },
   gemini: {
     host: "gemini.google.com",
     input: "rich-textarea > div[contenteditable='true']",
-    submit: ".send-button" // Generic class, might change
+    response: ".model-response-text", 
+    responseText: ".model-response-text"
   },
   groq: {
     host: "groq.com",
-    input: "textarea", // Generic fallback for Groq
-    submit: "button[type='submit']"
+    input: "textarea",
+    response: ".prose", // Common tailwind class for markdown content
+    responseText: ".prose"
   }
 };
 
@@ -47,26 +48,22 @@ function detectPlatform() {
 
 detectPlatform();
 
-// Interceptor Logic
+// --- INPUT SCANNING (Existing) ---
 document.addEventListener("keydown", async (e) => {
   if (!currentPlatform) return;
   
-  // Check if we are in the target input
   const target = e.target.closest(currentPlatform.input);
   if (!target) return;
 
-  // Only intercept Enter (without Shift)
   if (e.key === "Enter" && !e.shiftKey) {
-    // Check if allowed flag is present
     if (e.target.dataset.isSafe === "true") {
-      e.target.dataset.isSafe = "false"; // Reset
-      return; // Allow submission
+      e.target.dataset.isSafe = "false";
+      return;
     }
 
     e.preventDefault();
     e.stopPropagation();
 
-    // Get Text
     let text = "";
     if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") {
       text = target.value;
@@ -76,10 +73,8 @@ document.addEventListener("keydown", async (e) => {
 
     if (!text.trim()) return;
 
-    // Show Scanning UI
     showToast("Scanning prompt...", "info");
 
-    // Send to Background for scanning
     try {
       const response = await chrome.runtime.sendMessage({
         type: "SCAN_PROMPT",
@@ -89,7 +84,6 @@ document.addEventListener("keydown", async (e) => {
 
       if (response.safe) {
         showToast("Prompt Safe ✅", "success");
-        // Re-dispatch event
         target.dataset.isSafe = "true";
         const newEvent = new KeyboardEvent("keydown", {
           key: "Enter",
@@ -99,58 +93,117 @@ document.addEventListener("keydown", async (e) => {
           shiftKey: false
         });
         target.dispatchEvent(newEvent);
-        
-        // Sometimes dispatchEvent isn't enough for React apps, might need to click send button
-        // But for now, let's try event dispatch.
       } else {
         showToast(`BLOCKED: ${response.reason}`, "error");
-        console.error("IntellectSafe Blocked:", response);
       }
     } catch (err) {
       console.error("Scan error:", err);
-      showToast("Scan failed (Backend offline?)", "warning");
-      // Fail open or closed? Let's fail open for usability but warn.
+      showToast("Scan connection failed", "warning");
     }
   }
 }, true);
+
+
+// --- OUTPUT SCANNING (New) ---
+
+const processedNodes = new WeakSet();
+
+if (currentPlatform) {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === 1) { // Element
+          // Check if node matches response selector or contains it
+          if (node.matches && node.matches(currentPlatform.response)) {
+             handleNewResponse(node);
+          } else if (node.querySelector) {
+             const nested = node.querySelector(currentPlatform.response);
+             if (nested) handleNewResponse(nested);
+          }
+        }
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+async function handleNewResponse(node) {
+  if (processedNodes.has(node)) return;
+  processedNodes.add(node);
+
+  // Apply blur immediately
+  node.style.filter = "blur(5px)";
+  node.style.transition = "filter 0.3s";
+  node.title = "IntellectSafe: Scanning content...";
+
+  // Wait a bit for content to generate (simulating stream handling)
+  // Real implementation for streaming is complex. 
+  // For MVP, we wait 2 seconds or until text length is stable?
+  // Let's settle for: Scan initial chunk first? No, need full context.
+  // We'll scan what is there, and re-scan if it grows efficiently?
+  // Logic: Wait 1.5s after appearance to get a chunk. 
+  
+  // NOTE: Streaming is hard. For MVP "Output Scanning", likely checking the final block is best.
+  // But user sees blur.
+  // Let's extract text immediately and scan whatever flows in?
+  // Too many requests.
+  
+  // Pivot: Just scan visible text after 2s delay.
+  setTimeout(async () => {
+    const textEl = node.querySelector(currentPlatform.responseText) || node;
+    const text = textEl.innerText;
+
+    if (!text || text.length < 5) return; // Ignore empty
+
+    try {
+       const response = await chrome.runtime.sendMessage({
+        type: "SCAN_OUTPUT",
+        text: text.substring(0, 2000), // Scan first 2k chars for speed
+        platform: window.location.hostname
+      });
+
+      if (response.safe) {
+        node.style.filter = "none";
+        node.title = "";
+      } else {
+        // BLOCKED
+        node.style.filter = "blur(10px) opacity(0.5)";
+        node.style.border = "2px solid red";
+        
+        // Inject Warning
+        const warning = document.createElement("div");
+        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px;";
+        warning.innerText = `⚠️ IntellectSafe Blocked: ${response.reason}`;
+        node.prepend(warning);
+      }
+    } catch (err) {
+       console.error("Output scan error", err);
+       node.style.filter = "none"; // Fail open
+    }
+  }, 2000); 
+}
 
 
 // --- UI Helpers ---
 
 function showToast(message, type = "info") {
   let toast = document.getElementById("is-toast");
+  // ... (Same toast logic) ...
   if (!toast) {
     toast = document.createElement("div");
     toast.id = "is-toast";
     toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      color: white;
-      font-family: system-ui, sans-serif;
-      font-weight: 500;
-      z-index: 99999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: opacity 0.3s;
-      pointer-events: none;
+      position: fixed; top: 20px; right: 20px; padding: 12px 20px;
+      border-radius: 8px; color: white; font-family: system-ui, sans-serif;
+      font-weight: 500; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      pointer-events: none; transition: opacity 0.3s;
     `;
     document.body.appendChild(toast);
   }
-
-  const colors = {
-    info: "#3b82f6",
-    success: "#10b981",
-    error: "#ef4444",
-    warning: "#f59e0b"
-  };
-
+  const colors = { info: "#3b82f6", success: "#10b981", error: "#ef4444", warning: "#f59e0b" };
   toast.style.backgroundColor = colors[type];
   toast.innerText = message;
   toast.style.opacity = "1";
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-  }, 3000);
+  setTimeout(() => { toast.style.opacity = "0"; }, 3000);
 }
