@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 
-from app.api.routes import agent, audit, scan, governance, proxy, auth, connections
+from app.api.routes import agent, audit, scan, governance, proxy, auth, connections, users
 from app.models.provider_key import ProviderKey  # Import to register table
 from app.api.middleware.rate_limit import RateLimitMiddleware
 from app.db.session import engine
@@ -52,6 +52,7 @@ app.include_router(scan.router, prefix=settings.API_V1_PREFIX)
 app.include_router(agent.router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit.router, prefix=settings.API_V1_PREFIX)
 app.include_router(governance.router, prefix=settings.API_V1_PREFIX)
+app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 
 
 # Proxy router - No prefix for OpenAI compatibility (/v1/chat/completions)

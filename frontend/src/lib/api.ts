@@ -165,7 +165,12 @@ export const signup = async (request: SignupRequest): Promise<any> => {
 }
 
 export const getCurrentUser = async (): Promise<any> => {
-  const response = await api.get('/auth/me')
+  const response = await api.get('/users/me')
+  return response.data
+}
+
+export const updateUser = async (data: Record<string, any>): Promise<any> => {
+  const response = await api.put('/users/me', data)
   return response.data
 }
 

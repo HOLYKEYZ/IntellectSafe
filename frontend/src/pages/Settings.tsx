@@ -113,6 +113,23 @@ const Settings = () => {
           </div>
         </div>
 
+      {/* Safety Scanner Section */}
+      <div className="bg-card border rounded-lg p-6 shadow-sm">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">AI Safety Scanner</h2>
+              <p className="text-sm text-muted-foreground">Select which AI model performs safety checks (Output Scanning & Prompt Injection).</p>
+            </div>
+          </div>
+        </div>
+
+        <SafetyModelSelector user={user} onUpdate={(updated) => setUser(updated)} />
+      </div>
+
       {/* Connections Section (BYOK) */}
       <div className="bg-card border rounded-lg p-6 shadow-sm">
         <div className="flex items-start justify-between mb-6">
@@ -159,8 +176,53 @@ const Settings = () => {
 };
 
 // Sub-component for managing connections
-import { getConnections, createConnection, deleteConnection, Connection } from '@/lib/api';
+import { getConnections, createConnection, deleteConnection, updateUser, Connection } from '@/lib/api';
 import { Trash2, Plus, ShieldCheck } from 'lucide-react';
+
+const SafetyModelSelector = ({ user, onUpdate }: { user: any, onUpdate: (u: any) => void }) => {
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getConnections().then(setConnections).catch(console.error);
+  }, []);
+
+  const handleUpdate = async (provider: string) => {
+    setLoading(true);
+    try {
+        const val = provider || null;
+        const updated = await updateUser({ safety_provider: val });
+        onUpdate(updated);
+    } catch (err) {
+        console.error("Failed to update safety provider", err);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+        <label className="block text-sm font-medium">Select Scanner Model</label>
+        <select 
+            value={user?.safety_provider || ""} 
+            onChange={(e) => handleUpdate(e.target.value)}
+            disabled={loading}
+            className="w-full p-2 rounded border bg-background max-w-md"
+        >
+            <option value="">System Default (Optimized)</option>
+            {connections.map(c => (
+                <option key={c.id} value={c.provider}>
+                    Use my {c.provider} key ({c.label || c.key_mask})
+                </option>
+            ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+            Use one of your connected accounts to perform safety scans. 
+            Useful if you want to use a specific model (e.g. Haiku, Flash) for speed/cost.
+        </p>
+    </div>
+  );
+};
 
 const ConnectionsManager = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
