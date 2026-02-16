@@ -1,4 +1,6 @@
-from typing import Any
+from typing import Any, List
+import hashlib
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -7,7 +9,7 @@ from app.api import deps
 from app.api.deps import get_current_user
 from app.core import security
 from app.db.session import get_session
-from app.models.user import User, UserCreate, UserRead
+from app.models.user import User, UserCreate, UserRead, ApiKey, ApiKeyRead
 from datetime import timedelta
 from app.core.config import get_settings
 
@@ -85,3 +87,55 @@ def get_current_user_profile(
     Get current user profile. Used by frontend to validate token.
     """
     return current_user
+
+
+@router.post("/api-key")
+def create_api_key(
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Generate a new API key for the current user.
+    Returns the raw key ONCE — store it securely.
+    """
+    # Deactivate existing keys
+    statement = select(ApiKey).where(
+        ApiKey.user_id == current_user.id,
+        ApiKey.is_active == True,
+    )
+    existing_keys = db.exec(statement).all()
+    for k in existing_keys:
+        k.is_active = False
+        db.add(k)
+
+    # Generate cryptographically secure key
+    raw_key = f"is-{secrets.token_hex(24)}"
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    key_prefix = raw_key[:11]  # "is-" + first 8 hex chars
+
+    api_key = ApiKey(
+        user_id=current_user.id,
+        key_prefix=key_prefix,
+        key_hash=key_hash,
+    )
+    db.add(api_key)
+    db.commit()
+    db.refresh(api_key)
+
+    return {"api_key": raw_key, "prefix": key_prefix}
+
+
+@router.get("/api-keys", response_model=List[ApiKeyRead])
+def list_api_keys(
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    List active API keys (prefix only, never the full key).
+    """
+    statement = select(ApiKey).where(
+        ApiKey.user_id == current_user.id,
+    )
+    keys = db.exec(statement).all()
+    return keys
+

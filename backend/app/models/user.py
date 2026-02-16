@@ -26,3 +26,20 @@ class UserUpdate(SQLModel):
     full_name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+
+
+class ApiKey(SQLModel, table=True):
+    """User API keys for programmatic access"""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+    key_prefix: str = Field(max_length=12)      # First 8 chars for identification
+    key_hash: str                                 # SHA-256 hash of full key
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = Field(default=True)
+    last_used_at: Optional[datetime] = None
+
+
+class ApiKeyRead(SQLModel):
+    key_prefix: str
+    created_at: datetime
+    is_active: bool

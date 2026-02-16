@@ -6,14 +6,16 @@ from sqlmodel import SQLModel
 from app.api.routes import agent, audit, scan, governance, proxy, auth
 from app.api.middleware.rate_limit import RateLimitMiddleware
 from app.db.session import engine
+from app.models.database import Base
 from app.core.config import get_settings
 
 settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup
-    SQLModel.metadata.create_all(engine)
+    # Create tables on startup (both SQLModel and SQLAlchemy models)
+    SQLModel.metadata.create_all(engine)   # User table
+    Base.metadata.create_all(engine)        # scan_requests, risk_scores, audit_logs, etc.
     yield
 
 app = FastAPI(

@@ -1,34 +1,19 @@
 """
 Database service layer
 
-SQLAlchemy session management and database utilities.
+SQLAlchemy session management — uses the same engine as db/session.py
+to ensure a single connection pool across the entire app.
 """
 
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from app.core.config import get_settings
+# Import the shared engine from db/session.py (single source of truth)
+from app.db.session import engine
 
-settings = get_settings()
-
-# Create engine
-DATABASE_URL = settings.DATABASE_URL or "sqlite:///./sql_app.db"
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-
-engine = create_engine(
-    DATABASE_URL,
-    echo=settings.DB_ECHO,
-    pool_size=settings.DB_POOL_SIZE if "sqlite" not in DATABASE_URL else None,
-    max_overflow=settings.DB_MAX_OVERFLOW if "sqlite" not in DATABASE_URL else None,
-    pool_pre_ping=True,  # Verify connections before using
-    connect_args=connect_args
-)
-
-
-# Session factory
+# Session factory using the shared engine
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -53,4 +38,3 @@ def db_session() -> Generator[Session, None, None]:
         raise
     finally:
         session.close()
-

@@ -5,24 +5,28 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
         sync: false
       - key: SECRET_KEY
         generateValue: true
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: GOOGLE_API_KEY
-        sync: false
-      - key: DEEPSEEK_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false
-      - key: COHERE_API_KEY
+      - key: GEMINI2_API_KEY
         sync: false
+      - key: GROK2_API_KEY
+        sync: false
+      - key: OPEN_ROUTER_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://intellect-safe.vercel.app
+      - key: PYTHON_VERSION
+        value: "3.11.11"
 
   - type: worker
     name: ai-safety-worker
@@ -38,4 +42,3 @@ services:
         sync: false
       - key: CELERY_RESULT_BACKEND
         sync: false
-
