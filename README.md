@@ -89,6 +89,21 @@ flowchart LR
     style L2 fill:#533483,stroke:#e94560,color:#e0e0e0
 ```
 
+```
+
+## 🔑 Key Management & BYOK
+
+IntellectSafe supports **Bring Your Own Key (BYOK)** for all major providers.
+- **Secure Storage:** Keys are encrypted using `Fernet` (AES-128) before storage.
+- **Granular Control:** Assign specific keys to specific tasks (e.g., use a cheap key for high-volume safety scans).
+- **Universal Proxy:** Use your stored keys to access any model via our OpenAI-compatible proxy.
+
+### Configurable Safety Scanner
+You can dedicate a specific AI connection for **Safety Operations** (Prompt Injection & Output Scanning).
+1. Go to **Settings** -> **Upstream Connections**.
+2. Add a key (e.g., "OpenRouter Research").
+3. Select it in the **"AI Safety Scanner"** dropdown.
+4. All safety checks will now route through this connection, keeping your main operational keys separate.
 
 ## 🚀 Getting Started
 
