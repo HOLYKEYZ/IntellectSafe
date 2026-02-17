@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "IntellectSafe Companion",
-  "version": "1.0",
-  "description": "Secures your AI chat sessions by scanning prompts before submission.",
+  "version": "1.1",
+  "description": "Secures your AI chat sessions. Scans prompts & outputs (Allow-and-Retract mode).",
   "permissions": [
     "activeTab",
     "scripting",

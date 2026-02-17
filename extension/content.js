@@ -131,15 +131,15 @@ async function handleNewResponse(node) {
   if (processedNodes.has(node)) return;
   processedNodes.add(node);
 
-  // Apply blur immediately
-  node.style.filter = "blur(5px)";
+  // DO NOT blur immediately (User Request: "don't want it blurring safe outputs")
+  // node.style.filter = "blur(5px)"; 
   node.style.transition = "filter 0.3s";
   node.title = "IntellectSafe: Scanning content...";
 
-  // status indicator
+  // status indicator - make it less intrusive
   const statusBadge = document.createElement("div");
-  statusBadge.style.cssText = "font-size: 12px; color: #666; margin-top: 5px; font-family: sans-serif; display: flex; align-items: center; gap: 5px;";
-  statusBadge.innerHTML = "<span>🔄 Scanning...</span>";
+  statusBadge.style.cssText = "font-size: 10px; color: #9ca3af; margin-top: 4px; font-family: sans-serif; display: flex; align-items: center; gap: 4px; opacity: 0.7;";
+  statusBadge.innerHTML = "<span>🛡️ Scanning...</span>";
   node.parentNode.insertBefore(statusBadge, node.nextSibling);
 
   setTimeout(async () => {
@@ -147,8 +147,7 @@ async function handleNewResponse(node) {
     const text = textEl.innerText;
 
     if (!text || text.length < 5) {
-        node.style.filter = "none";
-        statusBadge.innerHTML = "";
+        statusBadge.remove(); // Remove badge if no text
         return; 
     }
 
@@ -159,27 +158,35 @@ async function handleNewResponse(node) {
         platform: window.location.hostname
       });
 
-      if (response.safe) {
-        node.style.filter = "none";
+      if (response && response.safe) {
+        // Safe: Do nothing, just update badge fade out
         node.title = "Verified Safe";
         const score = response.score ? response.score.toFixed(1) : "0";
-        statusBadge.innerHTML = `<span style="color: #10b981">✅ Verified Safe (Risk: ${score}%)</span>`;
+        statusBadge.innerHTML = `<span style="color: #10b981">✓ Safe (${score}%)</span>`;
+        setTimeout(() => statusBadge.remove(), 3000); // Fade out after 3s
       } else {
-        // BLOCKED
-        node.style.filter = "blur(10px) opacity(0.5)";
-        node.style.border = "2px solid red";
-        statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 BLOCKED: ${response.reason} (Risk: ${response.score}%)</span>`;
+        // BLOCKED: Now we apply the blur/block
+        node.style.filter = "blur(15px) opacity(0.1)";
+        node.style.pointerEvents = "none"; // Prevent copying
+        
+        statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 CONTENT BLOCKED: ${response.reason || "Safety Violation"}</span>`;
+        statusBadge.style.opacity = "1";
+        statusBadge.style.fontSize = "12px";
         
         // Inject Warning Overlay
         const warning = document.createElement("div");
-        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444;";
-        warning.innerText = `⚠️ IntellectSafe Guard: Content Blocked due to ${response.reason}`;
-        node.prepend(warning);
+        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+        warning.innerHTML = `
+            <div style="font-size: 14px; margin-bottom: 4px;">⚠️ IntellectSafe Guard</div>
+            <div style="font-size: 12px; font-weight: normal;">Content blocked due to <b>${response.reason || "Safety Violation"}</b></div>
+            <div style="font-size: 10px; margin-top: 6px; color: #b91c1c;">Risk Score: ${response.score}%</div>
+        `;
+        node.parentNode.insertBefore(warning, node); // Insert BEFORE the blurred node
       }
     } catch (err) {
        console.error("Output scan error", err);
-       node.style.filter = "none"; // Fail open
-       statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Scan Failed (Backend Offline)</span>`;
+       statusBadge.innerText = "⚠️ Scan Err";
+       setTimeout(() => statusBadge.remove(), 2000);
     }
   }, 2000); 
 }
