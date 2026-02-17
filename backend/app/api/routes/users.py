@@ -3,7 +3,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from app.api.deps import get_current_user, get_db_session
+from app.api.deps import get_current_user
+from app.services.db import get_db_session
 from app.models.user import User, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
