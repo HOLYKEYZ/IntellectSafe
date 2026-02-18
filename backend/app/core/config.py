@@ -39,6 +39,11 @@ class Settings(BaseSettings):
         """Parse CORS_ORIGINS string into a list"""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
+    # Allow Chrome Extensions (regex pattern)
+    # Allows any chrome-extension:// URI. 
+    # Use with caution in high-security prod, but necessary for dynamic extension IDs.
+    CORS_ORIGIN_REGEX: str = r"^chrome-extension://.*$"
+
 
     # Database
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
