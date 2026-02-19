@@ -22,7 +22,14 @@
 
   <button id="open-dashboard">Open Dashboard</button>
   
-  <div class="footer">Connected to Localhost:8001</div>
+  <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+    <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Backend URL</label>
+    <div style="display: flex; gap: 5px;">
+        <input id="backend-url" type="text" placeholder="http://localhost:8001" style="width: 100%; padding: 6px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px;">
+        <button id="save-url" style="width: auto; padding: 6px 12px; font-size: 11px; background: #4b5563;">Save</button>
+    </div>
+    <div id="save-msg" style="font-size: 10px; color: green; margin-top: 4px; height: 14px;"></div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

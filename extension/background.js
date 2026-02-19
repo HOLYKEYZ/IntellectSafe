@@ -1,8 +1,24 @@
 // IntellectSafe Companion - Background Worker
 
-const API_Base = "http://localhost:8001/api/v1/scan";
+let API_Base = "http://localhost:8001/api/v1/scan"; // Default Localhost
+
+function updateApiBase(rootUrl) {
+    if (!rootUrl) return;
+    const cleanRoot = rootUrl.replace(/\/$/, "");
+    API_Base = `${cleanRoot}/api/v1/scan`;
+    console.log("[IntellectSafe] API Base updated:", API_Base);
+}
+
+// Initialize from storage
+chrome.storage.local.get(['backendUrl'], (result) => {
+    if (result.backendUrl) updateApiBase(result.backendUrl);
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "CONFIG_UPDATED") {
+      updateApiBase(message.url);
+      return true;
+  }
   if (message.type === "SCAN_PROMPT") {
     scanText(message.text, message.platform, "/prompt")
       .then(result => sendResponse(result))
