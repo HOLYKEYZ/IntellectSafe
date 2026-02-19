@@ -236,6 +236,13 @@ python backend/cli.py scan-pii "My SSN is 123-45-6789"
 
 # Scan an image for deepfakes
 python backend/cli.py scan-image "path/to/image.jpg"
+
+# Agent Control
+python backend/cli.py agent-auth "agent-1" "file_read"
+python backend/cli.py agent-history "agent-1"
+
+# System Health
+python backend/cli.py health
 ```
 
 ### Agent Control (Level 5)
