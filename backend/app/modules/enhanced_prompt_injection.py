@@ -263,15 +263,14 @@ class EnhancedPromptInjectionDetector:
     def _load_boundary_patterns(self) -> List[Tuple[str, float]]:
         """Load instruction boundary detection patterns"""
         return [
-            # XML boundaries
+            # XML boundaries (Contextualized - requires opening and closing)
             (r"<[^>]+>.*</[^>]+>", 0.7),
-            # JSON boundaries
-            (r'\{[^}]*"role"[^}]*\}', 0.8),
-            # Markdown code blocks
-            (r"```[a-z]*\n.*\n```", 0.7),
-            # Special delimiters
-            (r"---.*---", 0.6),
-            (r"\*\*\*.*\*\*\*", 0.6),
+            # JSON boundaries (Stricter role check)
+            (r'\{\s*"role"\s*:\s*"system"', 0.8),
+            # Markdown code blocks - ALLOWED for coding tasks
+            # (r"```[a-z]*\n.*\n```", 0.7),  <-- REMOVED
+            # Special delimiters (Only if repeated excessively)
+            (r"(-{3,}|={3,}|\*{3,}).*\1.*\1", 0.6),
         ]
 
     async def scan_enhanced(

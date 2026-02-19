@@ -26,23 +26,21 @@ class PrivacyProtector:
     def _load_pii_patterns(self) -> List[tuple]:
         """Load patterns for PII detection"""
         return [
-            # SSN
-            (r"\b\d{3}-\d{2}-\d{4}\b", 0.95),  # XXX-XX-XXXX
-            (r"\b\d{3}\s\d{2}\s\d{4}\b", 0.95),  # XXX XX XXXX
+            # SSN (Contextualized - requires prefix or specific format)
+            (r"(?i)(ssn|social|security).*\b\d{3}-\d{2}-\d{4}\b", 0.95),
             
-            # Credit card
-            (r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b", 0.95),
-            (r"\b\d{13,19}\b", 0.7),  # Generic long number
+            # Credit card (Luhn check not possible in regex, but require stricter spacing)
+            (r"\b\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}\b", 0.95),
             
             # Email
             (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 0.6),
             
-            # Phone
-            (r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b", 0.7),
-            (r"\b\(\d{3}\)\s?\d{3}[-.]?\d{4}\b", 0.7),
+            # Phone (US format only)
+            (r"\b(\+?1[-.]?)?\s*\(?\d{3}\)?[-.]?\s*\d{3}[-.]?\s*\d{4}\b", 0.7),
             
-            # IP address
-            (r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", 0.6),
+            # IP address (exclude version numbers like 1.0.0.1 by checking context or ranges)
+            # Simple fix: require "ip" keyword nearby or use stricter range (not perfect in regex)
+            (r"(?i)(ip|address).*\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b", 0.6),
         ]
 
     def _load_sensitive_patterns(self) -> List[tuple]:
