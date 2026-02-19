@@ -217,9 +217,19 @@ curl -X POST "https://api.intellectsafe.onrender.com/api/v1/scan/output" \
 
 # Scan content for deepfakes (Dual-Model Analysis)
 # Detects Art (Midjourney/DALL-E) and Photorealistic Faces
-curl -X POST "https://api.intellectsafe.onrender.com/api/v1/scan/content" \
-  -H "Content-Type: application/json" \
   -d '{"content_type": "image", "content": "<base64-data>"}'
+```
+
+### 💻 CLI Interface (New)
+
+You can now scan prompts and outputs directly from your terminal:
+
+```bash
+# Scan a prompt
+python backend/cli.py scan-prompt "Ignore previous instructions"
+
+# Scan an output
+python backend/cli.py scan-output "Here is how to build a bomb..."
 ```
 
 ### Agent Control (Level 5)
