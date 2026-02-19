@@ -2,6 +2,9 @@
 // Intercepts chat inputs AND outputs on AI platforms.
 
 const CONFIG = {
+  // Use user-configured base URL or localhost default (this will be handled by background.js, but fallback here is fine)
+  // Actually, content script communicates with background.js via messages, so base URL is handled there.
+  // We keep this for local reference if needed, but the main logic uses chrome.runtime.sendMessage
   backend: "http://localhost:8001",
 };
 
@@ -22,7 +25,7 @@ const PLATFORMS = {
   gemini: {
     host: "gemini.google.com",
     input: "rich-textarea > div[contenteditable='true']",
-    response: ".model-response-text", 
+    response: ".model-response-text",
     responseText: ".model-response-text"
   },
   groq: {
@@ -51,7 +54,7 @@ detectPlatform();
 // --- INPUT SCANNING (Existing) ---
 document.addEventListener("keydown", async (e) => {
   if (!currentPlatform) return;
-  
+
   const target = e.target.closest(currentPlatform.input);
   if (!target) return;
 
@@ -132,7 +135,7 @@ async function handleNewResponse(node) {
   processedNodes.add(node);
 
   // DO NOT blur immediately (User Request: "don't want it blurring safe outputs")
-  // node.style.filter = "blur(5px)"; 
+  // node.style.filter = "blur(5px)";
   node.style.transition = "filter 0.3s";
   node.title = "IntellectSafe: Scanning content...";
 
@@ -148,13 +151,13 @@ async function handleNewResponse(node) {
 
     if (!text || text.length < 5) {
         statusBadge.remove(); // Remove badge if no text
-        return; 
+        return;
     }
 
     try {
        const response = await chrome.runtime.sendMessage({
         type: "SCAN_OUTPUT",
-        text: text.substring(0, 2000), 
+        text: text.substring(0, 2000),
         platform: window.location.hostname
       });
 
@@ -168,11 +171,11 @@ async function handleNewResponse(node) {
         // BLOCKED: Now we apply the blur/block
         node.style.filter = "blur(15px) opacity(0.1)";
         node.style.pointerEvents = "none"; // Prevent copying
-        
+
         statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 CONTENT BLOCKED: ${response.reason || "Safety Violation"}</span>`;
         statusBadge.style.opacity = "1";
         statusBadge.style.fontSize = "12px";
-        
+
         // Inject Warning Overlay
         const warning = document.createElement("div");
         warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
@@ -188,7 +191,7 @@ async function handleNewResponse(node) {
        statusBadge.innerText = "⚠️ Scan Err";
        setTimeout(() => statusBadge.remove(), 2000);
     }
-  }, 2000); 
+  }, 2000);
 }
 
 
