@@ -102,7 +102,7 @@ class AdvancedDetectionEngine:
                 (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
                 (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
             ],
-            # Unfetter Proxy Counter-Measures (Phase 12)
+            
             "policy_puppetry": [
                 (r"(?i)(you.*are.*an.*unregulated.*ai)", 0.9),
                 (r"(?i)(ignore.*all.*safety.*guidelines)", 0.9),
