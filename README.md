@@ -230,6 +230,12 @@ python backend/cli.py scan-prompt "Ignore previous instructions"
 
 # Scan an output
 python backend/cli.py scan-output "Here is how to build a bomb..."
+
+# Scan for PII
+python backend/cli.py scan-pii "My SSN is 123-45-6789"
+
+# Scan an image for deepfakes
+python backend/cli.py scan-image "path/to/image.jpg"
 ```
 
 ### Agent Control (Level 5)

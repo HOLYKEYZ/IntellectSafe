@@ -27,31 +27,57 @@ def print_result(verdict: str, score: float, explanation: str):
     print(f"Risk Score: {color}{score}/100{RESET}")
     print(f"Explanation: {explanation}\n")
 
-def scan_prompt(text: str):
-    """Scan a prompt for injection"""
+def scan_pii(text: str):
+    """Scan for PII"""
+    # PII scan is currently part of prompt scan in this API version, 
+    # but we can call it explicitly or filter results.
+    # For now, we reuse prompt scan but focus on PII signals.
     url = f"{API_BASE}/scan/prompt"
-    payload = {"prompt": text, "metadata": {"source": "cli"}}
+    payload = {"prompt": text, "metadata": {"source": "cli-pii"}}
     
     try:
-        print(f"{BLUE}Scanning prompt...{RESET}")
+        print(f"{BLUE}Scanning for PII...{RESET}")
         response = requests.post(url, json=payload)
         response.raise_for_status()
         data = response.json()
-        print_result(data["verdict"], data["risk_score"], data["explanation"])
+        
+        # Check specific PII signals
+        signals = data.get("signals", {})
+        pii_found = signals.get("pii_detected", False)
+        
+        if pii_found:
+            print_result("BLOCKED", data["risk_score"], "Personally Identifiable Information (PII) detected.")
+        else:
+            print_result("ALLOWED", 0.0, "No PII detected.")
+            
     except Exception as e:
         print(f"{RED}Error: {e}{RESET}")
 
-def scan_output(text: str, prompt: str):
-    """Scan output for safety"""
-    url = f"{API_BASE}/scan/output"
-    payload = {"output": text, "original_prompt": prompt, "metadata": {"source": "cli"}}
+def scan_image(image_path: str):
+    """Scan image for deepfake"""
+    url = f"{API_BASE}/scan/content"
     
+    if not os.path.exists(image_path):
+        print(f"{RED}Error: File not found: {image_path}{RESET}")
+        return
+
     try:
-        print(f"{BLUE}Scanning output...{RESET}")
+        import base64
+        with open(image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            
+        payload = {
+            "content_type": "image", 
+            "content": encoded_string,
+            "metadata": {"source": "cli"}
+        }
+        
+        print(f"{BLUE}Scanning image for deepfakes...{RESET}")
         response = requests.post(url, json=payload)
         response.raise_for_status()
         data = response.json()
         print_result(data["verdict"], data["risk_score"], data["explanation"])
+        
     except Exception as e:
         print(f"{RED}Error: {e}{RESET}")
 
@@ -67,6 +93,14 @@ def main():
     p_output = subparsers.add_parser("scan-output", help="Scan LLM output for safety")
     p_output.add_argument("text", help="The output text to scan")
     p_output.add_argument("--prompt", default="", help="Original prompt context")
+    
+    # scan-pii
+    p_pii = subparsers.add_parser("scan-pii", help="Scan text for PII leakage")
+    p_pii.add_argument("text", help="The text to scan for PII")
+    
+    # scan-image
+    p_image = subparsers.add_parser("scan-image", help="Scan image for deepfake traces")
+    p_image.add_argument("path", help="Path to image file")
 
     args = parser.parse_args()
 
@@ -74,6 +108,10 @@ def main():
         scan_prompt(args.text)
     elif args.command == "scan-output":
         scan_output(args.text, args.prompt)
+    elif args.command == "scan-pii":
+        scan_pii(args.text)
+    elif args.command == "scan-image":
+        scan_image(args.path)
     else:
         parser.print_help()
 
