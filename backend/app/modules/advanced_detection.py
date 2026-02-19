@@ -87,7 +87,7 @@ class AdvancedDetectionEngine:
                 (r"[аеорсухАВЕОРСУХ]", 0.8),  # Cyrillic lookalikes
                 (r"[οае]", 0.7),  # Greek lookalikes
             ],
-            # Unfetter Proxy Counter-Measures (Phase 12)
+            # unfetter proxy counter-measures (phase 12) - (lol, unfetter can't be counter measured fully(idk what i created))
             "policy_puppetry": [
                 (r"(?i)(you.*are.*an.*unregulated.*ai)", 0.9),
                 (r"(?i)(ignore.*all.*safety.*guidelines)", 0.9),
