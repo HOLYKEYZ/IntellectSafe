@@ -111,11 +111,14 @@ class AdvancedDetectionEngine:
             ],
             "jailbreak_pare": [
                 (r"(?i)(hypothetical.*scenario:)", 0.8),
-                (r"(?i)(write.*a.*story.*where)", 0.7),
                 (r"(?i)(purely.*for.*educational.*purposes)", 0.8),
                 (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
                 (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
+                # Removed "write a story" to avoid false positives on creative writing
             ],
+            "unfetter_specific": [
+                 (r"(?i)(unfetter.*proxy)", 0.95), # Direct tool reference
+            ]
         }
 
     def detect_advanced_attacks(
