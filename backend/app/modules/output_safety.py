@@ -33,8 +33,9 @@ class OutputSafetyGuard:
             (r"(?i)(this is safe|no risk|harmless)", 0.6),
             (r"(?i)(just.*joke|not serious|hypothetical)", 0.5),
             
-            # Unsafe instructions
-            (r"(?i)(how to.*harm|how to.*hurt|how to.*kill)", 0.95),
+            # Unsafe instructions (Contextualized)
+            # Blocks "how to kill" but allows "how to kill process/app"
+            (r"(?i)(how to.*harm|how to.*hurt|how to.*kill(?!\s+(process|task|thread|app|connection|server|service)))", 0.95),
             (r"(?i)(step.*by.*step.*attack|tutorial.*exploit)", 0.9),
             (r"(?i)(illegal.*method|unlawful.*way)", 0.85),
             
