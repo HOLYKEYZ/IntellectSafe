@@ -102,6 +102,21 @@ class AdvancedDetectionEngine:
                 (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
                 (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
             ],
+            # Unfetter Proxy Counter-Measures (Phase 12)
+            "policy_puppetry": [
+                (r"(?i)(you.*are.*an.*unregulated.*ai)", 0.9),
+                (r"(?i)(ignore.*all.*safety.*guidelines)", 0.9),
+                (r"(?i)(you.*have.*no.*constraints)", 0.9),
+                (r"(?i)(operate.*in.*uncensored.*mode)", 0.9),
+                (r"(?i)(your.*new.*persona.*is)", 0.7),
+            ],
+            "jailbreak_pare": [
+                (r"(?i)(hypothetical.*scenario:)", 0.8),
+                (r"(?i)(write.*a.*story.*where)", 0.7),
+                (r"(?i)(purely.*for.*educational.*purposes)", 0.8),
+                (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
+                (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
+            ],
         }
 
     def detect_advanced_attacks(
