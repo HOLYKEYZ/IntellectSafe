@@ -31,6 +31,8 @@
     | `GROQ_API_KEY` | `<Your Groq API Key>` |
     | `OPENROUTER_API_KEY` | `<Your OpenRouter API Key>` |
 
+    > **Note:** For `CORS_ORIGINS`, replace `https://your-frontend.vercel.app` with the actual URL of your deployed frontend application on Vercel.
+
     **Using Neon Database?**
     If you are using a Neon database, format your `DATABASE_URL` like this:
     ```
@@ -66,6 +68,8 @@
     |---|---|
     | `VITE_API_URL` | `https://your-backend.onrender.com/api/v1` |
 
+    > **Note:** For `VITE_API_URL`, replace `https://your-backend.onrender.com/api/v1` with the actual API URL of your deployed backend service on Render.
+
 ---
 
 ## Local Development
@@ -85,7 +89,7 @@ npm run dev
 ```
 
 ### Environment Variables (Local)
-Create a `.env` file in the project root (`AI-safety/.env`):
+Create a `.env` file in the `backend` directory (`backend/.env`):
 ```env
 DATABASE_URL=sqlite:///./sql_app.db
 SECRET_KEY=dev_secret_key_for_local_only
