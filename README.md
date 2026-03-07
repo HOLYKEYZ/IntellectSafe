@@ -116,13 +116,14 @@ You can dedicate a specific AI connection for **Safety Operations** (Prompt Inje
 
 ```bash
 # Clone repository
-git clone <repo-url>
-cd AI-safety
+git clone https://github.com/HOLYKEYZ/IntellectSafe.git
+cd IntellectSafe
 
 # Backend setup
 cd backend
 python -m venv venv
 .\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 alembic upgrade head
 
