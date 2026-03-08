@@ -96,7 +96,7 @@ class Settings(BaseSettings):
     CONFIDENCE_THRESHOLD: float = 0.7  # Minimum confidence for action
 
     # Rate Limiting
-    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_ENABLED: bool = False
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_PER_HOUR: int = 1000
 

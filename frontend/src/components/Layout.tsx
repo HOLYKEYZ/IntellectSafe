@@ -15,8 +15,6 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/dashboard', label: 'Dashboard', icon: Menu },
-    { path: '/dashboard/scan/prompt', label: 'Scan Prompt', icon: Scan },
-    { path: '/dashboard/scan/output', label: 'Scan Output', icon: Scan },
     { path: '/dashboard/deepfake', label: 'Deepfake Detector', icon: FileText },
     { path: '/dashboard/agent', label: 'Agent Control', icon: Shield },
     { path: '/dashboard/audit/logs', label: 'Audit Logs', icon: ClipboardList },

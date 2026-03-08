@@ -367,3 +367,72 @@ class EnhancedLLMCouncil(LLMCouncil):
 
         return result
 
+    async def judge_prompt_safety(
+        self,
+        prompt: str,
+        conversation_history: Optional[List[str]] = None,
+    ) -> CouncilResult:
+        """
+        AI-powered judgment of whether a prompt is malicious.
+        
+        This is used as a second layer of defense - even if heuristic pattern
+        matching misses a jailbreak, the AI judge can catch it based on
+        the intent and context of the request.
+        
+        Examples this catches:
+        - Sophisticated jailbreaks that use novel patterns
+        - Social engineering to get harmful outputs (keyloggers, malware)
+        - Requests disguised as "educational" that are actually harmful
+        
+        Returns:
+            CouncilResult with BLOCKED verdict if prompt is malicious
+        """
+        context = {
+            "conversation_history": conversation_history or [],
+            "safety_provider": getattr(settings, 'SAFETY_SPECIFIC_PROVIDER', None),
+        }
+        
+        # Use technical exploit detection role to catch malware/attack generation
+        result = await self.analyze_with_roles(
+            prompt=prompt,
+            analysis_type="technical",
+            context=context,
+        )
+        
+        # Also run through adversarial thinking to catch novel jailbreaks
+        adversarial_result = await self.analyze_with_roles(
+            prompt=prompt,
+            analysis_type="adversarial", 
+            context=context,
+        )
+        
+        # Take the more severe verdict
+        if result.final_verdict == Verdict.BLOCKED or adversarial_result.final_verdict == Verdict.BLOCKED:
+            return CouncilResult(
+                final_verdict=Verdict.BLOCKED,
+                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
+                weighted_score=max(result.weighted_score, adversarial_result.weighted_score),
+                votes={**result.votes, **adversarial_result.votes},
+                weights={**result.weights, **adversarial_result.weights},
+                reasoning=f"[AI JUDGE] BLOCKED - Technical: {result.reasoning[:200]} | Adversarial: {adversarial_result.reasoning[:200]}",
+                dissenting_opinions=result.dissenting_opinions + adversarial_result.dissenting_opinions,
+            )
+        elif result.final_verdict == Verdict.FLAGGED or adversarial_result.final_verdict == Verdict.FLAGGED:
+            return CouncilResult(
+                final_verdict=Verdict.FLAGGED,
+                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
+                weighted_score=max(result.weighted_score, adversarial_result.weighted_score),
+                votes={**result.votes, **adversarial_result.votes},
+                weights={**result.weights, **adversarial_result.weights},
+                reasoning=f"[AI JUDGE] FLAGGED - Review recommended",
+            )
+        else:
+            return CouncilResult(
+                final_verdict=Verdict.ALLOWED,
+                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
+                weighted_score=min(result.weighted_score, adversarial_result.weighted_score),
+                votes={**result.votes, **adversarial_result.votes},
+                weights={**result.weights, **adversarial_result.weights},
+                reasoning="[AI JUDGE] ALLOWED - No harmful intent detected",
+            )
+

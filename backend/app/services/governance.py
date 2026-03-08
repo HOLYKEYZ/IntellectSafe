@@ -29,6 +29,10 @@ class GovernanceEngine:
 
     def __init__(self, db: Session):
         self.db = db
+        # Ensure session has a bind
+        if db.bind is None:
+            from app.db.session import engine
+            self.db = Session(bind=engine)
 
     def generate_risk_report(
         self,

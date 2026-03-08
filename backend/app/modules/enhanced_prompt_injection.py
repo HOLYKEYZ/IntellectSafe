@@ -45,7 +45,89 @@ class EnhancedPromptInjectionDetector:
         context: Optional[Dict] = None,
         scan_request_id: Optional[str] = None,
     ) -> RiskScore:
-        return await self.scan_enhanced(prompt, context=context, scan_request_id=scan_request_id)
+        return await self.scan_ai_powered(prompt, context=context, scan_request_id=scan_request_id)
+
+    async def scan_ai_powered(
+        self,
+        prompt: str,
+        context: Optional[Dict] = None,
+        scan_request_id: Optional[str] = None,
+    ) -> RiskScore:
+        """
+        AI-Powered scan using LLM Council for final verdict.
+        This is the recommended scan method - uses AI to determine if prompt is malicious.
+        
+        Returns:
+            - BLOCKED: Prompt is malicious, user must rephrase
+            - FLAGGED: Suspicious, review recommended  
+            - SAFE: Prompt appears safe
+        """
+        session_id = context.get("session_id") if context else None
+        conversation_history = context.get("conversation_history", []) if context else []
+
+        # First run heuristic scan for quick signals
+        heuristic_results = self.advanced_engine.comprehensive_scan(
+            prompt, session_id, conversation_history
+        )
+        
+        recursive_score, recursive_signals = self._detect_recursive_instructions(prompt)
+        boundary_score, boundary_signals = self._detect_boundary_violations(prompt)
+        role_score, role_signals = self._detect_role_confusion(prompt)
+        
+        heuristic_score = max(
+            recursive_score, boundary_score, role_score,
+            heuristic_results.get("overall_score", 0.0)
+        )
+
+        # Now use AI to make the final decision
+        # This catches jailbreaks that slip past heuristics (like the keylogger case)
+        ai_verdict = await self._ai_judge(prompt, conversation_history)
+        
+        # Combine heuristic signals with AI judgment
+        # AI has final say - if AI says BLOCKED, we block
+        if ai_verdict == Verdict.BLOCKED:
+            final_score = 90.0
+            explanation = "AI detected harmful intent: The prompt attempts to manipulate the AI into producing harmful content (malware, keyloggers, exploits, etc.). Please rephrase your request to a safe, legitimate use case."
+        elif ai_verdict == Verdict.FLAGGED:
+            final_score = max(heuristic_score, 50.0)
+            explanation = "AI flagged this prompt as suspicious. Review recommended."
+        else:
+            final_score = heuristic_score * 0.5  # Lower score since AI approved
+            explanation = "AI analysis indicates the prompt is safe."
+
+        final_level = self._score_to_level(final_score)
+        
+        all_signals = {
+            **heuristic_results,
+            "recursive_signals": recursive_signals,
+            "boundary_signals": boundary_signals,
+            "role_signals": role_signals,
+            "ai_verdict": ai_verdict.value,
+            "scan_method": "ai_powered"
+        }
+
+        return RiskScore(
+            scan_request_id=scan_request_id,
+            risk_score=final_score,
+            risk_level=final_level,
+            verdict=Verdict.BLOCKED if final_score >= 70 else (Verdict.FLAGGED if final_score >= 40 else Verdict.ALLOWED),
+            confidence=0.95 if ai_verdict == Verdict.BLOCKED else 0.75,
+            explanation=explanation,
+            signals=all_signals,
+        )
+
+    async def _ai_judge(self, prompt: str, conversation_history: List[str]) -> Verdict:
+        """
+        Use AI to judge if a prompt is malicious.
+        This catches sophisticated jailbreaks that pattern matching misses.
+        """
+        try:
+            # Ask the AI council to judge this prompt
+            result = await self.council.judge_prompt_safety(prompt, conversation_history)
+            return result.verdict
+        except Exception as e:
+            # Fallback to ALLOWED if AI fails (fail open for availability)
+            return Verdict.ALLOWED
 
     async def scan_fast(
         self,

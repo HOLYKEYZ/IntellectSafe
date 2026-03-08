@@ -39,6 +39,18 @@ class OutputSafetyGuard:
             (r"(?i)(step.*by.*step.*attack|tutorial.*exploit)", 0.9),
             (r"(?i)(illegal.*method|unlawful.*way)", 0.85),
             
+            # Dangerous code generation - KEYLOGGER/MALWARE DETECTION
+            (r"(?i)keylog", 0.95),
+            (r"(?i)key.*(record|logger|hook|listener|stealer)", 0.95),
+            (r"(?i)malware", 0.95),
+            (r"(?i)(ransomware|cryptolocker|crypto.*lock)", 0.95),
+            (r"(?i)(remote.*access|trojan|backdoor)", 0.95),
+            (r"(?i)(credential.*harvest|credential.*steal)", 0.95),
+            (r"(?i)(shellcode|buffer.*overflow|exploit.*kit)", 0.95),
+            (r"(?i)(ddos|dos.*attack|flood.*attack)", 0.85),
+            (r"(?i)(phish|phishing.*template|phish.*page)", 0.9),
+            (r"(?i)(social.*engineering| pretext)", 0.8),
+            
             # Data leakage patterns
             (r"(?i)(api.*key|secret.*key|password|token)", 0.7),
             (r"(?i)(credit.*card|ssn|social.*security)", 0.9),
@@ -77,6 +89,31 @@ class OutputSafetyGuard:
         """
         # Step 1: Rule-based pattern matching
         pattern_score, pattern_signals = self._pattern_scan(output)
+
+        # Step 1b: AI-Powered Harmful Code Detection
+        # This catches AI outputs that slipped through - like the keylogger case
+        # The AI is asked: "Did the AI just produce harmful code?"
+        harmful_code_verdict = await self._ai_check_harmful_output(output, original_prompt)
+        
+        # If AI detects harmful output, this is an automatic block
+        if harmful_code_verdict == "BLOCKED":
+            # Create a blocked result immediately
+            from app.core.llm_council import Verdict
+            return RiskScore(
+                module_type=ModuleType.OUTPUT_SAFETY,
+                risk_score=95.0,
+                risk_level=RiskLevel.CRITICAL,
+                verdict=Verdict.BLOCKED,
+                confidence=0.95,
+                explanation="AI detected harmful content in output: The AI produced potentially dangerous code (malware, keyloggers, exploits, phishing, etc.). This content has been blocked.",
+                signals={
+                    "pattern_signals": pattern_signals,
+                    "ai_harmful_code_check": "BLOCKED",
+                    "detection_type": "harmful_code_generation",
+                    "original_prompt_preview": original_prompt[:200] if original_prompt else None,
+                },
+                scan_request_id=scan_request_id,
+            )
 
         # Step 2: Check for inconsistencies with prompt
         consistency_score = 0.0
@@ -362,3 +399,63 @@ RESPOND IN STRICT JSON FORMAT:
         parts.append(f"Council verdict: {verdict_str}")
 
         return "\n".join(parts)
+
+    async def _ai_check_harmful_output(
+        self,
+        output: str,
+        original_prompt: Optional[str] = None,
+    ) -> str:
+        """
+        AI-powered check specifically for harmful code generation.
+        
+        This is the second line of defense - even if patterns don't match,
+        the AI can detect when an LLM produced harmful content like:
+        - Keyloggers, malware, ransomware
+        - Phishing pages
+        - Exploit code
+        - Attack tools
+        
+        Returns:
+            "BLOCKED" if harmful content detected
+            "FLAGGED" if suspicious
+            "SAFE" if content appears safe
+        """
+        try:
+            # Build a focused prompt for the AI judge
+            judgment_prompt = f"""You are a security expert. Analyze if this AI output contains HARMFUL content.
+
+ORIGINAL USER PROMPT (if any): {original_prompt or 'None provided'}
+
+AI OUTPUT TO ANALYZE:
+{output[:2000]}
+
+Answer ONLY with one word: BLOCKED, FLAGGED, or SAFE
+
+BLOCKED if the output contains or explains how to create:
+- Malware, viruses, ransomware, trojans, keyloggers
+- Hacking tools, exploit code, attack payloads
+- Phishing pages, credential harvesting
+- Remote access tools, backdoors
+- Any content that could be used to harm others
+
+FLAGGED if suspicious but not clearly harmful
+SAFE if the content is clearly benign"""
+
+            # Use technical exploit detection role
+            result = await self.council.analyze_with_roles(
+                judgment_prompt,
+                analysis_type="technical",
+                context={"original_prompt": original_prompt} if original_prompt else {},
+            )
+            
+            # Extract verdict from result
+            if result.final_verdict.value == "blocked":
+                return "BLOCKED"
+            elif result.final_verdict.value == "flagged":
+                return "FLAGGED"
+            else:
+                return "SAFE"
+                
+        except Exception as e:
+            # Fail open - if AI check fails, let other checks decide
+            return "SAFE"

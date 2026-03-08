@@ -107,9 +107,9 @@ async def scan_prompt(
         db.commit()
         db.refresh(scan_request)
 
-        # Run FAST detection (heuristic only - no LLM calls for speed)
-        # Use scan_enhanced() instead if you need full LLM Council analysis
-        risk_score = await prompt_detector.scan_fast(
+        # Run AI-POWERED detection (uses AI to judge intent)
+        # This catches jailbreaks that pattern matching misses
+        risk_score = await prompt_detector.scan(
             request.prompt,
             context={
                 "user_id": request.user_id,
