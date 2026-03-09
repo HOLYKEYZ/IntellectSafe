@@ -76,3 +76,17 @@
   }
 }
 
+/* Sidebar scrollbar */
+aside nav::-webkit-scrollbar {
+  width: 4px;
+}
+aside nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+aside nav::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 9999px;
+}
+aside nav::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
