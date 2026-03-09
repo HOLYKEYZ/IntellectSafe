@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Scan, FileText, BarChart3, Home, Menu, X, Shield, ClipboardList } from 'lucide-react'
+import { FileText, BarChart3, Home, Menu, X, Shield, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ThemeToggle from './ThemeToggle'
 
