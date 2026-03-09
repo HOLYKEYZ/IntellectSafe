@@ -4,9 +4,6 @@
 .env.local
 .env.*.local
 
-# AGENTS.md - local AI assistant config (not affiliated with project)
-AGENTS.md
-
 # Python
 __pycache__/
 *.py[cod]
