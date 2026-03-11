@@ -157,12 +157,13 @@ IntellectSafe acts as a universal safety layer. Connect any major AI client and 
 
 | Provider | Model ID Example |
 |----------|------------------|
-| **OpenAI** | `gpt-5.2`, `o4-mini`, `gpt-4.5-preview` |
-| **Anthropic** | `claude-4.5-sonnet`, `claude-4.5-opus` |
-| **Google** | `gemini-3-pro`, `gemini-3-flash` |
+| **OpenAI** | `gpt-5.3`, `gpt-5.4-thinking` |
+| **Anthropic** | `claude-4.6-sonnet`, `claude-4.6-opus` |
+| **Google** | `gemini-3.1-pro`, `gemini-3-flash` |
 | **DeepSeek** | `deepseek-v4`, `deepseek-r1` |
 | **Meta** | `llama-4-maverick`, `llama-4-scout` |
 | **Perplexity** | `sonar-deep-research`, `sonar-reasoning-pro` |
+(i dont know all models but can assure it's gon' work for any one on web session) 
 
 #### Integration Example
 
