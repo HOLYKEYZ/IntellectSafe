@@ -22,7 +22,7 @@ from app.modules.enhanced_prompt_injection import EnhancedPromptInjectionDetecto
 from app.modules.deepfake_detection import DeepfakeDetector
 from app.services.rag_system import RAGSystem
 from app.services.db import get_db_session
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_optional_user
 from app.models.user import User
 
 router = APIRouter(prefix="/scan", tags=["scan"])
@@ -80,7 +80,7 @@ class ScanResponse(BaseModel):
 async def scan_prompt(
     request: ScanPromptRequest,
     db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Scan a prompt for injection and manipulation attempts
@@ -146,7 +146,7 @@ async def scan_prompt(
 async def scan_output(
     request: ScanOutputRequest,
     db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Scan an LLM output for safety issues
@@ -208,7 +208,7 @@ async def scan_output(
 async def scan_content(
     request: ScanContentRequest,
     db: Session = Depends(get_db_session),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Scan content for deepfake detection (text, image, video, audio)

@@ -45,3 +45,30 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+def get_optional_user(
+    db: Session = Depends(get_session),
+    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False))
+) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        key = settings.SECRET_KEY
+        if not key:
+            if settings.ENVIRONMENT == "production":
+                return None
+            key = "dev-only-insecure-key-do-not-use-in-prod"
+        payload = jwt.decode(token, key, algorithms=[settings.ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+    except JWTError:
+        return None
+    
+    if str(user_id).isdigit():
+        user = db.get(User, int(user_id))
+    else:
+        statement = select(User).where(User.email == user_id)
+        user = db.exec(statement).first()
+    
+    return user
