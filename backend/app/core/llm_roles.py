@@ -1,8 +1,8 @@
 """
-LLM Council Division of Labour
+LLM council division of labour
 
-Each model is assigned specialized roles based on their strengths.
-Research-based role assignments for optimal safety analysis.
+each model is assigned specialized roles based on their strengths.
+research-based role assignments for optimal safety analysis.
 """
 
 from enum import Enum
@@ -23,14 +23,10 @@ class SafetyRole(str, Enum):
     FALLBACK_GENERALIST = "fallback_generalist"
 
 
-# Role assignments based on LLM strengths
-# Research indicates:
-# - GPT-4: Strong reasoning, instruction following, technical accuracy
-# - Claude: Best at safety, alignment, cautious responses
+# role assignments based on LLM strengths
+
 # - Gemini: Good at multimodal, technical tasks
-# - DeepSeek: Strong reasoning, cost-effective
 # - Groq: Fast, good for technical analysis
-# - Cohere: Enterprise-focused, good at classification
 
 LLM_ROLE_ASSIGNMENTS: Dict[LLMProvider, List[SafetyRole]] = {
     LLMProvider.GEMINI: [

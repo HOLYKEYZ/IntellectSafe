@@ -21,7 +21,7 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 def print_banner():
-    """Print the cool ASCII banner"""
+    """print the ASCII banner"""
     banner = f"""{CYAN}
     ██╗███╗   ██╗████████╗███████╗██╗     ██╗     ███████╗ ██████╗████████╗
     ██║████╗  ██║╚══██╔══╝██╔════╝██║     ██║     ██╔════╝██╔════╝╚══██╔══╝
@@ -34,7 +34,7 @@ def print_banner():
     print(banner)
 
 def print_result(verdict: str, score: float, explanation: str):
-    """Print formatted scan result"""
+    """print formatted scan result"""
     color = GREEN
     if verdict == "blocked":
         color = RED
