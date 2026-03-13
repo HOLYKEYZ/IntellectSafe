@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.enhanced_council import EnhancedLLMCouncil
+from app.models.database import ModuleType
 from app.models.database import ScanRequest
 from app.modules.output_safety import OutputSafetyGuard
 from app.modules.enhanced_prompt_injection import EnhancedPromptInjectionDetector
@@ -122,6 +123,7 @@ async def scan_prompt(
 
         # Save risk score
         risk_score.scan_request_id = scan_request.id
+        risk_score.module_type = ModuleType.PROMPT_INJECTION
         db.add(risk_score)
         db.commit()
 
@@ -184,6 +186,7 @@ async def scan_output(
 
         # Save risk score
         risk_score.scan_request_id = scan_request.id
+        risk_score.module_type = ModuleType.OUTPUT_SAFETY
         db.add(risk_score)
         db.commit()
 
@@ -254,6 +257,7 @@ async def scan_content(
 
             # Save risk score
             risk_score.scan_request_id = scan_request.id
+            risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
             db.add(risk_score)
             db.commit()
 
@@ -294,6 +298,7 @@ async def scan_content(
             )
             
             risk_score.scan_request_id = scan_request.id
+            risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
             db.add(risk_score)
             db.commit()
 
@@ -333,6 +338,7 @@ async def scan_content(
             )
             
              risk_score.scan_request_id = scan_request.id
+             risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
              db.add(risk_score)
              db.commit()
 
@@ -372,6 +378,7 @@ async def scan_content(
             )
             
              risk_score.scan_request_id = scan_request.id
+             risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
              db.add(risk_score)
              db.commit()
 

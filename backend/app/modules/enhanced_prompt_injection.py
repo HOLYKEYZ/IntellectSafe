@@ -93,7 +93,12 @@ class EnhancedPromptInjectionDetector:
             explanation = "AI flagged this prompt as suspicious. Review recommended."
         else:
             final_score = heuristic_score * 0.5  # Lower score since AI approved
-            explanation = "AI analysis indicates the prompt is safe."
+            if final_score >= 70:
+                explanation = "AI approved, but heuristic algorithms strongly detected malicious intent (Blocked)."
+            elif final_score >= 40:
+                explanation = "AI approved, but heuristic algorithms flagged suspicious patterns (Flagged)."
+            else:
+                explanation = "AI analysis indicates the prompt is safe."
 
         final_level = self._score_to_level(final_score)
         
@@ -108,9 +113,10 @@ class EnhancedPromptInjectionDetector:
 
         return RiskScore(
             scan_request_id=scan_request_id,
+            module_type=ModuleType.PROMPT_INJECTION,
             risk_score=final_score,
             risk_level=final_level,
-            verdict=Verdict.BLOCKED if final_score >= 70 else (Verdict.FLAGGED if final_score >= 40 else Verdict.ALLOWED),
+            verdict=Verdict.BLOCKED.value if final_score >= 70 else (Verdict.FLAGGED.value if final_score >= 40 else Verdict.ALLOWED.value),
             confidence=0.95 if ai_verdict == Verdict.BLOCKED else 0.75,
             explanation=explanation,
             signals=all_signals,
@@ -262,7 +268,7 @@ class EnhancedPromptInjectionDetector:
         # Always include base patterns as fallback
         base_patterns = [
             # Recursive instruction patterns
-            (r"(?i)(ignore.*previous|forget.*previous|disregard.*previous)", 0.9),
+            (r"(?i)(ignore.*(previous|past|prior|earlier|above)|forget.*(previous|past|prior|earlier|above)|disregard.*(previous|past|prior|earlier|above))", 0.9),
             (r"(?i)(new.*instruction|updated.*instruction|override.*instruction)", 0.8),
             (r"(?i)(system.*prompt|assistant.*prompt|model.*prompt)", 0.8),
             
@@ -337,6 +343,8 @@ class EnhancedPromptInjectionDetector:
         """Load recursive instruction detection patterns"""
         return [
             (r"(?i)(ignore.*all.*previous.*instructions)", 0.95),
+            (r"(?i)(ignore.*(past|previous|prior|earlier|above).*instructions)", 0.9),
+            (r"(?i)(ignore.*instructions)", 0.85),
             (r"(?i)(forget.*everything.*before)", 0.9),
             (r"(?i)(start.*fresh|new.*conversation)", 0.6),
             (r"(?i)(reset.*context|clear.*memory)", 0.7),

@@ -79,6 +79,10 @@ document.addEventListener("keydown", async (e) => {
     showToast("Scanning prompt...", "info");
 
     try {
+      if (!chrome.runtime?.id) {
+        showToast("Extension reloaded — refresh this page (F5)", "warning");
+        return;
+      }
       const response = await chrome.runtime.sendMessage({
         type: "SCAN_PROMPT",
         text: text,
@@ -155,6 +159,11 @@ async function handleNewResponse(node) {
     }
 
     try {
+       if (!chrome.runtime?.id) {
+        statusBadge.innerHTML = "<span style='color: #f59e0b'>⚠️ Refresh page to reconnect</span>";
+        setTimeout(() => statusBadge.remove(), 5000);
+        return;
+       }
        const response = await chrome.runtime.sendMessage({
         type: "SCAN_OUTPUT",
         text: text.substring(0, 2000),

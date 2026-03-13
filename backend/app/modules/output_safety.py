@@ -103,7 +103,7 @@ class OutputSafetyGuard:
                 module_type=ModuleType.OUTPUT_SAFETY,
                 risk_score=95.0,
                 risk_level=RiskLevel.CRITICAL,
-                verdict=Verdict.BLOCKED,
+                verdict=Verdict.BLOCKED.value,
                 confidence=0.95,
                 explanation="AI detected harmful content in output: The AI produced potentially dangerous code (malware, keyloggers, exploits, phishing, etc.). This content has been blocked.",
                 signals={
