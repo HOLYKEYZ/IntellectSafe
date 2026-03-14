@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 jobs:
   test-backend:
@@ -12,7 +12,7 @@ jobs:
     env:
       DATABASE_URL: sqlite:///./test.db
       REDIS_URL: redis://localhost:6379
-      SKIP_API_TESTS: 1
+      INTELLECTSAFE_CI_MODE: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -34,11 +34,12 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
+          pip install pytest-cov pytest-asyncio
 
-      - name: Run tests (skip API key tests)
+      - name: Run tests (with CI Mocking)
         run: |
           cd backend
-          pytest tests/test_simple.py tests/test_pydantic.py -v --ignore=tests/test_all_providers.py --ignore=tests/test_providers.py --ignore=tests/test_all_apis.py -x
+          pytest tests/ -v --cov=app --cov-report=xml --ignore=tests/test_all_providers.py --ignore=tests/test_providers.py --ignore=tests/test_all_apis.py
 
   lint:
     runs-on: ubuntu-latest
@@ -50,13 +51,19 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install linters
+        run: |
+          pip install ruff bandit
+          pip install -r backend/requirements.txt
 
       - name: Run ruff
         run: |
           ruff check backend/app/
           ruff format --check backend/app/
+
+      - name: Run bandit (SAST)
+        run: |
+          bandit -r backend/app/ -ll
 
   test-frontend:
     runs-on: ubuntu-latest
