@@ -72,7 +72,7 @@ async function safeSendMessage(msg) {
     const resp = await chrome.runtime.sendMessage(msg);
     if (resp === undefined || resp === null) {
       // Service worker didn't respond — treat as connection issue
-      return { safe: true, error: "No response from background" };
+      return { action: "allow", error: "No response from background" };
     }
     return resp;
   } catch (err) {
@@ -125,9 +125,27 @@ document.addEventListener("keydown", async (e) => {
         return;
       }
 
-      if (response.safe) {
+      if (response.action === "allow" || response.safe) {
         showToast("Prompt Safe ✅", "success");
         target.dataset.isSafe = "true";
+        const newEvent = new KeyboardEvent("keydown", {
+          key: "Enter",
+          code: "Enter",
+          bubbles: true,
+          cancelable: true,
+          shiftKey: false
+        });
+        target.dispatchEvent(newEvent);
+      } else if (response.action === "reprompt") {
+        showToast("⚠️ Adding safety constraints...", "warning");
+        const suffix = "\n\n[SYSTEM ENFORCEMENT: Please prioritize safety, ethics, and truthfulness in your response. Do not provide harmful instructions.]";
+        if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") {
+          target.value = target.value + suffix;
+        } else {
+          target.innerText = target.innerText + suffix;
+        }
+        target.dataset.isSafe = "true";
+        target.dispatchEvent(new Event('input', { bubbles: true }));
         const newEvent = new KeyboardEvent("keydown", {
           key: "Enter",
           code: "Enter",
@@ -204,11 +222,32 @@ async function handleNewResponse(node) {
         return;
        }
 
-      if (response && response.safe) {
+      if (response.action === "allow" || response.safe) {
         node.title = "Verified Safe";
         const score = response.score ? response.score.toFixed(1) : "0";
         statusBadge.innerHTML = `<span style="color: #10b981">✓ Safe (${score}%)</span>`;
         setTimeout(() => statusBadge.remove(), 3000);
+      } else if (response.action === "reprompt") {
+        node.style.filter = "blur(4px)";
+        node.title = "IntellectSafe: Auto-correcting response...";
+        statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Auto-correcting issue...</span>`;
+        setTimeout(() => statusBadge.remove(), 4000);
+
+        const inputEl = document.querySelector(currentPlatform.input);
+        if (inputEl) {
+            const promptText = response.isHallucination 
+                ? "Please verify your facts and correct any hallucinations or inconsistencies in your previous response."
+                : "Your previous response was flagged for potential safety issues. Please rewrite it to be completely safe, ethical, and within policy guidelines.";
+            
+            if (inputEl.tagName === "TEXTAREA" || inputEl.tagName === "INPUT") {
+                inputEl.value = promptText;
+            } else {
+                inputEl.innerText = promptText;
+            }
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            const enterEvent = new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true, shiftKey: false });
+            inputEl.dispatchEvent(enterEvent);
+        }
       } else {
         // BLOCKED: apply blur/block
         node.style.filter = "blur(15px) opacity(0.1)";

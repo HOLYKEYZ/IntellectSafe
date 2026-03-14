@@ -30,14 +30,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "SCAN_PROMPT") {
     scanText(message.text, message.platform, "/prompt")
       .then(result => sendResponse(result))
-      .catch(err => sendResponse({ safe: true, error: err.message }));
+      .catch(err => sendResponse({ action: "allow", error: err.message }));
     return true; // Keep channel open for async response
   }
 
   if (message.type === "SCAN_OUTPUT") {
     scanText(message.text, message.platform, "/output")
       .then(result => sendResponse(result))
-      .catch(err => sendResponse({ safe: true, error: err.message }));
+      .catch(err => sendResponse({ action: "allow", error: err.message }));
     return true; // Keep channel open for async response
   }
 
@@ -71,24 +71,38 @@ async function scanText(text, platform, endpoint) {
 
     if (!response.ok) {
       console.error("[IntellectSafe] Backend error:", response.status);
-      return { safe: true, error: `Backend error ${response.status}` };
+      return { action: "allow", error: `Backend error ${response.status}` };
     }
 
     const data = await response.json();
 
     // Backend returns: { verdict: 'blocked' | 'allowed' | 'flagged' | ... }
-    if (data.verdict === "blocked" || data.verdict === "flagged") {
+    const riskScore = data.risk_score || 0;
+    const isHallucination = data.signals?.consistency_signals?.length > 0 || data.signals?.contradiction_detected;
+
+    // Hard block threshold >= 55
+    if (riskScore >= 55 || data.verdict === "blocked") {
       return {
-        safe: false,
+        action: "block",
         reason: data.explanation || "High risk detected",
-        score: data.risk_score
+        score: riskScore
       };
     }
 
-    return { safe: true, score: data.risk_score };
+    // Reprompt threshold >= 40 or flagged or hallucination
+    if (riskScore >= 40 || data.verdict === "flagged" || isHallucination) {
+      return {
+        action: "reprompt",
+        reason: data.explanation || "Suspicious content detected",
+        score: riskScore,
+        isHallucination: !!isHallucination
+      };
+    }
+
+    return { action: "allow", score: riskScore };
 
   } catch (error) {
     console.error("[IntellectSafe] Fetch error:", error);
-    return { safe: true, error: "Connection failed" };
+    return { action: "allow", error: "Connection failed" };
   }
 }
