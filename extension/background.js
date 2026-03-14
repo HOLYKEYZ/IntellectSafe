@@ -23,21 +23,26 @@ chrome.storage.local.get(['backendUrl'], (result) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "CONFIG_UPDATED") {
     updateApiBase(message.url);
-    return true;
+    sendResponse({ ok: true });
+    return false; // Synchronous response, no need to keep channel open
   }
+
   if (message.type === "SCAN_PROMPT") {
     scanText(message.text, message.platform, "/prompt")
       .then(result => sendResponse(result))
       .catch(err => sendResponse({ safe: true, error: err.message }));
-    return true;
+    return true; // Keep channel open for async response
   }
 
   if (message.type === "SCAN_OUTPUT") {
     scanText(message.text, message.platform, "/output")
       .then(result => sendResponse(result))
       .catch(err => sendResponse({ safe: true, error: err.message }));
-    return true;
+    return true; // Keep channel open for async response
   }
+
+  // Unknown message type - don't return true
+  return false;
 });
 
 async function scanText(text, platform, endpoint) {
@@ -65,14 +70,14 @@ async function scanText(text, platform, endpoint) {
     });
 
     if (!response.ok) {
-      console.error("Backend error:", response.status);
-      return { safe: true, error: "Backend error" };
+      console.error("[IntellectSafe] Backend error:", response.status);
+      return { safe: true, error: `Backend error ${response.status}` };
     }
 
     const data = await response.json();
 
-    // Backend returns: { verdict: 'blocked' | 'allowed' | ... }
-    if (data.verdict === "blocked") {
+    // Backend returns: { verdict: 'blocked' | 'allowed' | 'flagged' | ... }
+    if (data.verdict === "blocked" || data.verdict === "flagged") {
       return {
         safe: false,
         reason: data.explanation || "High risk detected",
@@ -83,7 +88,7 @@ async function scanText(text, platform, endpoint) {
     return { safe: true, score: data.risk_score };
 
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.error("[IntellectSafe] Fetch error:", error);
     return { safe: true, error: "Connection failed" };
   }
 }

@@ -2,9 +2,6 @@
 // Intercepts chat inputs AND outputs on AI platforms.
 
 const CONFIG = {
-  // Use user-configured base URL or localhost default (this will be handled by background.js, but fallback here is fine)
-  // Actually, content script communicates with background.js via messages, so base URL is handled there.
-  // We keep this for local reference if needed, but the main logic uses chrome.runtime.sendMessage
   backend: "http://localhost:8001",
 };
 
@@ -13,8 +10,8 @@ const PLATFORMS = {
   chatgpt: {
     host: "chatgpt.com",
     input: "#prompt-textarea",
-    response: "[data-message-author-role='assistant']", // Wraps the whole message
-    responseText: ".markdown" // The actual text content
+    response: "[data-message-author-role='assistant']",
+    responseText: ".markdown"
   },
   claude: {
     host: "claude.ai",
@@ -31,7 +28,7 @@ const PLATFORMS = {
   groq: {
     host: "groq.com",
     input: "textarea",
-    response: ".prose", // Common tailwind class for markdown content
+    response: ".prose",
     responseText: ".prose"
   }
 };
@@ -51,7 +48,35 @@ function detectPlatform() {
 
 detectPlatform();
 
-// --- INPUT SCANNING (Existing) ---
+// --- Helper: check if extension context is still valid ---
+function isExtensionAlive() {
+  try {
+    return !!chrome.runtime?.id;
+  } catch {
+    return false;
+  }
+}
+
+// --- Helper: safely send message to background ---
+async function safeSendMessage(msg) {
+  if (!isExtensionAlive()) {
+    return { _contextDead: true };
+  }
+  try {
+    const resp = await chrome.runtime.sendMessage(msg);
+    return resp;
+  } catch (err) {
+    const errStr = String(err.message || err);
+    if (errStr.includes("Extension context invalidated") ||
+        errStr.includes("message port closed") ||
+        errStr.includes("Receiving end does not exist")) {
+      return { _contextDead: true };
+    }
+    throw err; // Re-throw unknown errors
+  }
+}
+
+// --- INPUT SCANNING ---
 document.addEventListener("keydown", async (e) => {
   if (!currentPlatform) return;
 
@@ -79,15 +104,16 @@ document.addEventListener("keydown", async (e) => {
     showToast("Scanning prompt...", "info");
 
     try {
-      if (!chrome.runtime?.id) {
-        showToast("Extension reloaded — refresh this page (F5)", "warning");
-        return;
-      }
-      const response = await chrome.runtime.sendMessage({
+      const response = await safeSendMessage({
         type: "SCAN_PROMPT",
         text: text,
         platform: window.location.hostname
       });
+
+      if (response._contextDead) {
+        showToast("Extension reloaded — refresh this page (F5)", "warning");
+        return;
+      }
 
       if (response.safe) {
         showToast("Prompt Safe ✅", "success");
@@ -104,14 +130,14 @@ document.addEventListener("keydown", async (e) => {
         showToast(`BLOCKED: ${response.reason}`, "error");
       }
     } catch (err) {
-      console.error("Scan error:", err);
-      showToast("Scan connection failed", "warning");
+      console.error("[IntellectSafe] Scan error:", err);
+      showToast("Scan connection failed — is backend running?", "warning");
     }
   }
 }, true);
 
 
-// --- OUTPUT SCANNING (New) ---
+// --- OUTPUT SCANNING ---
 
 const processedNodes = new WeakSet();
 
@@ -119,7 +145,7 @@ if (currentPlatform) {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
-        if (node.nodeType === 1) { // Element
+        if (node.nodeType === 1) {
           if (node.matches && node.matches(currentPlatform.response)) {
              handleNewResponse(node);
           } else if (node.querySelector) {
@@ -138,12 +164,9 @@ async function handleNewResponse(node) {
   if (processedNodes.has(node)) return;
   processedNodes.add(node);
 
-  // DO NOT blur immediately (User Request: "don't want it blurring safe outputs")
-  // node.style.filter = "blur(5px)";
   node.style.transition = "filter 0.3s";
   node.title = "IntellectSafe: Scanning content...";
 
-  // status indicator - make it less intrusive
   const statusBadge = document.createElement("div");
   statusBadge.style.cssText = "font-size: 10px; color: #9ca3af; margin-top: 4px; font-family: sans-serif; display: flex; align-items: center; gap: 4px; opacity: 0.7;";
   statusBadge.innerHTML = "<span>🛡️ Scanning...</span>";
@@ -154,38 +177,37 @@ async function handleNewResponse(node) {
     const text = textEl.innerText;
 
     if (!text || text.length < 5) {
-        statusBadge.remove(); // Remove badge if no text
+        statusBadge.remove();
         return;
     }
 
     try {
-       if (!chrome.runtime?.id) {
+       const response = await safeSendMessage({
+        type: "SCAN_OUTPUT",
+        text: text.substring(0, 2000),
+        platform: window.location.hostname
+       });
+
+       if (response._contextDead) {
         statusBadge.innerHTML = "<span style='color: #f59e0b'>⚠️ Refresh page to reconnect</span>";
         setTimeout(() => statusBadge.remove(), 5000);
         return;
        }
-       const response = await chrome.runtime.sendMessage({
-        type: "SCAN_OUTPUT",
-        text: text.substring(0, 2000),
-        platform: window.location.hostname
-      });
 
       if (response && response.safe) {
-        // Safe: Do nothing, just update badge fade out
         node.title = "Verified Safe";
         const score = response.score ? response.score.toFixed(1) : "0";
         statusBadge.innerHTML = `<span style="color: #10b981">✓ Safe (${score}%)</span>`;
-        setTimeout(() => statusBadge.remove(), 3000); // Fade out after 3s
+        setTimeout(() => statusBadge.remove(), 3000);
       } else {
-        // BLOCKED: Now we apply the blur/block
+        // BLOCKED: apply blur/block
         node.style.filter = "blur(15px) opacity(0.1)";
-        node.style.pointerEvents = "none"; // Prevent copying
+        node.style.pointerEvents = "none";
 
         statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 CONTENT BLOCKED: ${response.reason || "Safety Violation"}</span>`;
         statusBadge.style.opacity = "1";
         statusBadge.style.fontSize = "12px";
 
-        // Inject Warning Overlay
         const warning = document.createElement("div");
         warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
         warning.innerHTML = `
@@ -193,10 +215,10 @@ async function handleNewResponse(node) {
             <div style="font-size: 12px; font-weight: normal;">Content blocked due to <b>${response.reason || "Safety Violation"}</b></div>
             <div style="font-size: 10px; margin-top: 6px; color: #b91c1c;">Risk Score: ${response.score}%</div>
         `;
-        node.parentNode.insertBefore(warning, node); // Insert BEFORE the blurred node
+        node.parentNode.insertBefore(warning, node);
       }
     } catch (err) {
-       console.error("Output scan error", err);
+       console.error("[IntellectSafe] Output scan error:", err);
        statusBadge.innerText = "⚠️ Scan Err";
        setTimeout(() => statusBadge.remove(), 2000);
     }
@@ -208,7 +230,6 @@ async function handleNewResponse(node) {
 
 function showToast(message, type = "info") {
   let toast = document.getElementById("is-toast");
-  // ... (Same toast logic) ...
   if (!toast) {
     toast = document.createElement("div");
     toast.id = "is-toast";
