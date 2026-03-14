@@ -64,6 +64,10 @@ async function safeSendMessage(msg) {
   }
   try {
     const resp = await chrome.runtime.sendMessage(msg);
+    if (resp === undefined || resp === null) {
+      // Service worker didn't respond — treat as connection issue
+      return { safe: true, error: "No response from background" };
+    }
     return resp;
   } catch (err) {
     const errStr = String(err.message || err);
