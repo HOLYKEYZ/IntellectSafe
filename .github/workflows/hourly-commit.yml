@@ -29,9 +29,9 @@ jobs:
           fi
 
           echo "Last commit was $((DIFF / 60))m ago — committing."
-          date > last_updated.txt
+          date > .github/.keep_active
           git config --global user.name "HOLYKEYZ"
           git config --global user.email "ayandajoseph390@gmail.com"
-          git add last_updated.txt
+          git add .github/.keep_active
           git commit -m "chore: hourly update"
           git push
