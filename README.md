@@ -187,13 +187,19 @@ response = client.chat.completions.create(
 
 ### 🛡️ Secure Your Real AI Sessions (Extension)
 
-To secure your sessions on **ChatGPT, Claude, Gemini, and Groq**, install the **IntellectSafe Companion** Chrome Extension:
+To secure your sessions on **ChatGPT, Claude, Gemini, Grok, and Groq**, install the **IntellectSafe Companion** Chrome Extension:
 
 1. Open Chrome and go to `chrome://extensions`.
 2. Enable **Developer Mode** (top right).
 3. Click **Load Unpacked**.
 4. Select the `extension/` folder from this repository.
-5. Browse `chatgpt.com` or `groq.com`. Your prompts are now scanned locally! 🚀
+5. Browse `chatgpt.com`, `grok.com`, etc. Your prompts are now scanned locally! 🚀
+
+<br>
+<p align="center">
+  <img src="assets/intellectsafe-guard.png" alt="IntellectSafe Guard in Action" width="800"/>
+</p>
+<br>
 
 ### 🔌 Verify Connections
 

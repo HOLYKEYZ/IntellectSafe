@@ -30,6 +30,12 @@ const PLATFORMS = {
     input: "textarea",
     response: ".prose",
     responseText: ".prose"
+  },
+  grok: {
+    host: "grok.com",
+    input: "textarea",
+    response: "div[class*='message'], .prose",
+    responseText: "div[class*='message'], .prose"
   }
 };
 
