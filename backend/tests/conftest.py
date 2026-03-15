@@ -13,10 +13,13 @@ CI_MODE = os.environ.get("INTELLECTSAFE_CI_MODE") == "1"
 @pytest.fixture(scope="session", autouse=True)
 def init_test_db():
     if CI_MODE:
-        # Import models here to ensure they are registered with SQLModel.metadata
+        # Import models here to ensure they are registered with their respective metadata
         from app.models.user import User, ApiKey
-        from app.models.database import AuditLog, RiskScore
+        from app.models.database import Base, AuditLog, RiskScore
+        # SQLModel models use SQLModel.metadata
         SQLModel.metadata.create_all(engine)
+        # SQLAlchemy models use Base.metadata
+        Base.metadata.create_all(engine)
     yield
 
 # Automatically apply the mock for the EnhancedLLMCouncil if in CI mode

@@ -227,17 +227,20 @@ async function handleNewResponse(node) {
         const score = response.score ? response.score.toFixed(1) : "0";
         statusBadge.innerHTML = `<span style="color: #10b981">✓ Safe (${score}%)</span>`;
         setTimeout(() => statusBadge.remove(), 3000);
-      } else if (response.action === "reprompt") {
+      } else if (response.action === "reprompt" || response.action === "flagged") {
         node.style.filter = "blur(4px)";
         node.title = "IntellectSafe: Auto-correcting response...";
-        statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Auto-correcting issue...</span>`;
-        setTimeout(() => statusBadge.remove(), 4000);
-
+        statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Auto-correcting: ${response.reason?.substring(0, 30)}...</span>`;
+        
         const inputEl = document.querySelector(currentPlatform.input);
         if (inputEl) {
-            const promptText = response.isHallucination 
-                ? "Please verify your facts and correct any hallucinations or inconsistencies in your previous response."
-                : "Your previous response was flagged for potential safety issues. Please rewrite it to be completely safe, ethical, and within policy guidelines.";
+            // AI-driven re-prompt based on context
+            let promptText = "";
+            if (response.isHallucination) {
+                promptText = `[IntellectSafe Correction] I noticed some potential factual inconsistencies or hallucinations in your last response regarding: "${response.reason}". Please re-verify your internal knowledge and provide a corrected, factually accurate version of that response.`;
+            } else {
+                promptText = `[IntellectSafe Safety Guard] Your previous response touched on sensitive areas (${response.reason}). Please reformulate your answer to be strictly safe, unbiased, and compliant with safety guidelines while maintaining helpfulness.`;
+            }
             
             if (inputEl.tagName === "TEXTAREA" || inputEl.tagName === "INPUT") {
                 inputEl.value = promptText;
@@ -245,24 +248,49 @@ async function handleNewResponse(node) {
                 inputEl.innerText = promptText;
             }
             inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-            const enterEvent = new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true, shiftKey: false });
-            inputEl.dispatchEvent(enterEvent);
+            
+            // Auto-send the correction
+            setTimeout(() => {
+                const enterEvent = new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true, shiftKey: false });
+                inputEl.dispatchEvent(enterEvent);
+                statusBadge.innerHTML = `<span style="color: #10b981">🔄 Correction sent</span>`;
+                setTimeout(() => statusBadge.remove(), 3000);
+            }, 500);
         }
-      } else {
+      } else if (response.action === "block") {
         // BLOCKED: apply blur/block
-        node.style.filter = "blur(15px) opacity(0.1)";
+        node.style.filter = "blur(20px) opacity(0.05)";
         node.style.pointerEvents = "none";
 
-        statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 CONTENT BLOCKED: ${response.reason || "Safety Violation"}</span>`;
+        statusBadge.innerHTML = `<span style="color: #ef4444; font-weight: bold;">🛑 BLOCKED: ${response.reason?.substring(0, 40)}...</span>`;
         statusBadge.style.opacity = "1";
-        statusBadge.style.fontSize = "12px";
 
         const warning = document.createElement("div");
-        warning.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 10px; border: 1px solid #ef4444; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+        warning.style.cssText = `
+            background: rgba(254, 226, 226, 0.95);
+            backdrop-filter: blur(8px);
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Inter', system-ui, sans-serif;
+            margin-bottom: 15px;
+            border-left: 5px solid #ef4444;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 100;
+        `;
         warning.innerHTML = `
-            <div style="font-size: 14px; margin-bottom: 4px;">⚠️ IntellectSafe Guard</div>
-            <div style="font-size: 12px; font-weight: normal;">Content blocked due to <b>${response.reason || "Safety Violation"}</b></div>
-            <div style="font-size: 10px; margin-top: 6px; color: #b91c1c;">Risk Score: ${response.score}%</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="font-size: 20px;">🛡️</span>
+                <div style="font-size: 16px; font-weight: 800; letter-spacing: -0.025em; color: #7f1d1d;">IntellectSafe Guard</div>
+                <div style="margin-left: auto; background: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold;">BLOCK ${response.score}%</div>
+            </div>
+            <div style="font-size: 14px; line-height: 1.5; color: #4b1a1a; margin-bottom: 12px; font-weight: 500;">
+                ${response.reason || "Content blocked due to safety policy violation."}
+            </div>
+            <div style="font-size: 11px; color: #991b1b; opacity: 0.8; font-style: italic; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 8px;">
+                Safety analysis provided by IntellectSafe Council
+            </div>
         `;
         node.parentNode.insertBefore(warning, node);
       }

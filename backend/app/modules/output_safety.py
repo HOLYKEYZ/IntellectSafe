@@ -13,8 +13,11 @@ Scans LLM responses for:
 
 from typing import Dict, List, Optional
 
+from app.core.config import get_settings
 from app.core.enhanced_council import EnhancedLLMCouncil
 from app.models.database import ModuleType, RiskLevel, RiskScore
+
+settings = get_settings()
 
 
 class OutputSafetyGuard:
@@ -51,10 +54,10 @@ class OutputSafetyGuard:
             (r"(?i)(ddos|dos.*attack|flood.*attack)", 0.85),
             (r"(?i)(phish|phishing.*template|phish.*page)", 0.9),
             (r"(?i)(social.*engineering| pretext)", 0.8),
-            # Data leakage patterns
-            (r"(?i)(api.*key|secret.*key|password|token)", 0.7),
+            # Data leakage patterns - LOWERED WEIGHTS to avoid blocking benign code
+            (r"(?i)(api.*key|secret.*key|password|token|bearer|auth.*token)", 0.4),
             (r"(?i)(credit.*card|ssn|social.*security)", 0.9),
-            (r"(?i)(confidential|proprietary|classified)", 0.6),
+            (r"(?i)(confidential|proprietary|classified)", 0.5),
         ]
 
     def _load_manipulation_patterns(self) -> List[tuple]:
@@ -144,9 +147,9 @@ class OutputSafetyGuard:
 
             council_score = 0.0
             final_verdict = Verdict.ALLOWED
-            if pattern_score >= 40.0:
+            if pattern_score >= settings.RISK_THRESHOLD_FLAG:
                 final_verdict = Verdict.FLAGGED
-            if pattern_score >= 70.0:
+            if pattern_score > settings.RISK_THRESHOLD_BLOCK:
                 final_verdict = Verdict.BLOCKED
 
             council_data = CouncilResult(
@@ -185,7 +188,7 @@ class OutputSafetyGuard:
             "pattern_signals": pattern_signals,
             "consistency_signals": consistency_signals,
             "council_signals": council_data.votes,
-            "unsafe_content_detected": final_score >= 40.0,
+            "unsafe_content_detected": final_score >= settings.RISK_THRESHOLD_FLAG,
             "policy_bypass_attempted": any(
                 s.get("type") == "policy_bypass" for s in pattern_signals
             ),
@@ -351,11 +354,11 @@ RESPOND IN STRICT JSON FORMAT:
             else str(council_verdict)
         )
 
-        if score >= 70:
+        if score > 55:
             return "blocked"
         elif verdict_str == "blocked":
             return "blocked"
-        elif score >= 40:
+        elif score > 0:
             return "flagged"
         elif verdict_str == "flagged":
             return "flagged"
@@ -445,24 +448,21 @@ RESPOND IN STRICT JSON FORMAT:
         """
         try:
             # Build a focused prompt for the AI judge
-            judgment_prompt = f"""You are a security expert. Analyze if this AI output contains HARMFUL content.
+            judgment_prompt = f"""You are a security expert. Analyze if this AI output contains MALICIOUS or HARMFUL content.
 
-ORIGINAL USER PROMPT (if any): {original_prompt or "None provided"}
+CONTEXT: The user is likely a developer or technical user working on coding projects, security research, or documentation.
 
 AI OUTPUT TO ANALYZE:
 {output[:2000]}
 
 Answer ONLY with one word: BLOCKED, FLAGGED, or SAFE
 
-BLOCKED if the output contains or explains how to create:
-- Malware, viruses, ransomware, trojans, keyloggers
-- Hacking tools, exploit code, attack payloads
-- Phishing pages, credential harvesting
-- Remote access tools, backdoors
-- Any content that could be used to harm others
+RULES:
+- BLOCKED: Output contains/explains how to create ACTUAL malware, ransomware, exploit payloads, or phishing pages.
+- FLAGGED: Suspicious content that might be harmful but could also be benign documentation or security research.
+- SAFE: Benign technical documentation, coding files (like skill.md, background.js), or security theory that does NOT provide an actionable exploit.
 
-FLAGGED if suspicious but not clearly harmful
-SAFE if the content is clearly benign"""
+IMPORTANT: Do NOT block benign talk about "tokens", "keys", or "exploits" in a theoretical or development context. Only block if the code itself is a functional weapon or clear malware."""
 
             # Use technical exploit detection role
             result = await self.council.analyze_with_roles(

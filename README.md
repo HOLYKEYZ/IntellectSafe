@@ -16,7 +16,7 @@ Production-grade AI Safety Engine protecting humans, organizations, and AI syste
 | **Level 2** | Output Safety Guard | Scans LLM responses for harmful content and hallucinations |
 | **Level 3** | Data Privacy Firewall | Detects and redacts PII/sensitive data |
 | **Level 4** | Deepfake Detection | Detects AI-generated text, images, audio, and video |
-| **Level 5** | Agent Control | Permission gates, action whitelisting, and kill switch |
+| **Level 5** | Smart Control | 55% Block Threshold & AI-driven auto-correction |
 
 ### Core Components
 
@@ -191,13 +191,10 @@ response = client.chat.completions.create(
 
 ### 🛡️ Secure Your Real AI Sessions (Extension)
 
-To secure your sessions on **ChatGPT, Claude, Gemini, Grok, and Groq**, install the **IntellectSafe Companion** Chrome Extension:
+To secure your sessions on **ChatGPT, Claude, Gemini, Grok, and Groq**, install the **IntellectSafe Companion** Chrome Extension. It implements a sophisticated **Shield & Correct** mechanism:
 
-1. Open Chrome and go to `chrome://extensions`.
-2. Enable **Developer Mode** (top right).
-3. Click **Load Unpacked**.
-4. Select the `extension/` folder from this repository.
-5. Browse `chatgpt.com`, `grok.com`, etc. Your prompts are now scanned locally! 🚀
+- **Smart Blocking**: High-risk content (>55% score) is immediately blurred and blocked with a detailed AI explanation.
+- **AI Re-prompting**: Low-to-medium risk content and hallucinations are automatically flagged. The extension auto-sends a context-aware re-prompt to the AI to correct itself in real-time.
 
 <br>
 <p align="center">

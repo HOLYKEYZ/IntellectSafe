@@ -107,9 +107,9 @@ class Settings(BaseSettings):
         None, description="Specific model name for safety scans"
     )
 
-    # Safety Thresholds
-    RISK_THRESHOLD_BLOCK: float = 70.0  # Block if score >= 70
-    RISK_THRESHOLD_FLAG: float = 40.0  # Flag if score >= 40
+    # Safety Thresholds (Tuned for zero false positives on benign coding content)
+    RISK_THRESHOLD_BLOCK: float = 55.0  # Block if score > 55
+    RISK_THRESHOLD_FLAG: float = 30.0  # Flag if score >= 30
     CONFIDENCE_THRESHOLD: float = 0.7  # Minimum confidence for action
 
     # Rate Limiting

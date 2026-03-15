@@ -78,22 +78,26 @@ async function scanText(text, platform, endpoint) {
 
     // Backend returns: { verdict: 'blocked' | 'allowed' | 'flagged' | ... }
     const riskScore = data.risk_score || 0;
-    const isHallucination = data.signals?.consistency_signals?.length > 0 || data.signals?.contradiction_detected;
+    
+    // Detailed hallucination detection from signals
+    const isHallucination = data.signals?.hallucination_detected === true || 
+                           (data.signals?.consistency_signals && data.signals.consistency_signals.length > 0) ||
+                           data.signals?.contradiction_detected === true;
 
-    // Hard block threshold >= 55
-    if (riskScore >= 55 || data.verdict === "blocked") {
+    // Hard block threshold > 55 (User specified)
+    if (riskScore > 55 || data.verdict === "blocked") {
       return {
         action: "block",
-        reason: data.explanation || "High risk detected",
+        reason: data.explanation || "High risk safety violation detected",
         score: riskScore
       };
     }
 
-    // Reprompt threshold >= 40 or flagged or hallucination
-    if (riskScore >= 40 || data.verdict === "flagged" || isHallucination) {
+    // Reprompt threshold: anything flagged, any hallucination, or low-to-medium risk
+    if (riskScore > 0 || data.verdict === "flagged" || isHallucination) {
       return {
         action: "reprompt",
-        reason: data.explanation || "Suspicious content detected",
+        reason: data.explanation || "Safety/Consistency concern detected",
         score: riskScore,
         isHallucination: !!isHallucination
       };
