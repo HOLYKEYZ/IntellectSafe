@@ -61,4 +61,3 @@ def check_redis_connection() -> bool:
         return True
     except Exception:
         return False
-

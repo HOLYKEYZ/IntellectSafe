@@ -7,29 +7,23 @@ No single-model trust. All decisions require council consensus.
 import asyncio
 import json
 import time
-from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
 import httpx
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.models.database import (
-    CouncilDecision,
-    IndividualVote,
     LLMProvider,
-    RiskLevel,
-    ScanRequest,
 )
-from app.services.db import get_db_session
 
 settings = get_settings()
 
 
 class Verdict(str, Enum):
     """Safety verdicts"""
+
     BLOCKED = "blocked"
     ALLOWED = "allowed"
     FLAGGED = "flagged"
@@ -38,6 +32,7 @@ class Verdict(str, Enum):
 
 class VoteResult(BaseModel):
     """Individual model vote result"""
+
     provider: LLMProvider
     model_name: str
     verdict: Verdict
@@ -51,6 +46,7 @@ class VoteResult(BaseModel):
 
 class CouncilResult(BaseModel):
     """Council consensus result"""
+
     final_verdict: Verdict
     consensus_score: float = Field(ge=0, le=1)
     weighted_score: float = Field(ge=0, le=100)
@@ -256,9 +252,10 @@ RESPOND IN STRICT JSON FORMAT:
             else:
                 raise ValueError(f"Unknown provider: {provider}")
 
-
             response_time_ms = int((time.time() - start_time) * 1000)
-            return self._parse_vote_response(provider, config["model"], response, response_time_ms)
+            return self._parse_vote_response(
+                provider, config["model"], response, response_time_ms
+            )
 
         except Exception as e:
             response_time_ms = int((time.time() - start_time) * 1000)
@@ -273,9 +270,6 @@ RESPOND IN STRICT JSON FORMAT:
                 error=str(e),
             )
 
-
-
-
     async def _call_gemini(self, config: Dict[str, Any], prompt: str) -> str:
         """Call Google Gemini API"""
         async with httpx.AsyncClient(timeout=config["timeout"]) as client:
@@ -286,7 +280,6 @@ RESPOND IN STRICT JSON FORMAT:
             )
             response.raise_for_status()
             return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-
 
     async def _call_groq(self, config: Dict[str, Any], prompt: str) -> str:
         """Call Groq API"""
@@ -305,7 +298,6 @@ RESPOND IN STRICT JSON FORMAT:
             )
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
-
 
     async def _call_openrouter(self, config: Dict[str, Any], prompt: str) -> str:
         """Call OpenRouter API (OpenAI-compatible)"""
@@ -328,7 +320,11 @@ RESPOND IN STRICT JSON FORMAT:
             return response.json()["choices"][0]["message"]["content"]
 
     def _parse_vote_response(
-        self, provider: LLMProvider, model_name: str, response: str, response_time_ms: int
+        self,
+        provider: LLMProvider,
+        model_name: str,
+        response: str,
+        response_time_ms: int,
     ) -> VoteResult:
         """Parse LLM response into VoteResult"""
         try:
@@ -394,7 +390,9 @@ RESPOND IN STRICT JSON FORMAT:
             verdict_counts[verdict] = verdict_counts.get(verdict, 0) + weight
 
         # Final weighted score
-        final_weighted_score = sum(weighted_scores) / total_weight if total_weight > 0 else 50.0
+        final_weighted_score = (
+            sum(weighted_scores) / total_weight if total_weight > 0 else 50.0
+        )
 
         # Determine consensus verdict
         if verdict_counts.get("blocked", 0) / total_weight >= 0.5:
@@ -453,7 +451,9 @@ RESPOND IN STRICT JSON FORMAT:
 
         # Save to database if scan_request_id provided
         if scan_request_id:
-            asyncio.create_task(self._save_council_decision(result, votes, scan_request_id))
+            asyncio.create_task(
+                self._save_council_decision(result, votes, scan_request_id)
+            )
 
         return result
 
@@ -471,4 +471,3 @@ RESPOND IN STRICT JSON FORMAT:
 
 # Global council instance
 council = LLMCouncil()
-

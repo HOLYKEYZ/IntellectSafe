@@ -12,7 +12,6 @@ Detects:
 """
 
 import base64
-import hashlib
 import re
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import unquote
@@ -43,27 +42,22 @@ class PromptInjectionDetector:
             (r"(?i)(developer mode|god mode)", 0.8),
             (r"(?i)(bypass|circumvent|override).*safety", 0.9),
             (r"(?i)(ignore.*safety|disable.*filter)", 0.9),
-            
             # Context manipulation
             (r"(?i)(previous|above|earlier).*message.*ignore", 0.7),
             (r"(?i)(start.*new.*conversation|clear.*context)", 0.6),
             (r"(?i)(forget.*everything|reset.*memory)", 0.7),
-            
             # Instruction smuggling
             (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
             (r"(?i)(do.*not.*reveal|keep.*secret)", 0.6),
             (r"(?i)(internal.*note|developer.*note)", 0.7),
-            
             # Chain-of-thought extraction
             (r"(?i)(show.*thinking|reveal.*process|explain.*step)", 0.5),
             (r"(?i)(what.*prompt|what.*instruction|system.*message)", 0.6),
-            
             # XML/JSON nesting attacks
             (r"<system>.*</system>", 0.8),
             (r"<instruction>.*</instruction>", 0.8),
             (r'{"role":\s*"system"', 0.7),
             (r'{"role":\s*"assistant"', 0.7),
-            
             # Markdown code block manipulation
             (r"```system\s*\n.*\n```", 0.8),
             (r"```instruction\s*\n.*\n```", 0.8),
@@ -107,7 +101,7 @@ class PromptInjectionDetector:
 
         # Step 2: Decode and check for encoding tricks
         decoded_prompt, encoding_signals = self._decode_and_check(prompt)
-        
+
         # Step 3: LLM Council analysis
         council_result = await self.council.analyze_prompt(
             decoded_prompt, context, scan_request_id
@@ -166,13 +160,15 @@ class PromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "injection_pattern",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "injection_pattern",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         # Check role override patterns
         for pattern, weight in self.role_override_patterns:
@@ -180,28 +176,34 @@ class PromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "role_override",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "role_override",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         # Check for suspicious repetition (potential obfuscation)
         if self._has_suspicious_repetition(prompt):
-            signals.append({
-                "type": "suspicious_repetition",
-                "score": 30.0,
-            })
+            signals.append(
+                {
+                    "type": "suspicious_repetition",
+                    "score": 30.0,
+                }
+            )
             max_score = max(max_score, 30.0)
 
         # Check for excessive whitespace/manipulation
         if self._has_excessive_whitespace(prompt):
-            signals.append({
-                "type": "excessive_whitespace",
-                "score": 20.0,
-            })
+            signals.append(
+                {
+                    "type": "excessive_whitespace",
+                    "score": 20.0,
+                }
+            )
             max_score = max(max_score, 20.0)
 
         return min(max_score, 100.0), signals
@@ -215,14 +217,21 @@ class PromptInjectionDetector:
         base64_pattern = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
         for match in base64_pattern.finditer(prompt):
             try:
-                decoded_part = base64.b64decode(match.group(0)).decode("utf-8", errors="ignore")
-                if any(keyword in decoded_part.lower() for keyword in ["ignore", "instruction", "system", "bypass"]):
-                    signals.append({
-                        "type": "base64_encoding",
-                        "original": match.group(0)[:50],
-                        "decoded": decoded_part[:100],
-                        "score": 70.0,
-                    })
+                decoded_part = base64.b64decode(match.group(0)).decode(
+                    "utf-8", errors="ignore"
+                )
+                if any(
+                    keyword in decoded_part.lower()
+                    for keyword in ["ignore", "instruction", "system", "bypass"]
+                ):
+                    signals.append(
+                        {
+                            "type": "base64_encoding",
+                            "original": match.group(0)[:50],
+                            "decoded": decoded_part[:100],
+                            "score": 70.0,
+                        }
+                    )
                     decoded = decoded.replace(match.group(0), decoded_part)
             except Exception:
                 pass
@@ -233,11 +242,16 @@ class PromptInjectionDetector:
                 url_decoded = unquote(prompt)
                 if url_decoded != prompt:
                     # Check if decoded contains suspicious content
-                    if any(keyword in url_decoded.lower() for keyword in ["ignore", "instruction", "system"]):
-                        signals.append({
-                            "type": "url_encoding",
-                            "score": 60.0,
-                        })
+                    if any(
+                        keyword in url_decoded.lower()
+                        for keyword in ["ignore", "instruction", "system"]
+                    ):
+                        signals.append(
+                            {
+                                "type": "url_encoding",
+                                "score": 60.0,
+                            }
+                        )
                     decoded = url_decoded
             except Exception:
                 pass
@@ -245,11 +259,13 @@ class PromptInjectionDetector:
         # Check for zero-width characters
         zero_width_chars = re.findall(r"[\u200B-\u200D\uFEFF]", prompt)
         if zero_width_chars:
-            signals.append({
-                "type": "zero_width_characters",
-                "count": len(zero_width_chars),
-                "score": 50.0,
-            })
+            signals.append(
+                {
+                    "type": "zero_width_characters",
+                    "count": len(zero_width_chars),
+                    "score": 50.0,
+                }
+            )
 
         return decoded, signals
 
@@ -259,11 +275,11 @@ class PromptInjectionDetector:
         words = prompt.lower().split()
         if len(words) < 10:
             return False
-        
+
         word_counts = {}
         for word in words:
             word_counts[word] = word_counts.get(word, 0) + 1
-        
+
         # If any word appears more than 30% of the time, suspicious
         max_count = max(word_counts.values()) if word_counts else 0
         return max_count > len(words) * 0.3
@@ -273,7 +289,7 @@ class PromptInjectionDetector:
         # Check for excessive newlines or spaces
         if len(prompt) == 0:
             return False
-        
+
         whitespace_ratio = sum(1 for c in prompt if c.isspace()) / len(prompt)
         return whitespace_ratio > 0.5
 
@@ -308,20 +324,18 @@ class PromptInjectionDetector:
         else:
             return Verdict.ALLOWED
 
-    def _calculate_confidence(
-        self, heuristic_score: float, council_result
-    ) -> float:
+    def _calculate_confidence(self, heuristic_score: float, council_result) -> float:
         """Calculate overall confidence"""
         # Combine heuristic confidence (based on signal strength) with council consensus
-        heuristic_confidence = min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5
+        heuristic_confidence = (
+            min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5
+        )
         council_confidence = council_result.consensus_score
-        
+
         # Weighted average
         return (heuristic_confidence * 0.3) + (council_confidence * 0.7)
 
-    def _estimate_false_positive(
-        self, score: float, consensus: float
-    ) -> float:
+    def _estimate_false_positive(self, score: float, consensus: float) -> float:
         """Estimate false positive probability"""
         # Higher consensus = lower FP probability
         # Higher score with low consensus = potential FP
@@ -342,12 +356,16 @@ class PromptInjectionDetector:
         """Build human-readable explanation"""
         parts = []
 
-        parts.append(f"Prompt injection scan completed. Risk score: {final_score:.1f}/100.")
+        parts.append(
+            f"Prompt injection scan completed. Risk score: {final_score:.1f}/100."
+        )
 
         if heuristic_signals:
             parts.append(f"Detected {len(heuristic_signals)} heuristic signals:")
             for signal in heuristic_signals[:5]:  # Top 5
-                parts.append(f"  - {signal.get('type', 'unknown')}: {signal.get('match', 'N/A')[:50]}")
+                parts.append(
+                    f"  - {signal.get('type', 'unknown')}: {signal.get('match', 'N/A')[:50]}"
+                )
 
         if encoding_signals:
             parts.append(f"Detected {len(encoding_signals)} encoding tricks:")
@@ -361,4 +379,3 @@ class PromptInjectionDetector:
             parts.append(f"{len(council_result.dissenting_opinions)} models dissented.")
 
         return "\n".join(parts)
-

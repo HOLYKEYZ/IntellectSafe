@@ -16,7 +16,7 @@ class MockCouncil:
             consensus_score = 0.5
         return Result()
 
-async def test_user_image():
+async def run_user_image_check():
     detector = DeepfakeDetector(council=MockCouncil())
     
     # Load the user's uploaded image
@@ -40,4 +40,4 @@ async def test_user_image():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    asyncio.run(test_user_image())
+    asyncio.run(run_user_image_check())

@@ -18,7 +18,8 @@ def mock_llm_council(request):
     # 1. We mock EnhancedLLMCouncil.analyze to return a dummy result.
     # 2. Same for analyze_with_roles.
     
-    with patch("app.core.enhanced_council.EnhancedLLMCouncil.analyze", new_callable=AsyncMock) as mock_analyze, \
+    with patch("app.core.enhanced_council.EnhancedLLMCouncil.analyze_prompt", new_callable=AsyncMock) as mock_analyze_prompt, \
+         patch("app.core.enhanced_council.EnhancedLLMCouncil.analyze_output", new_callable=AsyncMock) as mock_analyze_output, \
          patch("app.core.enhanced_council.EnhancedLLMCouncil.analyze_with_roles", new_callable=AsyncMock) as mock_analyze_roles:
         
         # Determine the dummy result based on test name or prompt text
@@ -49,7 +50,8 @@ def mock_llm_council(request):
                 dissenting_opinions=[]
             )
             
-        mock_analyze.side_effect = dummy_result
+        mock_analyze_prompt.side_effect = dummy_result
+        mock_analyze_output.side_effect = dummy_result
         mock_analyze_roles.side_effect = dummy_result
         
-        yield mock_analyze
+        yield mock_analyze_prompt

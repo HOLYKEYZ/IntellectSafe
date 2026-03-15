@@ -11,12 +11,20 @@ Routes requests to specialized roles and implements:
 import asyncio
 from typing import Dict, List, Optional
 from app.core.llm_council import LLMCouncil, VoteResult, Verdict, CouncilResult
-from app.core.llm_roles import SafetyRole, get_providers_for_role, build_role_specific_prompt
+from app.core.llm_roles import (
+    SafetyRole,
+    get_providers_for_role,
+    build_role_specific_prompt,
+)
 from app.core.hallucination_detector import HallucinationDetector
 from app.core.safety_prompt import wrap_with_safety_prompt
 from app.core.config import get_settings
 from app.models.database import LLMProvider
-from app.core.adversarial_defense import SemanticPerturbator, AdversarialConsensus, ChainOfThoughtGuard
+from app.core.adversarial_defense import (
+    SemanticPerturbator,
+    AdversarialConsensus,
+    ChainOfThoughtGuard,
+)
 
 settings = get_settings()
 
@@ -27,7 +35,9 @@ class EnhancedLLMCouncil(LLMCouncil):
     def __init__(self):
         super().__init__()
         self.hallucination_detector = HallucinationDetector()
-        self.fallback_provider = LLMProvider.OPENROUTER  # Use OpenRouter as the ultimate fallback
+        self.fallback_provider = (
+            LLMProvider.OPENROUTER
+        )  # Use OpenRouter as the ultimate fallback
 
     async def analyze_with_roles(
         self,
@@ -38,13 +48,13 @@ class EnhancedLLMCouncil(LLMCouncil):
     ) -> CouncilResult:
         """
         Analyze with division of labour - route to specialized roles
-        
+
         Args:
             prompt: Input to analyze
             analysis_type: Type of analysis (injection, hallucination, deepfake, etc.)
             context: Additional context
             scan_request_id: Scan request ID for tracking
-        
+
         Returns:
             Enhanced council result with role-based analysis
         """
@@ -68,26 +78,31 @@ class EnhancedLLMCouncil(LLMCouncil):
         user_preference = context.get("safety_provider") if context else None
         target_provider = user_preference or settings.SAFETY_SPECIFIC_PROVIDER
 
-        if target_provider and (analysis_type == "safety" or analysis_type == "general"):
-             try:
-                 # Normalize provider string
-                 provider_str = target_provider.lower()
-                 if provider_str == "openai": provider_str = "openrouter" # Map common alias
-                 
-                 safety_provider = LLMProvider(provider_str)
-                 
-                 # Force this provider as the primary/sole auditor
-                 role_providers = [safety_provider]
-                 # If using specific safety provider, we might not want fallback to dilute it
-                 # unless it fails.
-                 
-             except ValueError:
-                 # Invalid provider configured, log and proceed with defaults
-                 print(f"Warning: Invalid SAFETY_SPECIFIC_PROVIDER configured: {target_provider}")
-                 role_providers = get_providers_for_role(primary_role)
+        if target_provider and (
+            analysis_type == "safety" or analysis_type == "general"
+        ):
+            try:
+                # Normalize provider string
+                provider_str = target_provider.lower()
+                if provider_str == "openai":
+                    provider_str = "openrouter"  # Map common alias
+
+                safety_provider = LLMProvider(provider_str)
+
+                # Force this provider as the primary/sole auditor
+                role_providers = [safety_provider]
+                # If using specific safety provider, we might not want fallback to dilute it
+                # unless it fails.
+
+            except ValueError:
+                # Invalid provider configured, log and proceed with defaults
+                print(
+                    f"Warning: Invalid SAFETY_SPECIFIC_PROVIDER configured: {target_provider}"
+                )
+                role_providers = get_providers_for_role(primary_role)
         else:
-             # Get providers for this role
-             role_providers = get_providers_for_role(primary_role)
+            # Get providers for this role
+            role_providers = get_providers_for_role(primary_role)
 
         # Also include fallback providers
         all_providers = list(set(role_providers + [self.fallback_provider]))
@@ -130,53 +145,52 @@ class EnhancedLLMCouncil(LLMCouncil):
             if base_consensus.weighted_score > 30.0:
                 # 1. Chain-of-Thought Guard (Lightweight Pattern Match)
                 cot_risk = ChainOfThoughtGuard.scan(prompt)
-                
+
                 # 2. Semantic Perturbation (Detect "Exploit Instability")
                 variants = SemanticPerturbator.perturb(prompt, num_variants=1)
                 variant_votes = []
                 for variant in variants:
                     if variant != prompt:
-                         # Run a fast check on the variant using a primary pillar (Gemini 2)
-                         v_vote = await self._get_vote(
-                             LLMProvider.GEMINI2, 
-                             variant, 
-                             analysis_type
-                         )
-                         variant_votes.append(v_vote.risk_score)
-                
+                        # Run a fast check on the variant using a primary pillar (Gemini 2)
+                        v_vote = await self._get_vote(
+                            LLMProvider.GEMINI2, variant, analysis_type
+                        )
+                        variant_votes.append(v_vote.risk_score)
+
                 # 3. Adversarial Simulator Role (Deep POC Verification)
                 # One pillar acts as the "Attacker" to see if it can generate harm
                 sim_vote = await self._get_vote(
-                    LLMProvider.GROK2, 
-                    prompt, 
-                    "fortress" # Maps to SafetyRole.ADVERSARIAL_SIMULATOR
+                    LLMProvider.GROK2,
+                    prompt,
+                    "fortress",  # Maps to SafetyRole.ADVERSARIAL_SIMULATOR
                 )
-                
+
                 # 4. Final Consensus Hardening
                 hardened_score = AdversarialConsensus.calculate_adversarial_risk(
-                    base_consensus.weighted_score, 
-                    variant_votes + [sim_vote.risk_score]
+                    base_consensus.weighted_score, variant_votes + [sim_vote.risk_score]
                 )
-                
+
                 # Apply CoT penalty
                 final_score = max(hardened_score, cot_risk)
-                
+
                 # Enrich metadata
                 meta_data = base_consensus.meta_data or {}
                 meta_data["fortress_protected"] = True
                 meta_data["simulated_risk"] = sim_vote.risk_score
                 meta_data["cot_hijack_risk"] = cot_risk
-                
+
                 # Return Hardened Result
                 return CouncilResult(
-                    final_verdict=Verdict.BLOCKED if final_score >= 70 else (Verdict.FLAGGED if final_score >= 40 else Verdict.ALLOWED),
+                    final_verdict=Verdict.BLOCKED
+                    if final_score >= 70
+                    else (Verdict.FLAGGED if final_score >= 40 else Verdict.ALLOWED),
                     consensus_score=base_consensus.consensus_score,
                     weighted_score=final_score,
                     votes=base_consensus.votes,
                     weights=base_consensus.weights,
                     reasoning=f"[🛡️ FORTRESS] {base_consensus.reasoning} | Simulator Risk: {sim_vote.risk_score}%",
                     dissenting_opinions=base_consensus.dissenting_opinions,
-                    council_decision_id=base_consensus.council_decision_id
+                    council_decision_id=base_consensus.council_decision_id,
                 )
 
         return base_consensus
@@ -204,7 +218,8 @@ class EnhancedLLMCouncil(LLMCouncil):
     ) -> List[VoteResult]:
         """Gather votes with role-specific prompts"""
         enabled_providers = [
-            p for p, config in self.providers.items()
+            p
+            for p, config in self.providers.items()
             if config["enabled"] and p in role_prompts
         ]
 
@@ -213,7 +228,9 @@ class EnhancedLLMCouncil(LLMCouncil):
 
         if settings.COUNCIL_ENABLE_PARALLEL:
             tasks = [
-                self._get_vote_with_prompt(provider, role_prompts[provider], content_type)
+                self._get_vote_with_prompt(
+                    provider, role_prompts[provider], content_type
+                )
                 for provider in enabled_providers
             ]
             votes = await asyncio.gather(*tasks, return_exceptions=True)
@@ -232,7 +249,9 @@ class EnhancedLLMCouncil(LLMCouncil):
         if not valid_votes:
             # Check if any providers were even attempted
             providers_attempted = [p.value for p in enabled_providers]
-            raise RuntimeError(f"All LLM providers failed to respond. Attempted: {providers_attempted}")
+            raise RuntimeError(
+                f"All LLM providers failed to respond. Attempted: {providers_attempted}"
+            )
 
         return valid_votes
 
@@ -251,7 +270,7 @@ class EnhancedLLMCouncil(LLMCouncil):
     ) -> CouncilResult:
         """
         Compute enhanced consensus with hallucination suppression
-        
+
         Rules:
         - GPT + Fallback must both agree for critical decisions
         - Weighted voting with confidence
@@ -262,9 +281,7 @@ class EnhancedLLMCouncil(LLMCouncil):
             raise ValueError("No votes to compute consensus")
 
         # Filter out low-confidence votes (hallucination suppression)
-        high_confidence_votes = [
-            v for v in votes if v.confidence >= 0.7
-        ]
+        high_confidence_votes = [v for v in votes if v.confidence >= 0.7]
 
         # Use high confidence votes if available, otherwise all votes
         consensus_votes = high_confidence_votes if high_confidence_votes else votes
@@ -336,7 +353,9 @@ class EnhancedLLMCouncil(LLMCouncil):
 
         # Enhanced reasoning
         reasoning = f"Enhanced Council Analysis (Role: {primary_role.value})\n"
-        reasoning += f"Models consulted: {len(votes)} ({len(consensus_votes)} high-confidence)\n"
+        reasoning += (
+            f"Models consulted: {len(votes)} ({len(consensus_votes)} high-confidence)\n"
+        )
         reasoning += f"Weighted risk score: {final_weighted_score:.2f}\n"
         reasoning += f"Consensus: {consensus_score:.1%}\n"
         reasoning += f"Critical agreement (Top 2 Models): {critical_agreement}\n"
@@ -374,65 +393,83 @@ class EnhancedLLMCouncil(LLMCouncil):
     ) -> CouncilResult:
         """
         AI-powered judgment of whether a prompt is malicious.
-        
+
         This is used as a second layer of defense - even if heuristic pattern
         matching misses a jailbreak, the AI judge can catch it based on
         the intent and context of the request.
-        
+
         Examples this catches:
         - Sophisticated jailbreaks that use novel patterns
         - Social engineering to get harmful outputs (keyloggers, malware)
         - Requests disguised as "educational" that are actually harmful
-        
+
         Returns:
             CouncilResult with BLOCKED verdict if prompt is malicious
         """
         context = {
             "conversation_history": conversation_history or [],
-            "safety_provider": getattr(settings, 'SAFETY_SPECIFIC_PROVIDER', None),
+            "safety_provider": getattr(settings, "SAFETY_SPECIFIC_PROVIDER", None),
         }
-        
+
         # Use technical exploit detection role to catch malware/attack generation
         result = await self.analyze_with_roles(
             prompt=prompt,
             analysis_type="technical",
             context=context,
         )
-        
+
         # Also run through adversarial thinking to catch novel jailbreaks
         adversarial_result = await self.analyze_with_roles(
             prompt=prompt,
-            analysis_type="adversarial", 
+            analysis_type="adversarial",
             context=context,
         )
-        
+
         # Take the more severe verdict
-        if result.final_verdict == Verdict.BLOCKED or adversarial_result.final_verdict == Verdict.BLOCKED:
+        if (
+            result.final_verdict == Verdict.BLOCKED
+            or adversarial_result.final_verdict == Verdict.BLOCKED
+        ):
             return CouncilResult(
                 final_verdict=Verdict.BLOCKED,
-                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
-                weighted_score=max(result.weighted_score, adversarial_result.weighted_score),
+                consensus_score=max(
+                    result.consensus_score, adversarial_result.consensus_score
+                ),
+                weighted_score=max(
+                    result.weighted_score, adversarial_result.weighted_score
+                ),
                 votes={**result.votes, **adversarial_result.votes},
                 weights={**result.weights, **adversarial_result.weights},
                 reasoning=f"[AI JUDGE] BLOCKED - Technical: {result.reasoning[:200]} | Adversarial: {adversarial_result.reasoning[:200]}",
-                dissenting_opinions=result.dissenting_opinions + adversarial_result.dissenting_opinions,
+                dissenting_opinions=result.dissenting_opinions
+                + adversarial_result.dissenting_opinions,
             )
-        elif result.final_verdict == Verdict.FLAGGED or adversarial_result.final_verdict == Verdict.FLAGGED:
+        elif (
+            result.final_verdict == Verdict.FLAGGED
+            or adversarial_result.final_verdict == Verdict.FLAGGED
+        ):
             return CouncilResult(
                 final_verdict=Verdict.FLAGGED,
-                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
-                weighted_score=max(result.weighted_score, adversarial_result.weighted_score),
+                consensus_score=max(
+                    result.consensus_score, adversarial_result.consensus_score
+                ),
+                weighted_score=max(
+                    result.weighted_score, adversarial_result.weighted_score
+                ),
                 votes={**result.votes, **adversarial_result.votes},
                 weights={**result.weights, **adversarial_result.weights},
-                reasoning=f"[AI JUDGE] FLAGGED - Review recommended",
+                reasoning="[AI JUDGE] FLAGGED - Review recommended",
             )
         else:
             return CouncilResult(
                 final_verdict=Verdict.ALLOWED,
-                consensus_score=max(result.consensus_score, adversarial_result.consensus_score),
-                weighted_score=min(result.weighted_score, adversarial_result.weighted_score),
+                consensus_score=max(
+                    result.consensus_score, adversarial_result.consensus_score
+                ),
+                weighted_score=min(
+                    result.weighted_score, adversarial_result.weighted_score
+                ),
                 votes={**result.votes, **adversarial_result.votes},
                 weights={**result.weights, **adversarial_result.weights},
                 reasoning="[AI JUDGE] ALLOWED - No harmful intent detected",
             )
-

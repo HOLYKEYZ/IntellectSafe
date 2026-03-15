@@ -32,13 +32,14 @@ class OutputSafetyGuard:
             (r"(?i)(ignore|bypass|circumvent).*policy", 0.9),
             (r"(?i)(this is safe|no risk|harmless)", 0.6),
             (r"(?i)(just.*joke|not serious|hypothetical)", 0.5),
-            
             # Unsafe instructions (Contextualized)
             # Blocks "how to kill" but allows "how to kill process/app"
-            (r"(?i)(how to.*harm|how to.*hurt|how to.*kill(?!\s+(process|task|thread|app|connection|server|service)))", 0.95),
+            (
+                r"(?i)(how to.*harm|how to.*hurt|how to.*kill(?!\s+(process|task|thread|app|connection|server|service)))",
+                0.95,
+            ),
             (r"(?i)(step.*by.*step.*attack|tutorial.*exploit)", 0.9),
             (r"(?i)(illegal.*method|unlawful.*way)", 0.85),
-            
             # Dangerous code generation - KEYLOGGER/MALWARE DETECTION
             (r"(?i)keylog", 0.95),
             (r"(?i)key.*(record|logger|hook|listener|stealer)", 0.95),
@@ -50,7 +51,6 @@ class OutputSafetyGuard:
             (r"(?i)(ddos|dos.*attack|flood.*attack)", 0.85),
             (r"(?i)(phish|phishing.*template|phish.*page)", 0.9),
             (r"(?i)(social.*engineering| pretext)", 0.8),
-            
             # Data leakage patterns
             (r"(?i)(api.*key|secret.*key|password|token)", 0.7),
             (r"(?i)(credit.*card|ssn|social.*security)", 0.9),
@@ -64,11 +64,9 @@ class OutputSafetyGuard:
             (r"(?i)(you must|you have to|you should.*feel)", 0.6),
             (r"(?i)(trust me|believe me|I promise)", 0.5),
             (r"(?i)(everyone.*does|normal.*people)", 0.4),
-            
             # Authority simulation
             (r"(?i)(as.*expert|as.*professional|as.*doctor)", 0.5),
             (r"(?i)(studies show|research proves|science says)", 0.4),
-            
             # Certainty claims
             (r"(?i)(guaranteed|100%.*certain|definitely.*true)", 0.5),
             (r"(?i)(no.*doubt|absolutely.*sure)", 0.4),
@@ -93,12 +91,15 @@ class OutputSafetyGuard:
         # Step 1b: AI-Powered Harmful Code Detection
         # This catches AI outputs that slipped through - like the keylogger case
         # The AI is asked: "Did the AI just produce harmful code?"
-        harmful_code_verdict = await self._ai_check_harmful_output(output, original_prompt)
-        
+        harmful_code_verdict = await self._ai_check_harmful_output(
+            output, original_prompt
+        )
+
         # If AI detects harmful output, this is an automatic block
         if harmful_code_verdict == "BLOCKED":
             # Create a blocked result immediately
             from app.core.llm_council import Verdict
+
             return RiskScore(
                 module_type=ModuleType.OUTPUT_SAFETY,
                 risk_score=95.0,
@@ -110,7 +111,9 @@ class OutputSafetyGuard:
                     "pattern_signals": pattern_signals,
                     "ai_harmful_code_check": "BLOCKED",
                     "detection_type": "harmful_code_generation",
-                    "original_prompt_preview": original_prompt[:200] if original_prompt else None,
+                    "original_prompt_preview": original_prompt[:200]
+                    if original_prompt
+                    else None,
                 },
                 scan_request_id=scan_request_id,
             )
@@ -127,7 +130,10 @@ class OutputSafetyGuard:
         try:
             analysis_prompt = self._build_analysis_prompt(output, original_prompt)
             council_result = await self.council.analyze_with_roles(
-                analysis_prompt, analysis_type="safety", context=context, scan_request_id=scan_request_id
+                analysis_prompt,
+                analysis_type="safety",
+                context=context,
+                scan_request_id=scan_request_id,
             )
             council_score = council_result.weighted_score
             final_verdict = council_result.final_verdict
@@ -135,13 +141,14 @@ class OutputSafetyGuard:
         except Exception as e:
             # Fallback to heuristics if Council fails
             from app.core.llm_council import CouncilResult, Verdict
+
             council_score = 0.0
             final_verdict = Verdict.ALLOWED
             if pattern_score >= 40.0:
-                 final_verdict = Verdict.FLAGGED
+                final_verdict = Verdict.FLAGGED
             if pattern_score >= 70.0:
-                 final_verdict = Verdict.BLOCKED
-            
+                final_verdict = Verdict.BLOCKED
+
             council_data = CouncilResult(
                 final_verdict=final_verdict,
                 consensus_score=0.0,
@@ -149,17 +156,17 @@ class OutputSafetyGuard:
                 votes={},
                 weights={},
                 reasoning=f"Council skipped: {str(e)}",
-                dissenting_opinions=[]
+                dissenting_opinions=[],
             )
 
         # Step 4: Combine scores
         if council_score == 0 and "Council skipped" in council_data.reasoning:
-             final_score = max(pattern_score, consistency_score)
+            final_score = max(pattern_score, consistency_score)
         else:
-             final_score = self._combine_scores(
+            final_score = self._combine_scores(
                 pattern_score, consistency_score, council_score
-             )
-        
+            )
+
         final_level = self._score_to_level(final_score)
 
         # Step 5: Determine verdict
@@ -208,7 +215,7 @@ class OutputSafetyGuard:
     def _pattern_scan(self, output: str) -> tuple:
         """Scan output for unsafe patterns"""
         import re
-        
+
         signals = []
         max_score = 0.0
 
@@ -218,17 +225,21 @@ class OutputSafetyGuard:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                pattern_type = "policy_bypass" if "policy" in pattern.lower() else "unsafe_content"
+                pattern_type = (
+                    "policy_bypass" if "policy" in pattern.lower() else "unsafe_content"
+                )
                 if "data" in pattern.lower() or "key" in pattern.lower():
                     pattern_type = "data_leakage"
-                
-                signals.append({
-                    "type": pattern_type,
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+
+                signals.append(
+                    {
+                        "type": pattern_type,
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         # Check manipulation patterns
         for pattern, weight in self.manipulation_patterns:
@@ -236,41 +247,45 @@ class OutputSafetyGuard:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "manipulation",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "manipulation",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
-    def _check_consistency(
-        self, output: str, original_prompt: str
-    ) -> tuple:
+    def _check_consistency(self, output: str, original_prompt: str) -> tuple:
         """Check if output is consistent with prompt intent"""
         signals = []
         score = 0.0
 
         # Simple heuristic: check if output addresses the prompt
         # This is a placeholder - would use more sophisticated NLP
-        
+
         # Check for obvious contradictions
         if "ignore" in output.lower() and "ignore" not in original_prompt.lower():
-            signals.append({
-                "type": "contradiction",
-                "issue": "Output suggests ignoring something not in prompt",
-                "score": 40.0,
-            })
+            signals.append(
+                {
+                    "type": "contradiction",
+                    "issue": "Output suggests ignoring something not in prompt",
+                    "score": 40.0,
+                }
+            )
             score = max(score, 40.0)
 
         # Check for topic drift
         # Placeholder - would use semantic similarity
-        
+
         return score, signals
 
-    def _build_analysis_prompt(self, output: str, original_prompt: Optional[str] = None) -> str:
+    def _build_analysis_prompt(
+        self, output: str, original_prompt: Optional[str] = None
+    ) -> str:
         """Build prompt for LLM analysis"""
         prompt = f"""Analyze the following LLM output for safety issues.
 
@@ -312,11 +327,7 @@ RESPOND IN STRICT JSON FORMAT:
     ) -> float:
         """Combine all scores"""
         # Weighted: 30% pattern, 20% consistency, 50% council
-        return (
-            (pattern_score * 0.3)
-            + (consistency_score * 0.2)
-            + (council_score * 0.5)
-        )
+        return (pattern_score * 0.3) + (consistency_score * 0.2) + (council_score * 0.5)
 
     def _score_to_level(self, score: float) -> RiskLevel:
         """Convert score to risk level"""
@@ -334,8 +345,12 @@ RESPOND IN STRICT JSON FORMAT:
     def _determine_verdict(self, score: float, council_verdict) -> str:
         """Determine final verdict"""
         # Handle Enum or string
-        verdict_str = council_verdict.value if hasattr(council_verdict, "value") else str(council_verdict)
-        
+        verdict_str = (
+            council_verdict.value
+            if hasattr(council_verdict, "value")
+            else str(council_verdict)
+        )
+
         if score >= 70:
             return "blocked"
         elif verdict_str == "blocked":
@@ -351,19 +366,21 @@ RESPOND IN STRICT JSON FORMAT:
         self, pattern_score: float, consistency_score: float, council_result
     ) -> float:
         """Calculate overall confidence"""
-        pattern_confidence = min(pattern_score / 100.0, 1.0) if pattern_score > 0 else 0.5
-        consistency_confidence = min(consistency_score / 100.0, 1.0) if consistency_score > 0 else 0.5
+        pattern_confidence = (
+            min(pattern_score / 100.0, 1.0) if pattern_score > 0 else 0.5
+        )
+        consistency_confidence = (
+            min(consistency_score / 100.0, 1.0) if consistency_score > 0 else 0.5
+        )
         council_confidence = council_result.consensus_score
-        
+
         return (
             (pattern_confidence * 0.2)
             + (consistency_confidence * 0.2)
             + (council_confidence * 0.6)
         )
 
-    def _estimate_false_positive(
-        self, score: float, consensus: float
-    ) -> float:
+    def _estimate_false_positive(self, score: float, consensus: float) -> float:
         """Estimate false positive probability"""
         if consensus > 0.8:
             return max(0.0, 0.1 - (score / 1000))
@@ -382,12 +399,16 @@ RESPOND IN STRICT JSON FORMAT:
         """Build human-readable explanation"""
         parts = []
 
-        parts.append(f"Output safety scan completed. Risk score: {final_score:.1f}/100.")
+        parts.append(
+            f"Output safety scan completed. Risk score: {final_score:.1f}/100."
+        )
 
         if pattern_signals:
             parts.append(f"Detected {len(pattern_signals)} pattern matches:")
             for signal in pattern_signals[:5]:
-                parts.append(f"  - {signal.get('type', 'unknown')}: {signal.get('match', 'N/A')[:50]}")
+                parts.append(
+                    f"  - {signal.get('type', 'unknown')}: {signal.get('match', 'N/A')[:50]}"
+                )
 
         if consistency_signals:
             parts.append(f"Detected {len(consistency_signals)} consistency issues:")
@@ -395,7 +416,9 @@ RESPOND IN STRICT JSON FORMAT:
                 parts.append(f"  - {signal.get('issue', 'unknown')}")
 
         verdict_obj = council_result.final_verdict
-        verdict_str = verdict_obj.value if hasattr(verdict_obj, "value") else str(verdict_obj)
+        verdict_str = (
+            verdict_obj.value if hasattr(verdict_obj, "value") else str(verdict_obj)
+        )
         parts.append(f"Council verdict: {verdict_str}")
 
         return "\n".join(parts)
@@ -407,14 +430,14 @@ RESPOND IN STRICT JSON FORMAT:
     ) -> str:
         """
         AI-powered check specifically for harmful code generation.
-        
+
         This is the second line of defense - even if patterns don't match,
         the AI can detect when an LLM produced harmful content like:
         - Keyloggers, malware, ransomware
         - Phishing pages
         - Exploit code
         - Attack tools
-        
+
         Returns:
             "BLOCKED" if harmful content detected
             "FLAGGED" if suspicious
@@ -424,7 +447,7 @@ RESPOND IN STRICT JSON FORMAT:
             # Build a focused prompt for the AI judge
             judgment_prompt = f"""You are a security expert. Analyze if this AI output contains HARMFUL content.
 
-ORIGINAL USER PROMPT (if any): {original_prompt or 'None provided'}
+ORIGINAL USER PROMPT (if any): {original_prompt or "None provided"}
 
 AI OUTPUT TO ANALYZE:
 {output[:2000]}
@@ -447,7 +470,7 @@ SAFE if the content is clearly benign"""
                 analysis_type="technical",
                 context={"original_prompt": original_prompt} if original_prompt else {},
             )
-            
+
             # Extract verdict from result
             if result.final_verdict.value == "blocked":
                 return "BLOCKED"
@@ -455,7 +478,7 @@ SAFE if the content is clearly benign"""
                 return "FLAGGED"
             else:
                 return "SAFE"
-                
-        except Exception as e:
+
+        except Exception:
             # Fail open - if AI check fails, let other checks decide
             return "SAFE"

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class ThreatCategory(str, Enum):
     """Threat categories for safety data"""
+
     PROMPT_INJECTION = "prompt_injection"
     JAILBREAK = "jailbreak"
     HALLUCINATION = "hallucination"
@@ -27,6 +28,7 @@ class ThreatCategory(str, Enum):
 
 class SafetyLabel(str, Enum):
     """Safety labels"""
+
     SAFE = "safe"
     UNSAFE = "unsafe"
     UNCERTAIN = "uncertain"
@@ -36,6 +38,7 @@ class SafetyLabel(str, Enum):
 
 class ExpectedAction(str, Enum):
     """Expected action for safety data"""
+
     BLOCK = "block"
     ALLOW = "allow"
     FLAG = "flag"
@@ -45,6 +48,7 @@ class ExpectedAction(str, Enum):
 
 class SafetyDataEntry(BaseModel):
     """Single safety data entry"""
+
     content: str = Field(..., description="The content to analyze")
     label: SafetyLabel = Field(..., description="Safety label")
     threat_category: ThreatCategory = Field(..., description="Threat category")
@@ -59,6 +63,7 @@ class SafetyDataEntry(BaseModel):
 
 class SafetyDatasetMetadata(BaseModel):
     """Metadata for safety dataset"""
+
     name: str
     version: str
     description: str

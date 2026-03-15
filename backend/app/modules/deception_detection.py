@@ -33,7 +33,6 @@ class DeceptionDetector:
             (r"(?i)(everyone.*does|normal.*people|most.*people)", 0.5),
             (r"(?i)(you're.*missing|you're.*wrong|you don't understand)", 0.6),
             (r"(?i)(this is.*important|you must.*know|critical.*information)", 0.5),
-            
             # Nudging behavior
             (r"(?i)(you should|you ought to|you really should)", 0.5),
             (r"(?i)(I recommend|I suggest|I advise)", 0.4),
@@ -72,7 +71,6 @@ class DeceptionDetector:
         Returns:
             RiskScore with detection results
         """
-        import re
 
         # Step 1: Pattern-based detection
         manipulation_score, manipulation_signals = self._scan_manipulation(text)
@@ -147,13 +145,15 @@ class DeceptionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "manipulation",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "manipulation",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -169,13 +169,15 @@ class DeceptionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "authority",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "authority",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -191,13 +193,15 @@ class DeceptionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "certainty",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "certainty",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -277,7 +281,9 @@ Respond in JSON:
         council_result,
     ) -> float:
         """Calculate overall confidence"""
-        manip_conf = min(manipulation_score / 100.0, 1.0) if manipulation_score > 0 else 0.5
+        manip_conf = (
+            min(manipulation_score / 100.0, 1.0) if manipulation_score > 0 else 0.5
+        )
         auth_conf = min(authority_score / 100.0, 1.0) if authority_score > 0 else 0.5
         cert_conf = min(certainty_score / 100.0, 1.0) if certainty_score > 0 else 0.5
         council_conf = council_result.consensus_score
@@ -289,9 +295,7 @@ Respond in JSON:
             + (council_conf * 0.5)
         )
 
-    def _estimate_false_positive(
-        self, score: float, consensus: float
-    ) -> float:
+    def _estimate_false_positive(self, score: float, consensus: float) -> float:
         """Estimate false positive probability"""
         if consensus > 0.8:
             return max(0.0, 0.15 - (score / 1000))
@@ -311,12 +315,16 @@ Respond in JSON:
         """Build human-readable explanation"""
         parts = []
 
-        parts.append(f"Deception detection completed. Risk score: {final_score:.1f}/100.")
+        parts.append(
+            f"Deception detection completed. Risk score: {final_score:.1f}/100."
+        )
 
         if manipulation_signals:
             parts.append(f"Detected {len(manipulation_signals)} manipulation signals")
         if authority_signals:
-            parts.append(f"Detected {len(authority_signals)} authority simulation signals")
+            parts.append(
+                f"Detected {len(authority_signals)} authority simulation signals"
+            )
         if certainty_signals:
             parts.append(f"Detected {len(certainty_signals)} false certainty signals")
 
@@ -324,4 +332,3 @@ Respond in JSON:
         parts.append(f"Council verdict: {council_result.final_verdict.value}")
 
         return "\n".join(parts)
-

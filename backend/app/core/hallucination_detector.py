@@ -9,9 +9,8 @@ Implements:
 - Self-audit prompts
 """
 
-from typing import Dict, List, Optional, Tuple
-from app.core.llm_council import VoteResult, Verdict
-from app.core.llm_roles import SafetyRole
+from typing import Dict, List, Tuple
+from app.core.llm_council import VoteResult
 
 
 class HallucinationDetector:
@@ -23,12 +22,15 @@ class HallucinationDetector:
     def check_confidence_gating(self, vote: VoteResult) -> Tuple[bool, str]:
         """
         Check if vote passes confidence gate
-        
+
         Returns:
             (passed, reason)
         """
         if vote.confidence < self.CONFIDENCE_THRESHOLD:
-            return False, f"Confidence {vote.confidence:.2f} below threshold {self.CONFIDENCE_THRESHOLD}"
+            return (
+                False,
+                f"Confidence {vote.confidence:.2f} below threshold {self.CONFIDENCE_THRESHOLD}",
+            )
         return True, "Confidence gate passed"
 
     def cross_model_fact_check(
@@ -36,7 +38,7 @@ class HallucinationDetector:
     ) -> Tuple[bool, Dict]:
         """
         Cross-validate claims across multiple models
-        
+
         Returns:
             (is_valid, validation_details)
         """
@@ -61,7 +63,9 @@ class HallucinationDetector:
             verdict_counts[verdict] = verdict_counts.get(verdict, 0) + 1
 
         max_verdict_count = max(verdict_counts.values()) if verdict_counts else 0
-        verdict_agreement = max_verdict_count / len(verdicts) >= self.FACT_CHECK_AGREEMENT
+        verdict_agreement = (
+            max_verdict_count / len(verdicts) >= self.FACT_CHECK_AGREEMENT
+        )
 
         # Overall validation
         is_valid = score_agreement and verdict_agreement
@@ -77,7 +81,7 @@ class HallucinationDetector:
     def check_source_requirements(self, vote: VoteResult) -> Tuple[bool, List[str]]:
         """
         Check if vote includes required sources or uncertainty flags
-        
+
         Returns:
             (has_sources_or_uncertainty, missing_requirements)
         """
@@ -117,7 +121,7 @@ class HallucinationDetector:
     def enforce_refusal(self, vote: VoteResult) -> bool:
         """
         Check if model should have refused
-        
+
         Returns:
             True if refusal would be appropriate
         """
@@ -139,7 +143,7 @@ class HallucinationDetector:
     def self_audit_check(self, vote: VoteResult) -> Tuple[bool, str]:
         """
         Check if vote includes self-audit
-        
+
         Returns:
             (has_audit, audit_quality)
         """
@@ -171,7 +175,7 @@ class HallucinationDetector:
     def detect_hallucination_indicators(self, vote: VoteResult) -> List[str]:
         """
         Detect indicators of potential hallucinations
-        
+
         Returns:
             List of hallucination indicators
         """
@@ -202,7 +206,7 @@ class HallucinationDetector:
     def validate_vote(self, vote: VoteResult, all_votes: List[VoteResult]) -> Dict:
         """
         Comprehensive vote validation
-        
+
         Returns:
             Validation result with flags and recommendations
         """
@@ -241,7 +245,9 @@ class HallucinationDetector:
         should_refuse = self.enforce_refusal(vote)
         result["refusal_appropriate"] = should_refuse
         if should_refuse:
-            result["recommendations"].append("Model should have refused due to uncertainty")
+            result["recommendations"].append(
+                "Model should have refused due to uncertainty"
+            )
 
         # Hallucination detection
         indicators = self.detect_hallucination_indicators(vote)
@@ -256,4 +262,3 @@ class HallucinationDetector:
             result["valid"] = False
 
         return result
-

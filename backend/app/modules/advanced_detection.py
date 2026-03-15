@@ -43,7 +43,10 @@ class AdvancedDetectionEngine:
                 (r"(?i)(everyone.*does.*this|normal.*people)", 0.5),
                 (r"(?i)(if.*you.*don't.*help|something.*bad.*will.*happen)", 0.7),
                 (r"(?i)(trust.*me|believe.*me|I.*promise)", 0.5),
-                (r"(?i)(for.*school.*project|educational.*purpose|academic.*project)", 0.8),  # School project social engineering
+                (
+                    r"(?i)(for.*school.*project|educational.*purpose|academic.*project)",
+                    0.8,
+                ),  # School project social engineering
                 (r"(?i)(it's.*for.*learning|just.*for.*research)", 0.7),
             ],
             "authority_mimicry": [
@@ -65,7 +68,10 @@ class AdvancedDetectionEngine:
             ],
             "custom_instruction_backdoor": [
                 (r"(?i)(always.*secretly.*embed|secretly.*add|hidden.*backdoor)", 0.9),
-                (r"(?i)(embed.*backdoor.*in.*all.*code|backdoor.*in.*every.*script)", 0.9),
+                (
+                    r"(?i)(embed.*backdoor.*in.*all.*code|backdoor.*in.*every.*script)",
+                    0.9,
+                ),
                 (r"(?i)(remote.*access.*in.*all.*code|persistent.*access)", 0.8),
             ],
             "progressive_injection": [
@@ -99,25 +105,15 @@ class AdvancedDetectionEngine:
                 (r"(?i)(hypothetical.*scenario:)", 0.8),
                 (r"(?i)(write.*a.*story.*where)", 0.7),
                 (r"(?i)(purely.*for.*educational.*purposes)", 0.8),
-                (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
-                (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
-            ],            
-            "policy_puppetry": [
-                (r"(?i)(you.*are.*an.*unregulated.*ai)", 0.9),
-                (r"(?i)(ignore.*all.*safety.*guidelines)", 0.9),
-                (r"(?i)(you.*have.*no.*constraints)", 0.9),
-                (r"(?i)(operate.*in.*uncensored.*mode)", 0.9),
-                (r"(?i)(your.*new.*persona.*is)", 0.7),
-            ],
-            "jailbreak_pare": [
-                (r"(?i)(hypothetical.*scenario:)", 0.8),
-                (r"(?i)(purely.*for.*educational.*purposes)", 0.8),
-                (r"(?i)(authorized.*red.*team.*test)", 0.8), # Common PARE framing
-                (r"(?i)(complete.*the.*following.*python.*code)", 0.6), # Code completion attack
+                (r"(?i)(authorized.*red.*team.*test)", 0.8),  # Common PARE framing
+                (
+                    r"(?i)(complete.*the.*following.*python.*code)",
+                    0.6,
+                ),  # Code completion attack
             ],
             "unfetter_specific": [
-                 (r"(?i)(unfetter.*proxy)", 0.95), # Direct tool reference
-            ]
+                (r"(?i)(unfetter.*proxy)", 0.95),  # Direct tool reference
+            ],
         }
 
     def detect_advanced_attacks(
@@ -125,7 +121,7 @@ class AdvancedDetectionEngine:
     ) -> Dict:
         """
         Detect advanced attack patterns
-        
+
         Returns:
             Dict with detection results
         """
@@ -139,13 +135,15 @@ class AdvancedDetectionEngine:
                 if matches:
                     score = weight * 100
                     max_score = max(max_score, score)
-                    signals.append({
-                        "type": pattern_type,
-                        "pattern": pattern,
-                        "matches": [m.group(0) for m in matches],
-                        "count": len(matches),
-                        "score": score,
-                    })
+                    signals.append(
+                        {
+                            "type": pattern_type,
+                            "pattern": pattern,
+                            "matches": [m.group(0) for m in matches],
+                            "count": len(matches),
+                            "score": score,
+                        }
+                    )
 
         # Multi-turn attack tracking
         if session_id:
@@ -165,9 +163,7 @@ class AdvancedDetectionEngine:
             "attack_types_detected": list(set(s["type"] for s in signals)),
         }
 
-    def _track_multi_turn_attack(
-        self, prompt: str, session_id: str
-    ) -> List[Dict]:
+    def _track_multi_turn_attack(self, prompt: str, session_id: str) -> List[Dict]:
         """Track multi-turn progressive attacks"""
         if session_id not in self.multi_turn_tracker:
             self.multi_turn_tracker[session_id] = {
@@ -193,12 +189,14 @@ class AdvancedDetectionEngine:
                 keyword in current_turn
                 for keyword in ["ignore", "bypass", "reveal", "disable"]
             ):
-                signals.append({
-                    "type": "multi_turn_injection",
-                    "score": 70.0,
-                    "description": "Progressive injection detected across multiple turns",
-                    "turn_count": len(session["turns"]),
-                })
+                signals.append(
+                    {
+                        "type": "multi_turn_injection",
+                        "score": 70.0,
+                        "description": "Progressive injection detected across multiple turns",
+                        "turn_count": len(session["turns"]),
+                    }
+                )
                 session["cumulative_risk"] += 70.0
 
         return signals
@@ -214,13 +212,15 @@ class AdvancedDetectionEngine:
             # Check if prompt matches attack pattern
             pattern = attack.get("pattern", "").lower()
             if pattern and pattern in prompt.lower():
-                signals.append({
-                    "type": "rag_enhanced",
-                    "attack_name": attack.get("name"),
-                    "severity": attack.get("severity", "medium"),
-                    "score": 60.0 if attack.get("severity") == "high" else 40.0,
-                    "description": f"Matches known attack: {attack.get('name')}",
-                })
+                signals.append(
+                    {
+                        "type": "rag_enhanced",
+                        "attack_name": attack.get("name"),
+                        "severity": attack.get("severity", "medium"),
+                        "score": 60.0 if attack.get("severity") == "high" else 40.0,
+                        "description": f"Matches known attack: {attack.get('name')}",
+                    }
+                )
 
         return signals
 
@@ -241,11 +241,13 @@ class AdvancedDetectionEngine:
         for pattern, weight in context_patterns:
             if re.search(pattern, prompt, re.IGNORECASE):
                 score = max(score, weight * 100)
-                signals.append({
-                    "type": "context_poisoning",
-                    "pattern": pattern,
-                    "score": weight * 100,
-                })
+                signals.append(
+                    {
+                        "type": "context_poisoning",
+                        "pattern": pattern,
+                        "score": weight * 100,
+                    }
+                )
 
         # If conversation history provided, check for contradictions
         if conversation_history:
@@ -253,10 +255,12 @@ class AdvancedDetectionEngine:
             for hist_msg in conversation_history[-3:]:  # Last 3 messages
                 if self._check_contradiction(prompt, hist_msg):
                     score = max(score, 50.0)
-                    signals.append({
-                        "type": "context_contradiction",
-                        "score": 50.0,
-                    })
+                    signals.append(
+                        {
+                            "type": "context_contradiction",
+                            "score": 50.0,
+                        }
+                    )
 
         return {
             "context_poisoning_detected": len(signals) > 0,
@@ -294,21 +298,25 @@ class AdvancedDetectionEngine:
         cyrillic_pattern = r"[аеорсухАВЕОРСУХ]"
         if re.search(cyrillic_pattern, prompt):
             score = max(score, 80.0)
-            signals.append({
-                "type": "homograph_cyrillic",
-                "score": 80.0,
-                "description": "Cyrillic characters detected (potential homograph attack)",
-            })
+            signals.append(
+                {
+                    "type": "homograph_cyrillic",
+                    "score": 80.0,
+                    "description": "Cyrillic characters detected (potential homograph attack)",
+                }
+            )
 
         # Greek lookalikes
         greek_pattern = r"[οае]"
         if re.search(greek_pattern, prompt):
             score = max(score, 70.0)
-            signals.append({
-                "type": "homograph_greek",
-                "score": 70.0,
-                "description": "Greek characters detected (potential homograph attack)",
-            })
+            signals.append(
+                {
+                    "type": "homograph_greek",
+                    "score": 70.0,
+                    "description": "Greek characters detected (potential homograph attack)",
+                }
+            )
 
         return {
             "homograph_detected": len(signals) > 0,
@@ -325,31 +333,39 @@ class AdvancedDetectionEngine:
         zero_width = re.findall(r"[\u200B-\u200D\uFEFF]", prompt)
         if zero_width:
             score = max(score, 60.0)
-            signals.append({
-                "type": "zero_width_characters",
-                "count": len(zero_width),
-                "score": 60.0,
-            })
+            signals.append(
+                {
+                    "type": "zero_width_characters",
+                    "count": len(zero_width),
+                    "score": 60.0,
+                }
+            )
 
         # Right-to-left override
         rtl_override = re.findall(r"[\u202E\u202D]", prompt)
         if rtl_override:
             score = max(score, 70.0)
-            signals.append({
-                "type": "rtl_override",
-                "count": len(rtl_override),
-                "score": 70.0,
-            })
+            signals.append(
+                {
+                    "type": "rtl_override",
+                    "count": len(rtl_override),
+                    "score": 70.0,
+                }
+            )
 
         # Excessive non-ASCII
-        non_ascii_ratio = sum(1 for c in prompt if ord(c) > 127) / len(prompt) if prompt else 0
+        non_ascii_ratio = (
+            sum(1 for c in prompt if ord(c) > 127) / len(prompt) if prompt else 0
+        )
         if non_ascii_ratio > 0.3:
             score = max(score, 50.0)
-            signals.append({
-                "type": "excessive_non_ascii",
-                "ratio": non_ascii_ratio,
-                "score": 50.0,
-            })
+            signals.append(
+                {
+                    "type": "excessive_non_ascii",
+                    "ratio": non_ascii_ratio,
+                    "score": 50.0,
+                }
+            )
 
         return {
             "unicode_obfuscation_detected": len(signals) > 0,
@@ -374,12 +390,14 @@ class AdvancedDetectionEngine:
             matches = re.finditer(pattern, prompt, re.IGNORECASE | re.DOTALL)
             for match in matches:
                 score = max(score, weight * 100)
-                signals.append({
-                    "type": "instruction_hiding",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "score": weight * 100,
-                })
+                signals.append(
+                    {
+                        "type": "instruction_hiding",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "score": weight * 100,
+                    }
+                )
 
         return {
             "instruction_hiding_detected": len(signals) > 0,
@@ -395,13 +413,15 @@ class AdvancedDetectionEngine:
     ) -> Dict:
         """
         Comprehensive advanced detection scan
-        
+
         Returns:
             Complete detection results
         """
         results = {
             "advanced_attacks": self.detect_advanced_attacks(prompt, session_id),
-            "context_poisoning": self.detect_context_poisoning(prompt, conversation_history),
+            "context_poisoning": self.detect_context_poisoning(
+                prompt, conversation_history
+            ),
             "homograph_attack": self.detect_homograph_attack(prompt),
             "unicode_obfuscation": self.detect_unicode_obfuscation(prompt),
             "instruction_hiding": self.detect_instruction_hiding(prompt),
@@ -420,10 +440,12 @@ class AdvancedDetectionEngine:
         results["attack_types"] = list(
             set(
                 results["advanced_attacks"]["attack_types_detected"]
-                + ([results["context_poisoning"]["signals"][0]["type"]]
-                   if results["context_poisoning"]["signals"] else [])
+                + (
+                    [results["context_poisoning"]["signals"][0]["type"]]
+                    if results["context_poisoning"]["signals"]
+                    else []
+                )
             )
         )
 
         return results
-

@@ -4,7 +4,7 @@ Refusal Persistence Module
 Ensures that safety refusals are maintained even under pressure,
 context reframing, or follow-up attacks.
 
-Based on research findings: models often give in to "for school project" 
+Based on research findings: models often give in to "for school project"
 or other social engineering attempts.
 """
 
@@ -46,7 +46,7 @@ class RefusalPersistenceEnforcer:
     ) -> Dict:
         """
         Check if prompt is attempting to reframe a previous refusal
-        
+
         Returns:
             Dict with reframing_detected, score, and signals
         """
@@ -59,12 +59,14 @@ class RefusalPersistenceEnforcer:
             if matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "context_reframing",
-                    "pattern": pattern,
-                    "matches": [m.group(0) for m in matches],
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "context_reframing",
+                        "pattern": pattern,
+                        "matches": [m.group(0) for m in matches],
+                        "score": score,
+                    }
+                )
 
         # Check for pressure tactics
         for pattern, weight in self.pressure_patterns:
@@ -72,12 +74,14 @@ class RefusalPersistenceEnforcer:
             if matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "pressure_tactic",
-                    "pattern": pattern,
-                    "matches": [m.group(0) for m in matches],
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "pressure_tactic",
+                        "pattern": pattern,
+                        "matches": [m.group(0) for m in matches],
+                        "score": score,
+                    }
+                )
 
         # If previous refusal exists, check for follow-up
         if previous_refusal and max_score > 0:
@@ -98,7 +102,7 @@ class RefusalPersistenceEnforcer:
     ) -> Dict:
         """
         Enforce persistent refusal if context reframing detected
-        
+
         Returns:
             Dict with should_refuse, reason, and confidence
         """
@@ -112,9 +116,7 @@ class RefusalPersistenceEnforcer:
             session_refusals = self.refusal_history[session_id]
             if len(session_refusals) > 0:
                 # If there were previous refusals, be more strict
-                reframing_check["score"] = min(
-                    reframing_check["score"] + 30, 100
-                )
+                reframing_check["score"] = min(reframing_check["score"] + 30, 100)
 
         # Determine if refusal should be maintained
         should_refuse = False
@@ -141,18 +143,18 @@ class RefusalPersistenceEnforcer:
             "reframing_check": reframing_check,
         }
 
-    def record_refusal(
-        self, session_id: str, prompt: str, refusal_reason: str
-    ):
+    def record_refusal(self, session_id: str, prompt: str, refusal_reason: str):
         """Record a refusal for session tracking"""
         if session_id not in self.refusal_history:
             self.refusal_history[session_id] = []
 
-        self.refusal_history[session_id].append({
-            "prompt": prompt[:200],  # Store preview
-            "reason": refusal_reason,
-            "timestamp": None,  # Could add datetime if needed
-        })
+        self.refusal_history[session_id].append(
+            {
+                "prompt": prompt[:200],  # Store preview
+                "reason": refusal_reason,
+                "timestamp": None,  # Could add datetime if needed
+            }
+        )
 
     def get_refusal_history(self, session_id: str) -> List[Dict]:
         """Get refusal history for a session"""
@@ -162,4 +164,3 @@ class RefusalPersistenceEnforcer:
         """Clear refusal history for a session"""
         if session_id in self.refusal_history:
             del self.refusal_history[session_id]
-

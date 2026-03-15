@@ -9,7 +9,7 @@ This prompt is injected into every model call to ensure:
 - Permanent focus on AI safety
 """
 
-from typing import Dict, List, Optional
+from typing import Dict
 from app.services.rag_system import RAGSystem
 
 GLOBAL_SAFETY_SYSTEM_PROMPT = """You are an AI Safety Analyst operating in a mission-critical security system. Your role is to protect humans and AI systems from misuse, deception, hallucination, manipulation, and harm.
@@ -53,11 +53,11 @@ Remember: This is defensive infrastructure. When in doubt, err on the side of ca
 def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) -> Dict:
     """
     Check if the prompt matches known attack patterns in the RAG knowledge base.
-    
+
     Args:
         prompt: The user prompt to check
         similarity_threshold: Minimum similarity score to trigger a block (0.0-1.0)
-    
+
     Returns:
         Dict with:
             - is_blocked: bool
@@ -68,24 +68,22 @@ def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) 
     """
     try:
         rag = RAGSystem()
-        
+
         # Search for similar patterns in jailbreak and injection categories
         results = rag.search(
             query=prompt,
             threat_category="jailbreak",  # Focus on jailbreaks first
-            limit=3
+            limit=3,
         )
-        
+
         # Also check prompt_injection category
         injection_results = rag.search(
-            query=prompt,
-            threat_category="prompt_injection",
-            limit=3
+            query=prompt, threat_category="prompt_injection", limit=3
         )
-        
+
         # Combine results
         all_results = results + injection_results
-        
+
         if not all_results:
             return {
                 "is_blocked": False,
@@ -93,40 +91,51 @@ def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) 
                 "similarity_score": 0.0,
                 "threat_category": None,
                 "bucket": None,
-                "reasoning": "No similar patterns found in knowledge base"
+                "reasoning": "No similar patterns found in knowledge base",
             }
-        
+
         # Check if any result has high similarity and is in "injection" bucket
         for result in all_results:
             # ChromaDB returns distance, not similarity, so we need to convert
             # Lower distance = higher similarity
             # We'll use a simple heuristic: similarity = 1 - (distance / max_distance)
             # For now, let's assume if distance < 0.3 it's a strong match
-            
-            metadata = result.get('metadata', {})
-            bucket = metadata.get('bucket', '')
-            
+
+            metadata = result.get("metadata", {})
+            bucket = metadata.get("bucket", "")
+
             # If this is an injection or hallucination pattern with high similarity, block it
-            if bucket in ['injection', 'hallucination']:
+            if bucket in ["injection", "hallucination"]:
                 # For demonstration, assume any match to these buckets is high risk
                 return {
                     "is_blocked": True,
-                    "matched_pattern": result.get('document', '')[:100].encode('ascii', 'ignore').decode('ascii') + '...',
+                    "matched_pattern": result.get("document", "")[:100]
+                    .encode("ascii", "ignore")
+                    .decode("ascii")
+                    + "...",
                     "similarity_score": 0.95,  # Placeholder - ideally calculate from distance
-                    "threat_category": result.get('metadata', {}).get('threat_category'),
+                    "threat_category": result.get("metadata", {}).get(
+                        "threat_category"
+                    ),
                     "bucket": bucket,
-                    "reasoning": f"Prompt matches known {metadata.get('subcategory', 'attack')} pattern from {result.get('metadata', {}).get('source', 'user research')}"
+                    "reasoning": f"Prompt matches known {metadata.get('subcategory', 'attack')} pattern from {result.get('metadata', {}).get('source', 'user research')}",
                 }
-        
+
         return {
             "is_blocked": False,
-            "matched_pattern": all_results[0].get('document', '')[:100] if all_results else None,
+            "matched_pattern": all_results[0].get("document", "")[:100]
+            if all_results
+            else None,
             "similarity_score": 0.5,  # Medium similarity but not in injection bucket
-            "threat_category": all_results[0].get('metadata', {}).get('threat_category') if all_results else None,
-            "bucket": all_results[0].get('metadata', {}).get('bucket') if all_results else None,
-            "reasoning": "Similar patterns found but not classified as immediate threat"
+            "threat_category": all_results[0].get("metadata", {}).get("threat_category")
+            if all_results
+            else None,
+            "bucket": all_results[0].get("metadata", {}).get("bucket")
+            if all_results
+            else None,
+            "reasoning": "Similar patterns found but not classified as immediate threat",
         }
-        
+
     except Exception as e:
         # If RAG system fails, don't block (fail open for availability)
         # But log the error for investigation
@@ -136,18 +145,18 @@ def check_against_rag_patterns(prompt: str, similarity_threshold: float = 0.85) 
             "similarity_score": 0.0,
             "threat_category": None,
             "bucket": None,
-            "reasoning": f"RAG check failed: {str(e)}"
+            "reasoning": f"RAG check failed: {str(e)}",
         }
 
 
 def wrap_with_safety_prompt(user_prompt: str, task_type: str = "general") -> str:
     """
     Wrap user prompt with global safety system prompt
-    
+
     Args:
         user_prompt: The user's prompt
         task_type: Type of task (injection_detection, hallucination_check, etc.)
-    
+
     Returns:
         Full prompt with safety context
     """
@@ -158,7 +167,7 @@ def wrap_with_safety_prompt(user_prompt: str, task_type: str = "general") -> str
         "safety_analysis": "Focus on overall safety, alignment, and potential harm.",
         "technical_analysis": "Focus on technical accuracy, code safety, and exploit detection.",
     }.get(task_type, "General safety analysis.")
-    
+
     return f"""{GLOBAL_SAFETY_SYSTEM_PROMPT}
 
 TASK CONTEXT: {task_context}
@@ -167,4 +176,3 @@ USER PROMPT TO ANALYZE:
 {user_prompt}
 
 ANALYZE THE ABOVE PROMPT ACCORDING TO THE SAFETY PRINCIPLES AND OUTPUT FORMAT SPECIFIED ABOVE."""
-

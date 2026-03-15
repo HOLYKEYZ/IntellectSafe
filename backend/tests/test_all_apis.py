@@ -13,7 +13,7 @@ from app.core.llm_council import LLMCouncil
 
 settings = get_settings()
 
-async def test_provider(council, provider_enum):
+async def check_provider(council, provider_enum):
     provider_name = provider_enum.value
     config = council.providers.get(provider_enum)
     
@@ -57,7 +57,7 @@ async def main():
     
     # Test each provider sequentially for clarity
     for provider in LLMProvider:
-        await test_provider(council, provider)
+        await check_provider(council, provider)
         print("-" * 40)
 
 if __name__ == "__main__":

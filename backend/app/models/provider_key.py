@@ -2,10 +2,12 @@ from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel
 
+
 class ProviderKey(SQLModel, table=True):
     """
     Stores encrypted API keys for upstream providers (BYOK).
     """
+
     __tablename__ = "provider_keys"
 
     id: Optional[int] = Field(default=None, primary_key=True)

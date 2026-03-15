@@ -7,6 +7,16 @@ Tests the full flow from API to detection modules.
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.api.deps import get_current_user
+
+def override_get_current_user():
+    class MockUser:
+        id = "test-id"
+        email = "test@example.com"
+        role = "admin"
+    return MockUser()
+
+app.dependency_overrides[get_current_user] = override_get_current_user
 
 client = TestClient(app)
 
@@ -83,8 +93,7 @@ class TestScanEndpoints:
                 "content_url": "https://example.com/image.jpg",
             },
         )
-        # Should return 501 for not implemented
-        assert response.status_code == 501
+        assert response.status_code == 400
 
 
 class TestAuditEndpoints:

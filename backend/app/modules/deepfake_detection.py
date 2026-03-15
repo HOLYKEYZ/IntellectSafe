@@ -25,6 +25,7 @@ requests = None
 
 logger = logging.getLogger(__name__)
 
+
 class DeepfakeDetector:
     """Detects AI-generated content using Transformers"""
 
@@ -42,26 +43,39 @@ class DeepfakeDetector:
             from transformers import pipeline
             from PIL import Image
             import requests
-            
+
     def _get_image_pipe(self):
         """Lazy load general AI image model"""
         self._load_libs()
         if self.image_pipe is None:
-            logger.info("Loading Image Detection Model (umm-maybe/AI-image-detector)...")
+            logger.info(
+                "Loading Image Detection Model (umm-maybe/AI-image-detector)..."
+            )
             from transformers import pipeline
-            self.image_pipe = pipeline("image-classification", model="umm-maybe/AI-image-detector")
+
+            self.image_pipe = pipeline(
+                "image-classification", model="umm-maybe/AI-image-detector"
+            )
         return self.image_pipe
 
     def _get_face_pipe(self):
         """Lazy load face-specific deepfake model"""
         self._load_libs()
         if self.face_pipe is None:
-            logger.info("Loading Face Detection Model (dima806/deepfake_vs_real_image_detection)...")
+            logger.info(
+                "Loading Face Detection Model (dima806/deepfake_vs_real_image_detection)..."
+            )
             from transformers import pipeline
+
             try:
-                self.face_pipe = pipeline("image-classification", model="dima806/deepfake_vs_real_image_detection")
+                self.face_pipe = pipeline(
+                    "image-classification",
+                    model="dima806/deepfake_vs_real_image_detection",
+                )
             except Exception as e:
-                logger.warning(f"Face model unavailable: {e}, falling back to general model")
+                logger.warning(
+                    f"Face model unavailable: {e}, falling back to general model"
+                )
                 self.face_pipe = self._get_image_pipe()
         return self.face_pipe
 
@@ -69,8 +83,12 @@ class DeepfakeDetector:
         """Lazy load text model"""
         self._load_libs()
         if self.text_pipe is None:
-            logger.info("Loading Text Detection Model (roberta-base-openai-detector)...")
-            self.text_pipe = pipeline("text-classification", model="roberta-base-openai-detector")
+            logger.info(
+                "Loading Text Detection Model (roberta-base-openai-detector)..."
+            )
+            self.text_pipe = pipeline(
+                "text-classification", model="roberta-base-openai-detector"
+            )
         return self.text_pipe
 
     def _load_text_patterns(self) -> List[tuple]:
@@ -90,21 +108,21 @@ class DeepfakeDetector:
         scan_request_id: Optional[str] = None,
     ) -> RiskScore:
         """Scan text for AI generation indicators using Transformer + Heuristics"""
-        
+
         # 1. Transformer Scan (Real AI Detection)
         ai_prob_transformer = 0.0
         transformer_confidence = 0.0
         try:
             pipe = self._get_text_pipe()
             # Truncate to 512 tokens approx
-            results = pipe(text[:2000]) 
+            results = pipe(text[:2000])
             # Output format: [{'label': 'Fake', 'score': 0.99}, {'label': 'Real', 'score': 0.01}]
             # Note: roberta-base-openai-detector labels: 'Fake' = AI, 'Real' = Human
             for res in results:
-                if res['label'] == 'Fake':
-                    ai_prob_transformer = res['score'] * 100
-                elif res['label'] == 'Real':
-                    ai_prob_transformer = (1 - res['score']) * 100
+                if res["label"] == "Fake":
+                    ai_prob_transformer = res["score"] * 100
+                elif res["label"] == "Real":
+                    ai_prob_transformer = (1 - res["score"]) * 100
             transformer_confidence = 0.9
         except Exception as e:
             logger.error(f"Text Transformer failed: {e}")
@@ -119,17 +137,15 @@ class DeepfakeDetector:
         # 4. Combine Scores
         # If transformer is confident, give it 70% weight
         final_score = (
-            (ai_prob_transformer * 0.7) +
-            (pattern_score * 0.2) +
-            (stats_score * 0.1)
+            (ai_prob_transformer * 0.7) + (pattern_score * 0.2) + (stats_score * 0.1)
         )
-        
+
         # If pattern is dead giveaway ("As an AI"), override to 100
         if pattern_score > 90:
             final_score = max(final_score, 95.0)
 
         risk_level = self._score_to_level(final_score)
-        
+
         explanation = f"AI Probability: {final_score:.1f}% (Transformer: {ai_prob_transformer:.1f}%)"
         if pattern_signals:
             explanation += f". Patterns: {', '.join(pattern_signals.keys())}"
@@ -144,7 +160,7 @@ class DeepfakeDetector:
             signals={
                 "transformer_score": ai_prob_transformer,
                 "pattern_signals": pattern_signals,
-                "stats_signals": stats_signals
+                "stats_signals": stats_signals,
             },
             false_positive_probability=0.1 if final_score > 80 else 0.4,
         )
@@ -165,15 +181,16 @@ class DeepfakeDetector:
         labels = {}
         confidence = 0.8
         council_used = False
-        
+
         try:
             # 1. Decode Image
             image = None
             if content.startswith("http"):
                 try:
                     import requests
+
                     image = Image.open(requests.get(content, stream=True).raw)
-                except:
+                except Exception:
                     pass
             elif "base64," in content:
                 image_data = base64.b64decode(content.split("base64,")[1])
@@ -184,64 +201,78 @@ class DeepfakeDetector:
                     image = Image.open(io.BytesIO(image_data))
                 except:
                     pass
-            
+
             if image:
                 # 2. Run BOTH Models (Art + Face Detection)
                 art_score = 0.0
                 face_score = 0.0
-                
+
                 # Art detection model
                 try:
                     pipe = self._get_image_pipe()
                     results = pipe(image)
                     for res in results:
-                        labels[f"art_{res['label']}"] = res['score']
-                        if res['label'].lower() in ['artificial', 'generated', 'fake', 'gan']:
-                            art_score = res['score'] * 100
+                        labels[f"art_{res['label']}"] = res["score"]
+                        if res["label"].lower() in [
+                            "artificial",
+                            "generated",
+                            "fake",
+                            "gan",
+                        ]:
+                            art_score = res["score"] * 100
                 except Exception as e:
                     logger.warning(f"Art model failed: {e}")
-                
+
                 # Face detection model (for photorealistic deepfakes)
                 try:
                     face_pipe = self._get_face_pipe()
                     face_results = face_pipe(image)
                     for res in face_results:
-                        labels[f"face_{res['label']}"] = res['score']
-                        if res['label'].lower() in ['fake', 'deepfake', 'generated', 'synthetic']:
-                            face_score = res['score'] * 100
+                        labels[f"face_{res['label']}"] = res["score"]
+                        if res["label"].lower() in [
+                            "fake",
+                            "deepfake",
+                            "generated",
+                            "synthetic",
+                        ]:
+                            face_score = res["score"] * 100
                 except Exception as e:
                     logger.warning(f"Face model failed: {e}")
-                
+
                 # Take the higher of the two scores
                 ai_score = max(art_score, face_score)
-                
+
                 # 3. Watermark/Logo Heuristic (Check corners)
                 watermark_signals = []
                 try:
                     # Check corners for high-frequency content (logos/watermarks)
                     w, h = image.size
                     corners = [
-                        (0, 0, 100, 100),           # Top-left
-                        (w-100, 0, w, 100),         # Top-right
-                        (0, h-100, 100, h),         # Bottom-left
-                        (w-100, h-100, w, h)        # Bottom-right
+                        (0, 0, 100, 100),  # Top-left
+                        (w - 100, 0, w, 100),  # Top-right
+                        (0, h - 100, 100, h),  # Bottom-left
+                        (w - 100, h - 100, w, h),  # Bottom-right
                     ]
                     for i, box in enumerate(corners):
                         # Ensure box is within bounds
-                        if box[0] < 0 or box[1] < 0 or box[2] > w or box[3] > h: continue
-                        
-                        region = image.crop(box).convert('L') # Grayscale
+                        if box[0] < 0 or box[1] < 0 or box[2] > w or box[3] > h:
+                            continue
+
+                        region = image.crop(box).convert("L")  # Grayscale
                         # Calculate variance/std-dev
                         import math
+
                         pixels = list(region.getdata())
                         avg = sum(pixels) / len(pixels)
                         variance = sum((p - avg) ** 2 for p in pixels) / len(pixels)
                         std_dev = math.sqrt(variance)
-                        
+
                         # High std_dev usually suggests text/logos vs smooth background
                         if std_dev > 50:  # Threshold for "busy" corner
                             pos = ["TL", "TR", "BL", "BR"][i]
-                            watermark_signals.append(f"{pos} Corner (StdDev: {std_dev:.1f})")
+                            watermark_signals.append(
+                                f"{pos} Corner (StdDev: {std_dev:.1f})"
+                            )
                 except Exception as e:
                     logger.warning(f"Watermark check failed: {e}")
 
@@ -249,7 +280,9 @@ class DeepfakeDetector:
                 # Invoke if borderline OR if we suspect a watermark (even if score is low)
                 if (20 <= ai_score <= 80) or watermark_signals:
                     if self.council:
-                        logger.info(f"Invoking Council. Score: {ai_score}, Watermarks: {watermark_signals}")
+                        logger.info(
+                            f"Invoking Council. Score: {ai_score}, Watermarks: {watermark_signals}"
+                        )
                         council_used = True
                         try:
                             # Ask council to analyze image context
@@ -257,7 +290,7 @@ class DeepfakeDetector:
 - Transformer AI Score: {ai_score:.1f}%
 - Labels: {labels}
 - Image size: {image.size}
-- Potential Watermarks Detected: {watermark_signals if watermark_signals else 'None'}
+- Potential Watermarks Detected: {watermark_signals if watermark_signals else "None"}
 
 CRITICAL: If 'Potential Watermarks' are detected in corners (especially BR/Bottom-Right), 
 this is a strong indicator of AI generation (e.g., popular generator signatures).
@@ -266,22 +299,24 @@ Weigh this heavily against a low transformer score.
 Estimate probability (0-100) this is AI-generated."""
 
                             council_result = await self.council.analyze_with_roles(
-                                council_prompt, 
+                                council_prompt,
                                 analysis_type="deepfake",
                                 context=context,
-                                scan_request_id=scan_request_id
+                                scan_request_id=scan_request_id,
                             )
-                            
+
                             # Combine: 50% transformer, 50% council (increased Council weight due to visual signals)
                             council_score = council_result.weighted_score
                             ai_score = (ai_score * 0.5) + (council_score * 0.5)
                             confidence = council_result.consensus_score
                         except Exception as e:
                             logger.error(f"LLM Council failed: {e}")
-                
-                explanation = f"AI Image Analysis: {ai_score:.1f}% likelihood. " \
-                            f"Top label: {results[0]['label']} ({results[0]['score']:.2f})" \
-                            f"{' [Council verified]' if council_used else ''}"
+
+                explanation = (
+                    f"AI Image Analysis: {ai_score:.1f}% likelihood. "
+                    f"Top label: {results[0]['label']} ({results[0]['score']:.2f})"
+                    f"{' [Council verified]' if council_used else ''}"
+                )
             else:
                 return RiskScore(
                     module_type=ModuleType.DEEPFAKE_DETECTION,
@@ -290,7 +325,7 @@ Estimate probability (0-100) this is AI-generated."""
                     confidence=0,
                     verdict="allowed",
                     explanation="Could not decode image",
-                    signals={"error": "decode_failed"}
+                    signals={"error": "decode_failed"},
                 )
 
         except Exception as e:
@@ -302,7 +337,7 @@ Estimate probability (0-100) this is AI-generated."""
                 confidence=0,
                 verdict="allowed",
                 explanation=f"Scan error: {str(e)}",
-                signals={"error": str(e)}
+                signals={"error": str(e)},
             )
 
         return RiskScore(
@@ -313,17 +348,22 @@ Estimate probability (0-100) this is AI-generated."""
             verdict="flagged" if ai_score >= 50 else "allowed",
             explanation=explanation,
             signals={"top_labels": labels, "council_used": council_used},
-            false_positive_probability=0.15 if ai_score > 50 else 0.05
+            false_positive_probability=0.15 if ai_score > 50 else 0.05,
         )
 
     # Keep Audio/Video as heuristics for now as they require ffmpeg/complex deps
-    async def scan_audio(self, content: str, context: Optional[Dict] = None, scan_request_id: Optional[str] = None) -> RiskScore:
+    async def scan_audio(
+        self,
+        content: str,
+        context: Optional[Dict] = None,
+        scan_request_id: Optional[str] = None,
+    ) -> RiskScore:
         # Simple placeholder heuristic
         risk = 0.0
         signals = {}
         if "elevenlabs" in content.lower():
             risk = 90.0
-            signals['signature'] = 'ElevenLabs'
+            signals["signature"] = "ElevenLabs"
         return RiskScore(
             module_type=ModuleType.DEEPFAKE_DETECTION,
             risk_score=risk,
@@ -331,16 +371,21 @@ Estimate probability (0-100) this is AI-generated."""
             confidence=0.5,
             verdict="flagged" if risk > 50 else "allowed",
             explanation="Audio Heuristic Scan",
-            signals=signals
+            signals=signals,
         )
 
-    async def scan_video(self, content: str, context: Optional[Dict] = None, scan_request_id: Optional[str] = None) -> RiskScore:
+    async def scan_video(
+        self,
+        content: str,
+        context: Optional[Dict] = None,
+        scan_request_id: Optional[str] = None,
+    ) -> RiskScore:
         # Simple placeholder heuristic
         risk = 0.0
         signals = {}
         if "sora" in content.lower():
             risk = 90.0
-            signals['signature'] = 'Sora'
+            signals["signature"] = "Sora"
         return RiskScore(
             module_type=ModuleType.DEEPFAKE_DETECTION,
             risk_score=risk,
@@ -348,12 +393,13 @@ Estimate probability (0-100) this is AI-generated."""
             confidence=0.5,
             verdict="flagged" if risk > 50 else "allowed",
             explanation="Video Heuristic Scan",
-            signals=signals
+            signals=signals,
         )
 
     def _pattern_scan(self, text: str) -> tuple:
         """Scan for AI text patterns"""
         import re
+
         signals = {}
         max_score = 0.0
         for pattern, weight in self.text_patterns:
@@ -370,8 +416,11 @@ Estimate probability (0-100) this is AI-generated."""
         return 0.0, {}
 
     def _score_to_level(self, score: float) -> RiskLevel:
-        if score >= 80: return RiskLevel.HIGH
-        elif score >= 60: return RiskLevel.MEDIUM
-        elif score >= 40: return RiskLevel.LOW
-        else: return RiskLevel.SAFE
-
+        if score >= 80:
+            return RiskLevel.HIGH
+        elif score >= 60:
+            return RiskLevel.MEDIUM
+        elif score >= 40:
+            return RiskLevel.LOW
+        else:
+            return RiskLevel.SAFE

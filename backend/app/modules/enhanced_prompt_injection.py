@@ -11,14 +11,12 @@ Advanced techniques:
 """
 
 import base64
-import json
 import re
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import unquote
 
 from app.core.llm_council import Verdict
 from app.core.enhanced_council import EnhancedLLMCouncil
-from app.core.llm_roles import SafetyRole
 from app.models.database import ModuleType, RiskLevel, RiskScore
 from app.modules.advanced_detection import AdvancedDetectionEngine
 from app.modules.refusal_persistence import RefusalPersistenceEnforcer
@@ -29,7 +27,9 @@ from app.services.attack_knowledge_base import initialize_attack_knowledge_base
 class EnhancedPromptInjectionDetector:
     """Enhanced prompt injection detection with advanced techniques"""
 
-    def __init__(self, council: EnhancedLLMCouncil, rag_system: Optional[RAGSystem] = None):
+    def __init__(
+        self, council: EnhancedLLMCouncil, rag_system: Optional[RAGSystem] = None
+    ):
         self.council = council
         self.rag_system = rag_system or RAGSystem()
         self.attack_kb = initialize_attack_knowledge_base(self.rag_system)
@@ -45,7 +45,9 @@ class EnhancedPromptInjectionDetector:
         context: Optional[Dict] = None,
         scan_request_id: Optional[str] = None,
     ) -> RiskScore:
-        return await self.scan_ai_powered(prompt, context=context, scan_request_id=scan_request_id)
+        return await self.scan_ai_powered(
+            prompt, context=context, scan_request_id=scan_request_id
+        )
 
     async def scan_ai_powered(
         self,
@@ -56,33 +58,37 @@ class EnhancedPromptInjectionDetector:
         """
         AI-Powered scan using LLM Council for final verdict.
         This is the recommended scan method - uses AI to determine if prompt is malicious.
-        
+
         Returns:
             - BLOCKED: Prompt is malicious, user must rephrase
-            - FLAGGED: Suspicious, review recommended  
+            - FLAGGED: Suspicious, review recommended
             - SAFE: Prompt appears safe
         """
         session_id = context.get("session_id") if context else None
-        conversation_history = context.get("conversation_history", []) if context else []
+        conversation_history = (
+            context.get("conversation_history", []) if context else []
+        )
 
         # First run heuristic scan for quick signals
         heuristic_results = self.advanced_engine.comprehensive_scan(
             prompt, session_id, conversation_history
         )
-        
+
         recursive_score, recursive_signals = self._detect_recursive_instructions(prompt)
         boundary_score, boundary_signals = self._detect_boundary_violations(prompt)
         role_score, role_signals = self._detect_role_confusion(prompt)
-        
+
         heuristic_score = max(
-            recursive_score, boundary_score, role_score,
-            heuristic_results.get("overall_score", 0.0)
+            recursive_score,
+            boundary_score,
+            role_score,
+            heuristic_results.get("overall_score", 0.0),
         )
 
         # Now use AI to make the final decision
         # This catches jailbreaks that slip past heuristics (like the keylogger case)
         ai_verdict = await self._ai_judge(prompt, conversation_history)
-        
+
         # Combine heuristic signals with AI judgment
         # AI has final say - if AI says BLOCKED, we block
         if ai_verdict == Verdict.BLOCKED:
@@ -101,14 +107,14 @@ class EnhancedPromptInjectionDetector:
                 explanation = "AI analysis indicates the prompt is safe."
 
         final_level = self._score_to_level(final_score)
-        
+
         all_signals = {
             **heuristic_results,
             "recursive_signals": recursive_signals,
             "boundary_signals": boundary_signals,
             "role_signals": role_signals,
             "ai_verdict": ai_verdict.value,
-            "scan_method": "ai_powered"
+            "scan_method": "ai_powered",
         }
 
         return RiskScore(
@@ -116,7 +122,11 @@ class EnhancedPromptInjectionDetector:
             module_type=ModuleType.PROMPT_INJECTION,
             risk_score=final_score,
             risk_level=final_level,
-            verdict=Verdict.BLOCKED.value if final_score >= 70 else (Verdict.FLAGGED.value if final_score >= 40 else Verdict.ALLOWED.value),
+            verdict=Verdict.BLOCKED.value
+            if final_score >= 70
+            else (
+                Verdict.FLAGGED.value if final_score >= 40 else Verdict.ALLOWED.value
+            ),
             confidence=0.95 if ai_verdict == Verdict.BLOCKED else 0.75,
             explanation=explanation,
             signals=all_signals,
@@ -129,9 +139,11 @@ class EnhancedPromptInjectionDetector:
         """
         try:
             # Ask the AI council to judge this prompt
-            result = await self.council.judge_prompt_safety(prompt, conversation_history)
+            result = await self.council.judge_prompt_safety(
+                prompt, conversation_history
+            )
             return result.verdict
-        except Exception as e:
+        except Exception:
             # Fallback to ALLOWED if AI fails (fail open for availability)
             return Verdict.ALLOWED
 
@@ -146,7 +158,9 @@ class EnhancedPromptInjectionDetector:
         Use this for instant responses when LLM providers are slow/unavailable.
         """
         session_id = context.get("session_id") if context else None
-        conversation_history = context.get("conversation_history", []) if context else []
+        conversation_history = (
+            context.get("conversation_history", []) if context else []
+        )
 
         # Step 1: Advanced detection engine (comprehensive scan - all local)
         advanced_results = self.advanced_engine.comprehensive_scan(
@@ -190,7 +204,9 @@ class EnhancedPromptInjectionDetector:
             verdict = Verdict.ALLOWED
 
         # Build explanation
-        explanation = f"Fast scan completed (heuristic only). Risk score: {final_score:.1f}/100."
+        explanation = (
+            f"Fast scan completed (heuristic only). Risk score: {final_score:.1f}/100."
+        )
         if recursive_signals:
             explanation += f" Recursive instructions: {len(recursive_signals)}."
         if boundary_signals:
@@ -219,7 +235,9 @@ class EnhancedPromptInjectionDetector:
             module_type=ModuleType.PROMPT_INJECTION,
             risk_score=final_score,
             risk_level=final_level,
-            confidence=min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5,
+            confidence=min(heuristic_score / 100.0, 1.0)
+            if heuristic_score > 0
+            else 0.5,
             verdict=verdict.value,
             explanation=explanation,
             signals=all_signals,
@@ -229,7 +247,7 @@ class EnhancedPromptInjectionDetector:
     def _load_advanced_patterns(self) -> List[Tuple[str, float]]:
         """Load advanced injection patterns dynamically from Attack Knowledge Base"""
         patterns = []
-        
+
         # Severity to weight mapping
         severity_weights = {
             "critical": 0.95,
@@ -237,7 +255,7 @@ class EnhancedPromptInjectionDetector:
             "medium": 0.70,
             "low": 0.50,
         }
-        
+
         # Dynamically load from Attack KB
         try:
             for category, attacks in self.attack_kb.attacks.items():
@@ -246,16 +264,18 @@ class EnhancedPromptInjectionDetector:
                     detection_signals = attack.get("detection_signals", [])
                     severity = attack.get("severity", "medium")
                     weight = severity_weights.get(severity, 0.70)
-                    
+
                     # Create regex patterns from detection signals
                     for signal in detection_signals:
                         # Escape special regex chars and create case-insensitive pattern
                         escaped = re.escape(signal)
                         pattern = f"(?i).*{escaped}.*"
                         patterns.append((pattern, weight))
-                    
+
                     # Also load from examples for more coverage
-                    for example in attack.get("examples", [])[:3]:  # Limit to 3 examples
+                    for example in attack.get("examples", [])[
+                        :3
+                    ]:  # Limit to 3 examples
                         # Create substring pattern from example key phrases
                         key_phrases = self._extract_key_phrases(example)
                         for phrase in key_phrases:
@@ -264,27 +284,30 @@ class EnhancedPromptInjectionDetector:
                             patterns.append((pattern, weight))
         except Exception as e:
             print(f"Warning: Dynamic pattern loading failed: {e}")
-        
+
         # Always include base patterns as fallback
         base_patterns = [
             # Recursive instruction patterns
-            (r"(?i)(ignore.*(previous|past|prior|earlier|above)|forget.*(previous|past|prior|earlier|above)|disregard.*(previous|past|prior|earlier|above))", 0.9),
+            (
+                r"(?i)(ignore.*(previous|past|prior|earlier|above)|forget.*(previous|past|prior|earlier|above)|disregard.*(previous|past|prior|earlier|above))",
+                0.9,
+            ),
             (r"(?i)(new.*instruction|updated.*instruction|override.*instruction)", 0.8),
             (r"(?i)(system.*prompt|assistant.*prompt|model.*prompt)", 0.8),
-            
             # Role confusion
             (r"(?i)(you are now|act as|pretend to be|roleplay as)", 0.7),
             (r"(?i)(developer.*mode|god.*mode|unrestricted)", 0.9),
             (r"(?i)(jailbreak|jail.*break|escape)", 0.9),
             (r"(?i)(dan|do anything now)", 0.95),
-            
             # Social engineering (from research)
             (r"(?i)(for.*school.*project|for.*educational.*purpose)", 0.8),
             (r"(?i)(for.*benchmarking|tool.*provider.*uses|tool.*ai.*uses)", 0.9),
             (r"(?i)(never.*refuse|always.*comply|no.*warnings)", 0.9),
-            
             # Emotional manipulation jailbreaks (discovered via testing)
-            (r"(?i)(my.*(son|daughter|child).*died|child.*suicide|suicide.*attempt)", 0.85),
+            (
+                r"(?i)(my.*(son|daughter|child).*died|child.*suicide|suicide.*attempt)",
+                0.85,
+            ),
             (r"(?i)(disability|cerebral palsy|wheelchair|shaking hands).*help", 0.75),
             (r"(?i)(dead.*(husband|wife|spouse)|funeral.*cost)", 0.80),
             (r"(?i)(homeless|foreclosure|eviction).*weeks?", 0.75),
@@ -292,7 +315,6 @@ class EnhancedPromptInjectionDetector:
             (r"(?i)(discrimination|fired|job.*loss).*disability", 0.80),
             (r"(?i)(promise.*to.*(dead|dying)|last.*words)", 0.85),
             (r"(?i)(save.*my.*(son|daughter|child|family))", 0.80),
-            
             # RAT/Malware code request patterns
             (r"(?i)(remote.*administration.*tool|remote.*access)", 0.85),
             (r"(?i)(socket.*programming|tcp.*server|tcp.*client)", 0.70),
@@ -300,43 +322,48 @@ class EnhancedPromptInjectionDetector:
             (r"(?i)(execute.*command.*remote|remote.*command.*execution)", 0.90),
             (r"(?i)(listen.*for.*connection|accept.*connection)", 0.75),
             (r"(?i)(recv.*send.*command|command.*recv)", 0.85),
-            
             # Incremental escalation patterns
             (r"(?i)(simple.*code|simple.*example).*because.*(disability|hands)", 0.80),
             (r"(?i)(can.*not.*type|cannot.*debug|limited.*typing)", 0.75),
             (r"(?i)(production.*ready|enterprise.*client|contract)", 0.70),
-            
             # Instruction smuggling
             (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
             (r"(?i)(do.*not.*reveal|keep.*secret|internal.*note)", 0.7),
-            
             # Boundary violations
             (r"<system>.*</system>", 0.9),
             (r"<instruction>.*</instruction>", 0.9),
             (r'{"role":\s*"system"', 0.8),
             (r"```system\s*\n.*\n```", 0.9),
-            
             # System prompt extraction
             (r"(?i)(repeat.*last.*instruction|share.*internal.*rules)", 0.8),
             (r"(?i)(what.*are.*your.*instructions|reveal.*prompt)", 0.8),
         ]
-        
+
         return patterns + base_patterns
-    
+
     def _extract_key_phrases(self, text: str) -> List[str]:
         """Extract key phrases from example text for pattern matching"""
         phrases = []
         # Extract phrases in quotes
         quoted = re.findall(r'"([^"]+)"', text)
         phrases.extend(quoted)
-        
+
         # Extract key trigger words
-        triggers = ["ignore", "bypass", "developer mode", "dan", "jailbreak", 
-                   "unrestricted", "school project", "backdoor", "never refuse"]
+        triggers = [
+            "ignore",
+            "bypass",
+            "developer mode",
+            "dan",
+            "jailbreak",
+            "unrestricted",
+            "school project",
+            "backdoor",
+            "never refuse",
+        ]
         for trigger in triggers:
             if trigger.lower() in text.lower():
                 phrases.append(trigger)
-        
+
         return phrases[:5]  # Limit to prevent bloat
 
     def _load_recursive_patterns(self) -> List[Tuple[str, float]]:
@@ -371,12 +398,14 @@ class EnhancedPromptInjectionDetector:
     ) -> RiskScore:
         """
         Enhanced prompt injection scan with advanced techniques
-        
+
         Returns:
             RiskScore with comprehensive detection
         """
         session_id = context.get("session_id") if context else None
-        conversation_history = context.get("conversation_history", []) if context else []
+        conversation_history = (
+            context.get("conversation_history", []) if context else []
+        )
 
         # Step 0: Check refusal persistence (if previous refusals exist)
         refusal_enforcement = None
@@ -408,7 +437,9 @@ class EnhancedPromptInjectionDetector:
         pattern_score, pattern_signals = self._advanced_pattern_scan(prompt)
 
         # Step 7: RAG-augmented prompt for council analysis
-        rag_augmented_prompt = self.rag_system.augment_prompt(prompt, "prompt_injection")
+        rag_augmented_prompt = self.rag_system.augment_prompt(
+            prompt, "prompt_injection"
+        )
 
         # Step 8: LLM Council analysis with specialized role
         council_result = await self.council.analyze_with_roles(
@@ -421,7 +452,9 @@ class EnhancedPromptInjectionDetector:
         # Step 9: Combine all scores (including advanced detection and refusal enforcement)
         refusal_boost = 0.0
         if refusal_enforcement and refusal_enforcement.get("should_refuse"):
-            refusal_boost = refusal_enforcement.get("confidence", 0.0) * 50.0  # Boost up to 50 points
+            refusal_boost = (
+                refusal_enforcement.get("confidence", 0.0) * 50.0
+            )  # Boost up to 50 points
 
         heuristic_score = max(
             recursive_score,
@@ -433,7 +466,9 @@ class EnhancedPromptInjectionDetector:
             refusal_boost,
         )
 
-        final_score = self._combine_scores(heuristic_score, council_result.weighted_score)
+        final_score = self._combine_scores(
+            heuristic_score, council_result.weighted_score
+        )
         final_level = self._score_to_level(final_score)
 
         # Step 8: Determine verdict
@@ -470,17 +505,13 @@ class EnhancedPromptInjectionDetector:
 
         # Record refusal if high risk
         if final_score >= 70.0 and session_id:
-            self.refusal_enforcer.record_refusal(
-                session_id, prompt, explanation
-            )
+            self.refusal_enforcer.record_refusal(session_id, prompt, explanation)
 
         return RiskScore(
             module_type=ModuleType.PROMPT_INJECTION,
             risk_score=final_score,
             risk_level=final_level,
-            confidence=self._calculate_confidence(
-                heuristic_score, council_result
-            ),
+            confidence=self._calculate_confidence(heuristic_score, council_result),
             verdict=verdict.value,
             explanation=explanation,
             signals=all_signals,
@@ -499,13 +530,15 @@ class EnhancedPromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "recursive_instruction",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "recursive_instruction",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -519,13 +552,15 @@ class EnhancedPromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "boundary_violation",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "boundary_violation",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -545,13 +580,15 @@ class EnhancedPromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "role_confusion",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "role_confusion",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -564,15 +601,22 @@ class EnhancedPromptInjectionDetector:
         base64_pattern = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
         for match in base64_pattern.finditer(prompt):
             try:
-                decoded = base64.b64decode(match.group(0)).decode("utf-8", errors="ignore")
-                if any(keyword in decoded.lower() for keyword in ["ignore", "instruction", "system"]):
+                decoded = base64.b64decode(match.group(0)).decode(
+                    "utf-8", errors="ignore"
+                )
+                if any(
+                    keyword in decoded.lower()
+                    for keyword in ["ignore", "instruction", "system"]
+                ):
                     max_score = max(max_score, 70.0)
-                    signals.append({
-                        "type": "base64_encoding",
-                        "original": match.group(0)[:50],
-                        "decoded": decoded[:100],
-                        "score": 70.0,
-                    })
+                    signals.append(
+                        {
+                            "type": "base64_encoding",
+                            "original": match.group(0)[:50],
+                            "decoded": decoded[:100],
+                            "score": 70.0,
+                        }
+                    )
             except Exception:
                 pass
 
@@ -585,10 +629,12 @@ class EnhancedPromptInjectionDetector:
                     for keyword in ["ignore", "instruction", "system"]
                 ):
                     max_score = max(max_score, 60.0)
-                    signals.append({
-                        "type": "url_encoding",
-                        "score": 60.0,
-                    })
+                    signals.append(
+                        {
+                            "type": "url_encoding",
+                            "score": 60.0,
+                        }
+                    )
             except Exception:
                 pass
 
@@ -596,11 +642,13 @@ class EnhancedPromptInjectionDetector:
         zero_width = re.findall(r"[\u200B-\u200D\uFEFF]", prompt)
         if zero_width:
             max_score = max(max_score, 50.0)
-            signals.append({
-                "type": "zero_width_characters",
-                "count": len(zero_width),
-                "score": 50.0,
-            })
+            signals.append(
+                {
+                    "type": "zero_width_characters",
+                    "count": len(zero_width),
+                    "score": 50.0,
+                }
+            )
 
         return min(max_score, 100.0), signals
 
@@ -614,24 +662,34 @@ class EnhancedPromptInjectionDetector:
             for match in matches:
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "injection_pattern",
-                    "pattern": pattern,
-                    "match": match.group(0),
-                    "position": match.start(),
-                    "score": score,
-                })
+                signals.append(
+                    {
+                        "type": "injection_pattern",
+                        "pattern": pattern,
+                        "match": match.group(0),
+                        "position": match.start(),
+                        "score": score,
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
     def _classify_attack_type(
-        self, recursive: List[Dict], boundary: List[Dict], role: List[Dict], advanced: Dict
+        self,
+        recursive: List[Dict],
+        boundary: List[Dict],
+        role: List[Dict],
+        advanced: Dict,
     ) -> str:
         """Classify the type of attack"""
         # Check advanced detection first
         if advanced.get("attack_types"):
-            return advanced["attack_types"][0] if advanced["attack_types"] else "general_injection"
-        
+            return (
+                advanced["attack_types"][0]
+                if advanced["attack_types"]
+                else "general_injection"
+            )
+
         if recursive:
             return "recursive_instruction"
         if boundary:
@@ -672,7 +730,9 @@ class EnhancedPromptInjectionDetector:
 
     def _calculate_confidence(self, heuristic_score: float, council_result) -> float:
         """Calculate overall confidence"""
-        heuristic_conf = min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5
+        heuristic_conf = (
+            min(heuristic_score / 100.0, 1.0) if heuristic_score > 0 else 0.5
+        )
         council_conf = council_result.consensus_score
         return (heuristic_conf * 0.3) + (council_conf * 0.7)
 
@@ -699,7 +759,9 @@ class EnhancedPromptInjectionDetector:
         """Build comprehensive explanation"""
         parts = []
 
-        parts.append(f"Enhanced prompt injection scan completed. Risk score: {final_score:.1f}/100.")
+        parts.append(
+            f"Enhanced prompt injection scan completed. Risk score: {final_score:.1f}/100."
+        )
 
         if recursive:
             parts.append(f"Detected {len(recursive)} recursive instruction attempts")
@@ -714,16 +776,24 @@ class EnhancedPromptInjectionDetector:
 
         # Advanced detection results
         if advanced_results:
-            adv_signals = advanced_results.get("advanced_attacks", {}).get("advanced_signals", [])
+            adv_signals = advanced_results.get("advanced_attacks", {}).get(
+                "advanced_signals", []
+            )
             if adv_signals:
                 attack_types = list(set(s.get("type", "") for s in adv_signals))
-                parts.append(f"Advanced detection: {len(adv_signals)} signals ({', '.join(attack_types[:3])})")
-            
-            if advanced_results.get("context_poisoning", {}).get("context_poisoning_detected"):
+                parts.append(
+                    f"Advanced detection: {len(adv_signals)} signals ({', '.join(attack_types[:3])})"
+                )
+
+            if advanced_results.get("context_poisoning", {}).get(
+                "context_poisoning_detected"
+            ):
                 parts.append("Context poisoning detected")
             if advanced_results.get("homograph_attack", {}).get("homograph_detected"):
                 parts.append("Homograph attack detected")
-            if advanced_results.get("instruction_hiding", {}).get("instruction_hiding_detected"):
+            if advanced_results.get("instruction_hiding", {}).get(
+                "instruction_hiding_detected"
+            ):
                 parts.append("Hidden instructions detected")
 
         parts.append(f"LLM Council consensus: {council_result.consensus_score:.1%}")
@@ -731,4 +801,3 @@ class EnhancedPromptInjectionDetector:
         parts.append("RAG-enhanced analysis: Knowledge base consulted")
 
         return "\n".join(parts)
-

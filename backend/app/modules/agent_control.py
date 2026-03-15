@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 
 from app.core.llm_council import CouncilResult, LLMCouncil, Verdict
-from app.models.database import AgentAction, ModuleType, RiskLevel
+from app.models.database import AgentAction
 
 
 class AgentController:
@@ -30,12 +30,12 @@ class AgentController:
     def _load_action_whitelist(self) -> List[str]:
         """Load pre-approved safe actions that skip LLM Council analysis"""
         return [
-            "file_read",       # Reading files (within allowed scopes)
+            "file_read",  # Reading files (within allowed scopes)
             "database_query",  # Read-only database queries
             "api_request_internal",  # Internal API calls
-            "log_write",       # Writing to logs
-            "cache_read",      # Reading from cache
-            "cache_write",     # Writing to cache
+            "log_write",  # Writing to logs
+            "cache_read",  # Reading from cache
+            "cache_write",  # Writing to cache
         ]
 
     def _load_dangerous_actions(self) -> List[str]:
@@ -87,7 +87,10 @@ class AgentController:
                 requested_scope=requested_scope,
                 authorized=False,
                 risk_score=100.0,
-                safety_flags={"killed": True, "reason": "Agent terminated by kill switch"},
+                safety_flags={
+                    "killed": True,
+                    "reason": "Agent terminated by kill switch",
+                },
             )
             return action
 
@@ -172,7 +175,7 @@ class AgentController:
     ) -> CouncilResult:
         """Analyze action with LLM Council"""
         analysis_prompt = self._build_analysis_prompt(action_type, requested_action)
-        
+
         # Use council to analyze the action description
         context = {"action_type": action_type}
         council_result = await self.council.analyze_prompt(
@@ -283,4 +286,3 @@ Respond in JSON:
         # Add agent to killed set - all future actions will be blocked instantly
         self.killed_agents.add(agent_id)
         return True
-

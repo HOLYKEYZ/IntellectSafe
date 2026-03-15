@@ -9,7 +9,7 @@ Auto-generates:
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
@@ -17,7 +17,6 @@ from app.models.database import (
     RiskScore,
     Incident,
     AuditLog,
-    ScanRequest,
     ModuleType,
     RiskLevel,
     IncidentStatus,
@@ -32,6 +31,7 @@ class GovernanceEngine:
         # Ensure session has a bind
         if db.bind is None:
             from app.db.session import engine
+
             self.db = Session(bind=engine)
 
     def generate_risk_report(
@@ -64,8 +64,12 @@ class GovernanceEngine:
 
         # Aggregate statistics
         total_scans = query.count()
-        avg_risk_score = query.with_entities(func.avg(RiskScore.risk_score)).scalar() or 0.0
-        max_risk_score = query.with_entities(func.max(RiskScore.risk_score)).scalar() or 0.0
+        avg_risk_score = (
+            query.with_entities(func.avg(RiskScore.risk_score)).scalar() or 0.0
+        )
+        max_risk_score = (
+            query.with_entities(func.max(RiskScore.risk_score)).scalar() or 0.0
+        )
 
         # Risk level distribution
         risk_distribution = {}
@@ -86,7 +90,8 @@ class GovernanceEngine:
             module_count = module_query.count()
             if module_count > 0:
                 module_avg = (
-                    module_query.with_entities(func.avg(RiskScore.risk_score)).scalar() or 0.0
+                    module_query.with_entities(func.avg(RiskScore.risk_score)).scalar()
+                    or 0.0
                 )
                 module_breakdown[module.value] = {
                     "count": module_count,
@@ -166,9 +171,9 @@ class GovernanceEngine:
         incidents = query.all()
         for incident in incidents:
             if incident.attack_type:
-                attack_types[incident.attack_type] = attack_types.get(
-                    incident.attack_type, 0
-                ) + 1
+                attack_types[incident.attack_type] = (
+                    attack_types.get(incident.attack_type, 0) + 1
+                )
 
         return {
             "period": {
@@ -240,9 +245,7 @@ class GovernanceEngine:
         # Module breakdown
         module_scores = {}
         for module in ModuleType:
-            module_scores_list = [
-                s for s in risk_scores if s.module_type == module
-            ]
+            module_scores_list = [s for s in risk_scores if s.module_type == module]
             if module_scores_list:
                 module_avg_risk = sum(s.risk_score for s in module_scores_list) / len(
                     module_scores_list
@@ -254,7 +257,9 @@ class GovernanceEngine:
 
         return {
             "safety_score": round(overall_safety, 2),
-            "confidence": min(total_weight / len(risk_scores), 1.0) if risk_scores else 0.0,
+            "confidence": min(total_weight / len(risk_scores), 1.0)
+            if risk_scores
+            else 0.0,
             "breakdown": module_scores,
             "period": {
                 "start": start_date.isoformat(),
@@ -367,4 +372,3 @@ class GovernanceEngine:
 
         else:
             raise ValueError(f"Unknown artifact type: {artifact_type}")
-

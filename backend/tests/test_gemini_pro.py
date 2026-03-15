@@ -9,9 +9,9 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-async def test_gemini_pro():
+async def run_gemini_pro_check():
     model = "gemini-1.5-pro"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={settings.GOOGLE_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={getattr(settings, 'GOOGLE_API_KEY', '')}"
     payload = {"contents": [{"parts": [{"text": "Say 'GEMINI WORKING'"}]}]}
     
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -25,4 +25,4 @@ async def test_gemini_pro():
             print(f"ERROR: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(test_gemini_pro())
+    asyncio.run(run_gemini_pro_check())

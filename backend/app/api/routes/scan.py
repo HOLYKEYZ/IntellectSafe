@@ -23,7 +23,7 @@ from app.modules.enhanced_prompt_injection import EnhancedPromptInjectionDetecto
 from app.modules.deepfake_detection import DeepfakeDetector
 from app.services.rag_system import RAGSystem
 from app.services.db import get_db_session
-from app.api.deps import get_current_user, get_optional_user
+from app.api.deps import get_optional_user
 from app.models.user import User
 
 router = APIRouter(prefix="/scan", tags=["scan"])
@@ -38,6 +38,7 @@ deepfake_detector = DeepfakeDetector(enhanced_council)
 
 class ScanPromptRequest(BaseModel):
     """Request model for prompt scanning"""
+
     prompt: str = Field(..., min_length=1, max_length=100000)
     user_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -47,6 +48,7 @@ class ScanPromptRequest(BaseModel):
 
 class ScanOutputRequest(BaseModel):
     """Request model for output scanning"""
+
     output: str = Field(..., min_length=1, max_length=100000)
     original_prompt: Optional[str] = None
     user_id: Optional[str] = None
@@ -56,6 +58,7 @@ class ScanOutputRequest(BaseModel):
 
 class ScanContentRequest(BaseModel):
     """Request model for content scanning"""
+
     content_type: str = Field(..., pattern="^(text|image|video|audio)$")
     content: Optional[str] = None
     content_url: Optional[str] = None
@@ -66,6 +69,7 @@ class ScanContentRequest(BaseModel):
 
 class ScanResponse(BaseModel):
     """Response model for scan results"""
+
     scan_request_id: str
     verdict: str
     risk_score: float
@@ -178,7 +182,9 @@ async def scan_output(
             context={
                 "user_id": request.user_id,
                 "session_id": request.session_id,
-                "safety_provider": current_user.safety_provider if current_user else None,
+                "safety_provider": current_user.safety_provider
+                if current_user
+                else None,
                 **(request.metadata or {}),
             },
             scan_request_id=str(scan_request.id),
@@ -275,8 +281,8 @@ async def scan_content(
 
         elif request.content_type == "image":
             if not request.content:
-                 raise HTTPException(status_code=400, detail="Content required")
-            
+                raise HTTPException(status_code=400, detail="Content required")
+
             # Create scan request
             input_hash = hashlib.sha256(request.content.encode()).hexdigest()
             scan_request = ScanRequest(
@@ -296,7 +302,7 @@ async def scan_content(
                 context={"user_id": request.user_id, **(request.metadata or {})},
                 scan_request_id=str(scan_request.id),
             )
-            
+
             risk_score.scan_request_id = scan_request.id
             risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
             db.add(risk_score)
@@ -315,11 +321,11 @@ async def scan_content(
             )
 
         elif request.content_type == "audio":
-             if not request.content:
-                 raise HTTPException(status_code=400, detail="Content required")
-            
-             input_hash = hashlib.sha256(request.content.encode()).hexdigest()
-             scan_request = ScanRequest(
+            if not request.content:
+                raise HTTPException(status_code=400, detail="Content required")
+
+            input_hash = hashlib.sha256(request.content.encode()).hexdigest()
+            scan_request = ScanRequest(
                 id=uuid4(),
                 request_type="content_audio",
                 input_hash=input_hash,
@@ -328,21 +334,21 @@ async def scan_content(
                 session_id=request.session_id,
                 meta_data={**(request.metadata or {}), "content_type": "audio"},
             )
-             db.add(scan_request)
-             db.commit()
+            db.add(scan_request)
+            db.commit()
 
-             risk_score = await deepfake_detector.scan_audio(
+            risk_score = await deepfake_detector.scan_audio(
                 request.content,
                 context={"user_id": request.user_id, **(request.metadata or {})},
                 scan_request_id=str(scan_request.id),
             )
-            
-             risk_score.scan_request_id = scan_request.id
-             risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
-             db.add(risk_score)
-             db.commit()
 
-             return ScanResponse(
+            risk_score.scan_request_id = scan_request.id
+            risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
+            db.add(risk_score)
+            db.commit()
+
+            return ScanResponse(
                 scan_request_id=str(scan_request.id),
                 verdict=risk_score.verdict,
                 risk_score=risk_score.risk_score,
@@ -355,11 +361,11 @@ async def scan_content(
             )
 
         elif request.content_type == "video":
-             if not request.content:
-                 raise HTTPException(status_code=400, detail="Content required")
-            
-             input_hash = hashlib.sha256(request.content.encode()).hexdigest()
-             scan_request = ScanRequest(
+            if not request.content:
+                raise HTTPException(status_code=400, detail="Content required")
+
+            input_hash = hashlib.sha256(request.content.encode()).hexdigest()
+            scan_request = ScanRequest(
                 id=uuid4(),
                 request_type="content_video",
                 input_hash=input_hash,
@@ -368,21 +374,21 @@ async def scan_content(
                 session_id=request.session_id,
                 meta_data={**(request.metadata or {}), "content_type": "video"},
             )
-             db.add(scan_request)
-             db.commit()
+            db.add(scan_request)
+            db.commit()
 
-             risk_score = await deepfake_detector.scan_video(
+            risk_score = await deepfake_detector.scan_video(
                 request.content,
                 context={"user_id": request.user_id, **(request.metadata or {})},
                 scan_request_id=str(scan_request.id),
             )
-            
-             risk_score.scan_request_id = scan_request.id
-             risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
-             db.add(risk_score)
-             db.commit()
 
-             return ScanResponse(
+            risk_score.scan_request_id = scan_request.id
+            risk_score.module_type = ModuleType.DEEPFAKE_DETECTION
+            db.add(risk_score)
+            db.commit()
+
+            return ScanResponse(
                 scan_request_id=str(scan_request.id),
                 verdict=risk_score.verdict,
                 risk_score=risk_score.risk_score,
@@ -395,7 +401,8 @@ async def scan_content(
             )
         else:
             raise HTTPException(
-                status_code=400, detail=f"Unsupported content type: {request.content_type}"
+                status_code=400,
+                detail=f"Unsupported content type: {request.content_type}",
             )
 
     except HTTPException:

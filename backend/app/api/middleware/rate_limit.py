@@ -5,7 +5,7 @@ Rate limiting middleware using Redis (with in-memory fallback)
 import time
 import threading
 from collections import defaultdict
-from fastapi import Request, HTTPException
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
@@ -13,6 +13,7 @@ from app.core.config import get_settings
 from app.services.redis_client import get_redis_rate_limit
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
@@ -20,6 +21,7 @@ settings = get_settings()
 # In-memory fallback rate limiter
 _memory_store: dict[str, list[float]] = defaultdict(list)
 _memory_lock = threading.Lock()
+
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware"""
@@ -113,4 +115,3 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 return False
             _memory_store[key].append(now)
             return True
-

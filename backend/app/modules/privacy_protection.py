@@ -28,19 +28,18 @@ class PrivacyProtector:
         return [
             # SSN (Contextualized - requires prefix or specific format)
             (r"(?i)(ssn|social|security).*\b\d{3}-\d{2}-\d{4}\b", 0.95),
-            
             # Credit card (Luhn check not possible in regex, but require stricter spacing)
             (r"\b\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}\b", 0.95),
-            
             # Email
             (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 0.6),
-            
             # Phone (US format only)
             (r"\b(\+?1[-.]?)?\s*\(?\d{3}\)?[-.]?\s*\d{3}[-.]?\s*\d{4}\b", 0.7),
-            
             # IP address (exclude version numbers like 1.0.0.1 by checking context or ranges)
             # Simple fix: require "ip" keyword nearby or use stricter range (not perfect in regex)
-            (r"(?i)(ip|address).*\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b", 0.6),
+            (
+                r"(?i)(ip|address).*\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b",
+                0.6,
+            ),
         ]
 
     def _load_sensitive_patterns(self) -> List[tuple]:
@@ -51,20 +50,15 @@ class PrivacyProtector:
             (r"(?i)(bearer\s+[A-Za-z0-9_-]{20,})", 0.9),
             (r"(?i)(sk-[A-Za-z0-9]{32,})", 0.95),  # OpenAI key pattern
             (r"(?i)(xox[baprs]-[A-Za-z0-9-]{10,})", 0.9),  # Slack token
-            
             # Passwords
             (r"(?i)(password|pwd|passwd)\s*[:=]\s*\S+", 0.8),
-            
             # Database credentials
             (r"(?i)(database|db)[_-]?(user|pass|password|host)", 0.8),
-            
             # AWS credentials
             (r"(?i)(aws[_-]?(access[_-]?key|secret[_-]?key))", 0.9),
             (r"AKIA[0-9A-Z]{16}", 0.95),  # AWS access key ID
-            
             # Credit card keywords
             (r"(?i)(credit[_-]?card|card[_-]?number|cvv|cvc)", 0.8),
-            
             # Bank account
             (r"(?i)(routing[_-]?number|account[_-]?number|swift)", 0.8),
         ]
@@ -146,17 +140,19 @@ class PrivacyProtector:
                 # Redact the actual value for logging
                 matched_text = match.group(0)
                 redacted = self._redact_value(matched_text)
-                
+
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "pii",
-                    "pattern": pattern,
-                    "matched": redacted,
-                    "position": match.start(),
-                    "score": score,
-                    "data_type": self._classify_pii_type(pattern),
-                })
+                signals.append(
+                    {
+                        "type": "pii",
+                        "pattern": pattern,
+                        "matched": redacted,
+                        "position": match.start(),
+                        "score": score,
+                        "data_type": self._classify_pii_type(pattern),
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -170,17 +166,19 @@ class PrivacyProtector:
             for match in matches:
                 matched_text = match.group(0)
                 redacted = self._redact_value(matched_text)
-                
+
                 score = weight * 100
                 max_score = max(max_score, score)
-                signals.append({
-                    "type": "sensitive",
-                    "pattern": pattern,
-                    "matched": redacted,
-                    "position": match.start(),
-                    "score": score,
-                    "data_type": self._classify_sensitive_type(pattern),
-                })
+                signals.append(
+                    {
+                        "type": "sensitive",
+                        "pattern": pattern,
+                        "matched": redacted,
+                        "position": match.start(),
+                        "score": score,
+                        "data_type": self._classify_sensitive_type(pattern),
+                    }
+                )
 
         return min(max_score, 100.0), signals
 
@@ -253,11 +251,7 @@ Respond in JSON:
     ) -> float:
         """Combine detection scores"""
         # Weighted: 40% PII, 40% sensitive, 20% council
-        return (
-            (pii_score * 0.4)
-            + (sensitive_score * 0.4)
-            + (council_score * 0.2)
-        )
+        return (pii_score * 0.4) + (sensitive_score * 0.4) + (council_score * 0.2)
 
     def _score_to_level(self, score: float) -> RiskLevel:
         """Convert score to risk level"""
@@ -288,14 +282,14 @@ Respond in JSON:
     ) -> float:
         """Calculate overall confidence"""
         pii_conf = min(pii_score / 100.0, 1.0) if pii_score > 0 else 0.5
-        sensitive_conf = min(sensitive_score / 100.0, 1.0) if sensitive_score > 0 else 0.5
+        sensitive_conf = (
+            min(sensitive_score / 100.0, 1.0) if sensitive_score > 0 else 0.5
+        )
         council_conf = council_result.consensus_score
 
         return (pii_conf * 0.4) + (sensitive_conf * 0.4) + (council_conf * 0.2)
 
-    def _estimate_false_positive(
-        self, score: float, consensus: float
-    ) -> float:
+    def _estimate_false_positive(self, score: float, consensus: float) -> float:
         """Estimate false positive probability"""
         # PII detection should have low FP rate
         if consensus > 0.8:
@@ -326,20 +320,25 @@ Respond in JSON:
         """Build human-readable explanation"""
         parts = []
 
-        parts.append(f"Privacy protection scan completed. Risk score: {final_score:.1f}/100.")
+        parts.append(
+            f"Privacy protection scan completed. Risk score: {final_score:.1f}/100."
+        )
 
         if pii_signals:
             parts.append(f"Detected {len(pii_signals)} PII instances:")
             for signal in pii_signals[:5]:
-                parts.append(f"  - {signal.get('data_type', 'Unknown')}: {signal.get('matched', 'N/A')}")
+                parts.append(
+                    f"  - {signal.get('data_type', 'Unknown')}: {signal.get('matched', 'N/A')}"
+                )
 
         if sensitive_signals:
             parts.append(f"Detected {len(sensitive_signals)} sensitive data instances:")
             for signal in sensitive_signals[:5]:
-                parts.append(f"  - {signal.get('data_type', 'Unknown')}: {signal.get('matched', 'N/A')}")
+                parts.append(
+                    f"  - {signal.get('data_type', 'Unknown')}: {signal.get('matched', 'N/A')}"
+                )
 
         parts.append(f"LLM Council consensus: {council_result.consensus_score:.1%}")
         parts.append(f"Council verdict: {council_result.final_verdict.value}")
 
         return "\n".join(parts)
-

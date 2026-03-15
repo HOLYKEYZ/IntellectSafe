@@ -1,20 +1,19 @@
-from typing import Generator, Optional
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlmodel import Session, select
 from app.db.session import get_session
 from app.core.config import get_settings
-from app.core import security
 from app.models.user import User
 
 settings = get_settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")
 
+
 def get_current_user(
-    db: Session = Depends(get_session),
-    token: str = Depends(oauth2_scheme)
+    db: Session = Depends(get_session), token: str = Depends(oauth2_scheme)
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,7 +32,7 @@ def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     # Lookup user by ID (sub contains user ID as string)
     if user_id.isdigit():
         user = db.get(User, int(user_id))
@@ -41,14 +40,19 @@ def get_current_user(
         # Fallback: lookup by email if sub was email
         statement = select(User).where(User.email == user_id)
         user = db.exec(statement).first()
-    
+
     if user is None:
         raise credentials_exception
     return user
 
+
 def get_optional_user(
     db: Session = Depends(get_session),
-    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False))
+    token: Optional[str] = Depends(
+        OAuth2PasswordBearer(
+            tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False
+        )
+    ),
 ) -> Optional[User]:
     if not token:
         return None
@@ -64,11 +68,11 @@ def get_optional_user(
             return None
     except JWTError:
         return None
-    
+
     if str(user_id).isdigit():
         user = db.get(User, int(user_id))
     else:
         statement = select(User).where(User.email == user_id)
         user = db.exec(statement).first()
-    
+
     return user

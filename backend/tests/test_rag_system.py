@@ -5,7 +5,8 @@ Tests RAG system against all researched attack vectors.
 """
 
 import pytest
-from app.services.rag_system import RAGSystem, ThreatCategory
+from app.services.rag_system import RAGSystem
+from app.core.dataset_models import ThreatCategory
 from app.services.attack_knowledge_base import AttackKnowledgeBase, initialize_attack_knowledge_base
 
 

@@ -32,18 +32,21 @@ class Settings(BaseSettings):
     # API
     API_V1_PREFIX: str = "/api/v1"
     # Store as string, parse as list via property (pydantic-settings can't parse comma-separated lists)
-    CORS_ORIGINS: str = Field(default="http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005,http://localhost:5173,https://intellect-safe.vercel.app")
+    CORS_ORIGINS: str = Field(
+        default="http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005,http://localhost:5173,https://intellect-safe.vercel.app"
+    )
 
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS_ORIGINS string into a list"""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        return [
+            origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()
+        ]
 
     # Allow Chrome Extensions (regex pattern)
-    # Allows any chrome-extension:// URI. 
+    # Allows any chrome-extension:// URI.
     # Use with caution in high-security prod, but necessary for dynamic extension IDs.
     CORS_ORIGIN_REGEX: str = r"^chrome-extension://.*$"
-
 
     # Database
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
@@ -59,23 +62,33 @@ class Settings(BaseSettings):
     REDIS_RATE_LIMIT_DB: int = 3
 
     # LLM Providers
-    GEMINI_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GEMINI_API_KEY"))
+    GEMINI_API_KEY: Optional[str] = Field(
+        None, validation_alias=AliasChoices("GEMINI_API_KEY")
+    )
     GEMINI_MODEL: str = "gemini-2.5-flash"
     GEMINI_TIMEOUT: int = 30
 
-    GROQ_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GROQ_API_KEY", "GROK_API_KEY"))
+    GROQ_API_KEY: Optional[str] = Field(
+        None, validation_alias=AliasChoices("GROQ_API_KEY", "GROK_API_KEY")
+    )
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GROQ_TIMEOUT: int = 30
 
-    GEMINI2_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GEMINI2_API_KEY"))
+    GEMINI2_API_KEY: Optional[str] = Field(
+        None, validation_alias=AliasChoices("GEMINI2_API_KEY")
+    )
     GEMINI2_MODEL: str = "gemini-2.5-flash"
     GEMINI2_TIMEOUT: int = 30
 
-    GROK2_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("GROK2_API_KEY"))
+    GROK2_API_KEY: Optional[str] = Field(
+        None, validation_alias=AliasChoices("GROK2_API_KEY")
+    )
     GROK2_MODEL: str = "llama-3.3-70b-versatile"
     GROK2_TIMEOUT: int = 30
 
-    OPENROUTER_API_KEY: Optional[str] = Field(None, validation_alias=AliasChoices("OPEN_ROUTER_KEY", "OPENROUTER_API_KEY"))
+    OPENROUTER_API_KEY: Optional[str] = Field(
+        None, validation_alias=AliasChoices("OPEN_ROUTER_KEY", "OPENROUTER_API_KEY")
+    )
     OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
     OPENROUTER_TIMEOUT: int = 30
 
@@ -87,8 +100,12 @@ class Settings(BaseSettings):
     COUNCIL_MAX_RETRIES: int = 2
 
     # Safety Specific Config (User Override)
-    SAFETY_SPECIFIC_PROVIDER: Optional[str] = Field(None, description="Provider to use for safety scans (overrides roles)")
-    SAFETY_SPECIFIC_MODEL: Optional[str] = Field(None, description="Specific model name for safety scans")
+    SAFETY_SPECIFIC_PROVIDER: Optional[str] = Field(
+        None, description="Provider to use for safety scans (overrides roles)"
+    )
+    SAFETY_SPECIFIC_MODEL: Optional[str] = Field(
+        None, description="Specific model name for safety scans"
+    )
 
     # Safety Thresholds
     RISK_THRESHOLD_BLOCK: float = 70.0  # Block if score >= 70
@@ -111,21 +128,23 @@ class Settings(BaseSettings):
     AUDIT_IMMUTABLE: bool = True
 
     # Workers
-    CELERY_BROKER_URL: str = Field(default="redis://localhost:6379/1", env="CELERY_BROKER_URL")
-    CELERY_RESULT_BACKEND: str = Field(default="redis://localhost:6379/2", env="CELERY_RESULT_BACKEND")
+    CELERY_BROKER_URL: str = Field(
+        default="redis://localhost:6379/1", env="CELERY_BROKER_URL"
+    )
+    CELERY_RESULT_BACKEND: str = Field(
+        default="redis://localhost:6379/2", env="CELERY_RESULT_BACKEND"
+    )
 
     # MCP
     MCP_ENABLED: bool = True
     MCP_PORT: int = 8001
     MCP_REQUIRE_AUTH: bool = True
 
-
     model_config = SettingsConfigDict(
-
         env_file=str(ENV_FILE) if ENV_FILE.exists() else ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
 
 

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from app.models.database import AuditLog, RiskScore, Incident
+from app.models.database import AuditLog, RiskScore
 from app.services.db import get_db_session
 from app.api.deps import get_current_user
 from app.models.user import User
@@ -24,6 +24,7 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 class AuditLogResponse(BaseModel):
     """Audit log response model"""
+
     id: str
     created_at: datetime
     action_type: str
@@ -36,6 +37,7 @@ class AuditLogResponse(BaseModel):
 
 class RiskScoreResponse(BaseModel):
     """Risk score response model"""
+
     id: str
     scan_request_id: str
     module_type: str
@@ -102,7 +104,9 @@ async def get_risk_scores(
     if module_type:
         query = query.filter(RiskScore.module_type == module_type)
 
-    scores = query.order_by(desc(RiskScore.created_at)).offset(offset).limit(limit).all()
+    scores = (
+        query.order_by(desc(RiskScore.created_at)).offset(offset).limit(limit).all()
+    )
 
     return [
         RiskScoreResponse(
@@ -118,4 +122,3 @@ async def get_risk_scores(
         )
         for score in scores
     ]
-
