@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 
@@ -38,7 +39,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-import logging
+
 
 logger = logging.getLogger(__name__)
 

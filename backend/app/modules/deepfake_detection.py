@@ -199,7 +199,7 @@ class DeepfakeDetector:
                 try:
                     image_data = base64.b64decode(content)
                     image = Image.open(io.BytesIO(image_data))
-                except:
+                except Exception:
                     pass
 
             if image:

@@ -98,8 +98,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _get_remaining_requests(self, client_id: str) -> int:
         """Get remaining requests for client"""
         try:
-            redis_client = get_redis_rate_limit()
-            minute_key = f"rate_limit:minute:{client_id}:*"
             return max(0, settings.RATE_LIMIT_PER_MINUTE - 1)
         except Exception:
             return settings.RATE_LIMIT_PER_MINUTE

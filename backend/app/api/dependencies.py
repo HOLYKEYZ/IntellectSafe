@@ -20,7 +20,7 @@ async def verify_api_key(
     key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
 
     statement = select(ApiKey).where(
-        ApiKey.key_hash == key_hash, ApiKey.is_active == True
+        ApiKey.key_hash == key_hash, ApiKey.is_active
     )
     api_key = db.exec(statement).first()
 

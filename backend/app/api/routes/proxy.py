@@ -21,6 +21,7 @@ from fastapi import APIRouter, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlmodel import select
 
 from app.core.config import get_settings
 from app.core.enhanced_council import EnhancedLLMCouncil

@@ -45,9 +45,8 @@ class HallucinationDetector:
         if len(votes) < 2:
             return False, {"error": "Need at least 2 models for fact checking"}
 
-        # Extract risk scores and confidences
+        # Extract risk scores
         scores = [v.risk_score for v in votes if v.error is None]
-        confidences = [v.confidence for v in votes if v.error is None]
 
         if len(scores) < 2:
             return False, {"error": "Not enough valid votes for fact checking"}

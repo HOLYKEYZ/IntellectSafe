@@ -15,7 +15,6 @@ from pathlib import Path
 # Vector DB imports (using ChromaDB as example - can be swapped)
 try:
     import chromadb
-    from chromadb.config import Settings
 
     CHROMA_AVAILABLE = True
 except ImportError:

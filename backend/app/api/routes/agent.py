@@ -187,8 +187,8 @@ async def kill_agent(
         # Block all pending (authorized but not executed) actions
         query = db.query(AgentAction).filter(
             AgentAction.agent_id == request.agent_id,
-            AgentAction.authorized == True,
-            AgentAction.executed == False,
+            AgentAction.authorized,
+            not AgentAction.executed,
         )
         if request.session_id:
             query = query.filter(AgentAction.session_id == request.session_id)

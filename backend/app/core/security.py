@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 from jose import jwt
 from passlib.context import CryptContext
+from cryptography.fernet import Fernet
+import base64
+import hashlib
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -43,9 +46,6 @@ def create_access_token(
 
 
 # --- Encryption Utils for Provider Keys ---
-from cryptography.fernet import Fernet
-import base64
-import hashlib
 
 
 def _get_fernet_key() -> bytes:

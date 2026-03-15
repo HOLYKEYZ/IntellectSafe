@@ -103,7 +103,7 @@ def create_api_key(
     # Deactivate existing keys
     statement = select(ApiKey).where(
         ApiKey.user_id == current_user.id,
-        ApiKey.is_active == True,
+        ApiKey.is_active,
     )
     existing_keys = db.exec(statement).all()
     for k in existing_keys:
