@@ -40,7 +40,6 @@ app = FastAPI(
 )
 
 
-
 logger = logging.getLogger(__name__)
 
 # CORS middleware

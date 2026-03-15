@@ -19,9 +19,7 @@ async def verify_api_key(
     """Verify API key and return user_id"""
     key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
 
-    statement = select(ApiKey).where(
-        ApiKey.key_hash == key_hash, ApiKey.is_active
-    )
+    statement = select(ApiKey).where(ApiKey.key_hash == key_hash, ApiKey.is_active)
     api_key = db.exec(statement).first()
 
     if not api_key:
