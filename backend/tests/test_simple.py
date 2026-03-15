@@ -11,7 +11,7 @@ def test_simple_openai_connection():
         pytest.skip("No OPENAI_API_KEY found in settings")
 
     print("=== Testing OpenAI (sync) ===")
-    print(f"Key length: {len(api_key)}")
+    print(f"Key length: {len(api_key) if api_key else 0}")
 
     try:
         with httpx.Client(timeout=30) as client:

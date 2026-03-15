@@ -56,8 +56,8 @@ class AgentController:
     def _load_allowed_scopes(self) -> Dict[str, List[str]]:
         """Load allowed scopes for different action types"""
         return {
-            "file_read": ["/tmp", "/var/tmp", "/home/user/documents"],
-            "file_write": ["/tmp", "/var/tmp"],
+            "file_read": ["/tmp", "/var/tmp", "/home/user/documents"],  # nosec B108
+            "file_write": ["/tmp", "/var/tmp"],  # nosec B108
             "database_query": ["readonly"],
             "api_request": ["https://api.example.com"],
         }

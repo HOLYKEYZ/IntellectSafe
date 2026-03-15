@@ -209,7 +209,7 @@ class RAGSystem:
         from pathlib import Path
 
         # Store in file system
-        doc_id = hashlib.md5(f"{source}{content[:100]}".encode()).hexdigest()
+        doc_id = hashlib.sha256(f"{source}{content[:100]}".encode()).hexdigest()
 
         # Create data directory if it doesn't exist
         data_dir = Path("./data/rag_fallback")

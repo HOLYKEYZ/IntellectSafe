@@ -8,18 +8,18 @@ on:
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
-    needs: [] # In a full setup, this might need the CI job to pass first. Assuming it runs parallel for now or is handled by GitHub environment protections.
-    
+    env:
+      RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
     steps:
       - name: Check for Render Hook Secret
-        if: ${{ secrets.RENDER_DEPLOY_HOOK == '' }}
+        if: env.RENDER_HOOK == ''
         run: echo "::warning::RENDER_DEPLOY_HOOK secret is missing. Skipping deployment."
 
       - name: Trigger Render Deployment
-        if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
+        if: env.RENDER_HOOK != ''
         uses: fjogeleit/http-request-action@v1
         with:
-          url: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          url: ${{ env.RENDER_HOOK }}
           method: 'GET'
           # Render deploy hooks are GET or POST requests to a specific URL that triggers a deploy.
           # The secret RENDER_DEPLOY_HOOK should look like: https://api.render.com/deploy/srv-...

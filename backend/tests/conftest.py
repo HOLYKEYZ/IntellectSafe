@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 from app.core.llm_council import CouncilResult, Verdict
 import sys
 
-from sqlmodel import SQLModel, create_all
+from sqlmodel import SQLModel
 from app.db.session import engine
 
 # Detect if we are in CI Mode
@@ -18,6 +18,10 @@ def init_test_db():
         from app.models.database import AuditLog, RiskScore
         SQLModel.metadata.create_all(engine)
     yield
+
+# Automatically apply the mock for the EnhancedLLMCouncil if in CI mode
+@pytest.fixture(autouse=True)
+def mock_llm_council(request):
     if not CI_MODE:
         yield
         return

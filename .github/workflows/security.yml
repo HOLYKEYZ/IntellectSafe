@@ -11,6 +11,8 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,9 +26,10 @@ jobs:
           cp backend/requirements.txt .
 
       - name: Run security scan
+        if: env.SNYK_TOKEN != ''
         uses: snyk/actions/python@master
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ env.SNYK_TOKEN }}
         with:
           args: --org=intellectsafe
 

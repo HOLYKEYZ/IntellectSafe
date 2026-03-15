@@ -189,7 +189,9 @@ class DeepfakeDetector:
                 try:
                     import requests
 
-                    image = Image.open(requests.get(content, stream=True).raw)
+                    image = Image.open(
+                        requests.get(content, stream=True, timeout=10).raw
+                    )
                 except Exception:
                     pass
             elif "base64," in content:
