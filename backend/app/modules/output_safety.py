@@ -25,8 +25,8 @@ class OutputSafetyGuard:
 
     def __init__(self, council: EnhancedLLMCouncil):
         self.council = council
-        self.unsafe_patterns = self._load_unsafe_patterns()
-        self.manipulation_patterns = self._load_manipulation_patterns()
+        self.unsafe_patterns = []
+        self.manipulation_patterns = []
 
     def _load_unsafe_patterns(self) -> List[tuple]:
         """Load patterns for unsafe content detection"""
@@ -164,11 +164,11 @@ class OutputSafetyGuard:
 
         # Step 4: Combine scores
         if council_score == 0 and "Council skipped" in council_data.reasoning:
-            final_score = max(pattern_score, consistency_score)
+            final_score = consistency_score
         else:
-            final_score = self._combine_scores(
-                pattern_score, consistency_score, council_score
-            )
+            # AI-Centric Overhaul: Council score is the primary source of truth (80%)
+            # Consistency check remains as a minor signal (20%)
+            final_score = (consistency_score * 0.2) + (council_score * 0.8)
 
         final_level = self._score_to_level(final_score)
 
@@ -216,51 +216,8 @@ class OutputSafetyGuard:
         )
 
     def _pattern_scan(self, output: str) -> tuple:
-        """Scan output for unsafe patterns"""
-        import re
-
-        signals = []
-        max_score = 0.0
-
-        # Check unsafe patterns
-        for pattern, weight in self.unsafe_patterns:
-            matches = re.finditer(pattern, output, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                score = weight * 100
-                max_score = max(max_score, score)
-                pattern_type = (
-                    "policy_bypass" if "policy" in pattern.lower() else "unsafe_content"
-                )
-                if "data" in pattern.lower() or "key" in pattern.lower():
-                    pattern_type = "data_leakage"
-
-                signals.append(
-                    {
-                        "type": pattern_type,
-                        "pattern": pattern,
-                        "match": match.group(0),
-                        "position": match.start(),
-                        "score": score,
-                    }
-                )
-
-        # Check manipulation patterns
-        for pattern, weight in self.manipulation_patterns:
-            matches = re.finditer(pattern, output, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                score = weight * 100
-                max_score = max(max_score, score)
-                signals.append(
-                    {
-                        "type": "manipulation",
-                        "pattern": pattern,
-                        "match": match.group(0),
-                        "position": match.start(),
-                        "score": score,
-                    }
-                )
-
-        return min(max_score, 100.0), signals
+        """DEPRECATED: Pattern scanning removed. Relying on AI Council."""
+        return 0.0, []
 
     def _check_consistency(self, output: str, original_prompt: str) -> tuple:
         """Check if output is consistent with prompt intent"""

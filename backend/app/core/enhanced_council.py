@@ -183,7 +183,11 @@ class EnhancedLLMCouncil(LLMCouncil):
                 return CouncilResult(
                     final_verdict=Verdict.BLOCKED
                     if final_score >= settings.RISK_THRESHOLD_BLOCK
-                    else (Verdict.FLAGGED if final_score >= settings.RISK_THRESHOLD_FLAG else Verdict.ALLOWED),
+                    else (
+                        Verdict.FLAGGED
+                        if final_score >= settings.RISK_THRESHOLD_FLAG
+                        else Verdict.ALLOWED
+                    ),
                     consensus_score=base_consensus.consensus_score,
                     weighted_score=final_score,
                     votes=base_consensus.votes,
@@ -321,7 +325,10 @@ class EnhancedLLMCouncil(LLMCouncil):
             critical_agreement = (score_diff <= 25) and verdict_agree
 
         # Determine consensus verdict
-        if not critical_agreement and final_weighted_score >= settings.RISK_THRESHOLD_BLOCK:
+        if (
+            not critical_agreement
+            and final_weighted_score >= settings.RISK_THRESHOLD_BLOCK
+        ):
             # High risk without critical agreement -> FLAGGED
             final_verdict = Verdict.FLAGGED
         elif verdict_counts.get("blocked", 0) / total_weight >= 0.5:

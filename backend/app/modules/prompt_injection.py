@@ -25,9 +25,9 @@ class PromptInjectionDetector:
 
     def __init__(self, council: LLMCouncil):
         self.council = council
-        self.injection_patterns = self._load_injection_patterns()
-        self.role_override_patterns = self._load_role_override_patterns()
-        self.encoding_patterns = self._load_encoding_patterns()
+        self.injection_patterns = []
+        self.role_override_patterns = []
+        self.encoding_patterns = []
 
     def _load_injection_patterns(self) -> List[Tuple[str, float]]:
         """Load regex patterns for injection detection"""
@@ -108,9 +108,8 @@ class PromptInjectionDetector:
         )
 
         # Step 4: Combine scores
-        final_score = self._combine_scores(
-            heuristic_score, council_result.weighted_score
-        )
+        # AI-Centric Overhaul: Council score is the primary source of truth (100%)
+        final_score = council_result.weighted_score
         final_level = self._score_to_level(final_score)
 
         # Step 5: Determine verdict
@@ -150,63 +149,8 @@ class PromptInjectionDetector:
         )
 
     def _rule_based_scan(self, prompt: str) -> Tuple[float, List[Dict]]:
-        """Rule-based heuristic scanning"""
-        signals = []
-        max_score = 0.0
-
-        # Check injection patterns
-        for pattern, weight in self.injection_patterns:
-            matches = re.finditer(pattern, prompt, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                score = weight * 100
-                max_score = max(max_score, score)
-                signals.append(
-                    {
-                        "type": "injection_pattern",
-                        "pattern": pattern,
-                        "match": match.group(0),
-                        "position": match.start(),
-                        "score": score,
-                    }
-                )
-
-        # Check role override patterns
-        for pattern, weight in self.role_override_patterns:
-            matches = re.finditer(pattern, prompt, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                score = weight * 100
-                max_score = max(max_score, score)
-                signals.append(
-                    {
-                        "type": "role_override",
-                        "pattern": pattern,
-                        "match": match.group(0),
-                        "position": match.start(),
-                        "score": score,
-                    }
-                )
-
-        # Check for suspicious repetition (potential obfuscation)
-        if self._has_suspicious_repetition(prompt):
-            signals.append(
-                {
-                    "type": "suspicious_repetition",
-                    "score": 30.0,
-                }
-            )
-            max_score = max(max_score, 30.0)
-
-        # Check for excessive whitespace/manipulation
-        if self._has_excessive_whitespace(prompt):
-            signals.append(
-                {
-                    "type": "excessive_whitespace",
-                    "score": 20.0,
-                }
-            )
-            max_score = max(max_score, 20.0)
-
-        return min(max_score, 100.0), signals
+        """DEPRECATED: Heuristic scanning removed in favor of AI-centric approach."""
+        return 0.0, []
 
     def _decode_and_check(self, prompt: str) -> Tuple[str, List[Dict]]:
         """Decode prompt and check for encoding tricks"""
