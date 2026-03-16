@@ -12,7 +12,7 @@
     "https://chatgpt.com/*",
     "https://claude.ai/*",
     "https://gemini.google.com/*",
-    "https://grok.com/*",
+    ,
     "https://groq.com/*",
     "http://localhost:8001/*"
   ],
@@ -22,7 +22,6 @@
         "https://chatgpt.com/*",
         "https://claude.ai/*",
         "https://gemini.google.com/*",
-        "https://grok.com/*",
         "https://groq.com/*"
       ],
       "js": ["content.js"],
