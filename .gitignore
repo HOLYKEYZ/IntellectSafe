@@ -20,3 +20,8 @@ backend/data/rag_fallback/
 # Logs & Diagnostics
 *.log
 diagnose_*.txt
+.coverage
+htmlcov/
+node_modules/
+dist/
+build/
