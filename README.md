@@ -288,3 +288,5 @@ python verify_agent.py
 **GPLv2**
 GNU GENERAL PUBLIC LICENSE
 Version 2 License .
+
+NOTE: still in development & research stage due to constant frontier models releases
