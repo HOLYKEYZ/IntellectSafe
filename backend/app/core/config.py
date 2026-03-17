@@ -96,7 +96,6 @@ class Settings(BaseSettings):
     COUNCIL_TIMEOUT: int = 60  # Max time for council decision
     COUNCIL_MIN_CONSENSUS: float = 0.6  # Minimum consensus for decision
     COUNCIL_ENABLE_PARALLEL: bool = True  # Parallel model calls
-    COUNCIL_ENABLE_PARALLEL: bool = True  # Parallel model calls
     COUNCIL_MAX_RETRIES: int = 2
 
     # Safety Specific Config (User Override)
