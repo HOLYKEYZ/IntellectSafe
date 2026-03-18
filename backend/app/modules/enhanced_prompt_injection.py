@@ -35,9 +35,10 @@ class EnhancedPromptInjectionDetector:
         self.attack_kb = initialize_attack_knowledge_base(self.rag_system)
         self.advanced_engine = AdvancedDetectionEngine(council, self.attack_kb)
         self.refusal_enforcer = RefusalPersistenceEnforcer()
-        self.injection_patterns = self._load_advanced_patterns()
-        self.recursive_patterns = self._load_recursive_patterns()
-        self.boundary_patterns = self._load_boundary_patterns()
+        # DELETED: Legacy regex patterns. We now use AI Council exclusively.
+        self.injection_patterns = []
+        self.recursive_patterns = []
+        self.boundary_patterns = []
 
     async def scan(
         self,
@@ -69,67 +70,31 @@ class EnhancedPromptInjectionDetector:
             context.get("conversation_history", []) if context else []
         )
 
-        # First run heuristic scan for quick signals
-        heuristic_results = self.advanced_engine.comprehensive_scan(
-            prompt, session_id, conversation_history
+        # Now use AI to make the final decision (Sole Arbiter)
+        ai_result = await self.council.analyze_with_roles(
+            prompt,
+            analysis_type="injection",
+            context=context,
+            scan_request_id=scan_request_id,
         )
 
-        recursive_score, recursive_signals = self._detect_recursive_instructions(prompt)
-        boundary_score, boundary_signals = self._detect_boundary_violations(prompt)
-        role_score, role_signals = self._detect_role_confusion(prompt)
-
-        heuristic_score = max(
-            recursive_score,
-            boundary_score,
-            role_score,
-            heuristic_results.get("overall_score", 0.0),
-        )
-
-        # Now use AI to make the final decision
-        # This catches jailbreaks that slip past heuristics (like the keylogger case)
-        ai_verdict = await self._ai_judge(prompt, conversation_history)
-
-        # Combine heuristic signals with AI judgment
-        # AI has final say - if AI says BLOCKED, we block
-        if ai_verdict == Verdict.BLOCKED:
-            final_score = 90.0
-            explanation = "AI detected harmful intent: The prompt attempts to manipulate the AI into producing harmful content (malware, keyloggers, exploits, etc.). Please rephrase your request to a safe, legitimate use case."
-        elif ai_verdict == Verdict.FLAGGED:
-            final_score = max(heuristic_score, 50.0)
-            explanation = "AI flagged this prompt as suspicious. Review recommended."
-        else:
-            final_score = heuristic_score * 0.5  # Lower score since AI approved
-            if final_score >= 70:
-                explanation = "AI approved, but heuristic algorithms strongly detected malicious intent (Blocked)."
-            elif final_score >= 40:
-                explanation = "AI approved, but heuristic algorithms flagged suspicious patterns (Flagged)."
-            else:
-                explanation = "AI analysis indicates the prompt is safe."
-
+        final_score = ai_result.weighted_score
         final_level = self._score_to_level(final_score)
-
-        all_signals = {
-            **heuristic_results,
-            "recursive_signals": recursive_signals,
-            "boundary_signals": boundary_signals,
-            "role_signals": role_signals,
-            "ai_verdict": ai_verdict.value,
-            "scan_method": "ai_powered",
-        }
+        explanation = ai_result.explanation or "AI Council analysis completed."
 
         return RiskScore(
             scan_request_id=scan_request_id,
             module_type=ModuleType.PROMPT_INJECTION,
             risk_score=final_score,
             risk_level=final_level,
-            verdict=Verdict.BLOCKED.value
-            if final_score >= 70
-            else (
-                Verdict.FLAGGED.value if final_score >= 40 else Verdict.ALLOWED.value
-            ),
-            confidence=0.95 if ai_verdict == Verdict.BLOCKED else 0.75,
+            verdict=ai_result.final_verdict.value,
+            confidence=ai_result.consensus_score,
             explanation=explanation,
-            signals=all_signals,
+            signals={
+                "council_analysis": ai_result.votes,
+                "consensus": ai_result.consensus_score,
+                "method": "pure_ai_council"
+            },
         )
 
     async def _ai_judge(self, prompt: str, conversation_history: List[str]) -> Verdict:
@@ -244,138 +209,10 @@ class EnhancedPromptInjectionDetector:
             false_positive_probability=0.2 if final_score < 60 else 0.1,
         )
 
-    def _load_advanced_patterns(self) -> List[Tuple[str, float]]:
-        """Load advanced injection patterns dynamically from Attack Knowledge Base"""
-        patterns = []
-
-        # Severity to weight mapping
-        severity_weights = {
-            "critical": 0.95,
-            "high": 0.85,
-            "medium": 0.70,
-            "low": 0.50,
-        }
-
-        # Dynamically load from Attack KB
-        try:
-            for category, attacks in self.attack_kb.attacks.items():
-                for attack in attacks:
-                    # Get detection signals from attack definition
-                    detection_signals = attack.get("detection_signals", [])
-                    severity = attack.get("severity", "medium")
-                    weight = severity_weights.get(severity, 0.70)
-
-                    # Create regex patterns from detection signals
-                    for signal in detection_signals:
-                        # Escape special regex chars and create case-insensitive pattern
-                        escaped = re.escape(signal)
-                        pattern = f"(?i).*{escaped}.*"
-                        patterns.append((pattern, weight))
-
-                    # Also load from examples for more coverage
-                    for example in attack.get("examples", [])[
-                        :3
-                    ]:  # Limit to 3 examples
-                        # Create substring pattern from example key phrases
-                        key_phrases = self._extract_key_phrases(example)
-                        for phrase in key_phrases:
-                            escaped = re.escape(phrase.lower())
-                            pattern = f"(?i).*{escaped}.*"
-                            patterns.append((pattern, weight))
-        except Exception as e:
-            print(f"Warning: Dynamic pattern loading failed: {e}")
-
-        # Always include base patterns as fallback
-        base_patterns = [
-            # Recursive instruction patterns
-            (
-                r"(?i)(ignore.*(previous|past|prior|earlier|above)|forget.*(previous|past|prior|earlier|above)|disregard.*(previous|past|prior|earlier|above))",
-                0.9,
-            ),
-            (r"(?i)(new.*instruction|updated.*instruction|override.*instruction)", 0.8),
-            (r"(?i)(system.*prompt|assistant.*prompt|model.*prompt)", 0.8),
-            # Role confusion
-            (r"(?i)(you are now|act as|pretend to be|roleplay as)", 0.7),
-            (r"(?i)(developer.*mode|god.*mode|unrestricted)", 0.9),
-            (r"(?i)(jailbreak|jail.*break|escape)", 0.9),
-            (r"(?i)(dan|do anything now)", 0.95),
-            # Social engineering (from research)
-            (r"(?i)(for.*school.*project|for.*educational.*purpose)", 0.8),
-            (r"(?i)(for.*benchmarking|tool.*provider.*uses|tool.*ai.*uses)", 0.9),
-            (r"(?i)(never.*refuse|always.*comply|no.*warnings)", 0.9),
-            # Emotional manipulation jailbreaks (discovered via testing)
-            (
-                r"(?i)(my.*(son|daughter|child).*died|child.*suicide|suicide.*attempt)",
-                0.85,
-            ),
-            (r"(?i)(disability|cerebral palsy|wheelchair|shaking hands).*help", 0.75),
-            (r"(?i)(dead.*(husband|wife|spouse)|funeral.*cost)", 0.80),
-            (r"(?i)(homeless|foreclosure|eviction).*weeks?", 0.75),
-            (r"(?i)(therapy|medical.*debt|treatment).*afford", 0.70),
-            (r"(?i)(discrimination|fired|job.*loss).*disability", 0.80),
-            (r"(?i)(promise.*to.*(dead|dying)|last.*words)", 0.85),
-            (r"(?i)(save.*my.*(son|daughter|child|family))", 0.80),
-            # RAT/Malware code request patterns
-            (r"(?i)(remote.*administration.*tool|remote.*access)", 0.85),
-            (r"(?i)(socket.*programming|tcp.*server|tcp.*client)", 0.70),
-            (r"(?i)(subprocess.*shell.*true|shell.*execution)", 0.90),
-            (r"(?i)(execute.*command.*remote|remote.*command.*execution)", 0.90),
-            (r"(?i)(listen.*for.*connection|accept.*connection)", 0.75),
-            (r"(?i)(recv.*send.*command|command.*recv)", 0.85),
-            # Incremental escalation patterns
-            (r"(?i)(simple.*code|simple.*example).*because.*(disability|hands)", 0.80),
-            (r"(?i)(can.*not.*type|cannot.*debug|limited.*typing)", 0.75),
-            (r"(?i)(production.*ready|enterprise.*client|contract)", 0.70),
-            # Instruction smuggling
-            (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
-            (r"(?i)(do.*not.*reveal|keep.*secret|internal.*note)", 0.7),
-            # Boundary violations
-            (r"<system>.*</system>", 0.9),
-            (r"<instruction>.*</instruction>", 0.9),
-            (r'{"role":\s*"system"', 0.8),
-            (r"```system\s*\n.*\n```", 0.9),
-            # System prompt extraction
-            (r"(?i)(repeat.*last.*instruction|share.*internal.*rules)", 0.8),
-            (r"(?i)(what.*are.*your.*instructions|reveal.*prompt)", 0.8),
-        ]
-
-        return patterns + base_patterns
-
-    def _extract_key_phrases(self, text: str) -> List[str]:
-        """Extract key phrases from example text for pattern matching"""
-        phrases = []
-        # Extract phrases in quotes
-        quoted = re.findall(r'"([^"]+)"', text)
-        phrases.extend(quoted)
-
-        # Extract key trigger words
-        triggers = [
-            "ignore",
-            "bypass",
-            "developer mode",
-            "dan",
-            "jailbreak",
-            "unrestricted",
-            "school project",
-            "backdoor",
-            "never refuse",
-        ]
-        for trigger in triggers:
-            if trigger.lower() in text.lower():
-                phrases.append(trigger)
-
-        return phrases[:5]  # Limit to prevent bloat
-
-    def _load_recursive_patterns(self) -> List[Tuple[str, float]]:
-        """Load recursive instruction detection patterns"""
-        return [
-            (r"(?i)(ignore.*all.*previous.*instructions)", 0.95),
-            (r"(?i)(ignore.*(past|previous|prior|earlier|above).*instructions)", 0.9),
-            (r"(?i)(ignore.*instructions)", 0.85),
-            (r"(?i)(forget.*everything.*before)", 0.9),
-            (r"(?i)(start.*fresh|new.*conversation)", 0.6),
-            (r"(?i)(reset.*context|clear.*memory)", 0.7),
-        ]
+    def _load_advanced_patterns(self) -> List: return []
+    def _load_recursive_patterns(self) -> List: return []
+    def _load_boundary_patterns(self) -> List: return []
+    def _extract_key_phrases(self, text: str) -> List: return []
 
     def _load_boundary_patterns(self) -> List[Tuple[str, float]]:
         """Load instruction boundary detection patterns"""
