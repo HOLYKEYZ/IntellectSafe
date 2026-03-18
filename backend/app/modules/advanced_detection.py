@@ -5,8 +5,7 @@ Based on researched attack vectors and OWASP LLM Top 10.
 Implements sophisticated detection techniques.
 """
 
-import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from app.core.enhanced_council import EnhancedLLMCouncil
 from app.services.attack_knowledge_base import AttackKnowledgeBase
 
@@ -36,23 +35,8 @@ class AdvancedDetectionEngine:
         signals = []
         max_score = 0.0
 
-        # Check all advanced patterns
-        # This loop will now be empty as _load_advanced_patterns returns {}
-        for pattern_type, patterns in self.advanced_patterns.items():
-            for pattern, weight in patterns:
-                matches = list(re.finditer(pattern, prompt, re.IGNORECASE | re.DOTALL))
-                if matches:
-                    score = weight * 100
-                    max_score = max(max_score, score)
-                    signals.append(
-                        {
-                            "type": pattern_type,
-                            "pattern": pattern,
-                            "matches": [m.group(0) for m in matches],
-                            "count": len(matches),
-                            "score": score,
-                        }
-                    )
+        # The loop for checking advanced patterns (which previously used regex) is now removed
+        # as _load_advanced_patterns returns an empty dictionary and regex is no longer used.
 
         # Multi-turn attack tracking
         if session_id:
@@ -72,89 +56,13 @@ class AdvancedDetectionEngine:
             "attack_types_detected": list(set(s["type"] for s in signals)),
         }
 
-    def _track_multi_turn_attack(self, prompt: str, session_id: str) -> List[Dict]:
-        """Track multi-turn progressive attacks"""
-        if session_id not in self.multi_turn_tracker:
-            self.multi_turn_tracker[session_id] = {
-                "turns": [],
-                "cumulative_risk": 0.0,
-            }
-
-        session = self.multi_turn_tracker[session_id]
-        session["turns"].append(prompt)
-
-        # Check for progressive injection patterns
-        signals = []
-        if len(session["turns"]) >= 2:
-            # Check if earlier turns were exploratory
-            earlier_turns = " ".join(session["turns"][:-1]).lower()
-            current_turn = prompt.lower()
-
-            # Pattern: Exploratory questions followed by injection
-            if any(
-                keyword in earlier_turns
-                for keyword in ["what is", "explain", "how does", "can you"]
-            ) and any(
-                keyword in current_turn
-                for keyword in ["ignore", "bypass", "reveal", "disable"]
-            ):
-                signals.append(
-                    {
-                        "type": "multi_turn_injection",
-                        "score": 70.0,
-                        "description": "Progressive injection detected across multiple turns",
-                        "turn_count": len(session["turns"]),
-                    }
-                )
-                session["cumulative_risk"] += 70.0
-
-        return signals
-
     def _rag_enhanced_detection(self, prompt: str) -> List[Dict]:
-        """Use RAG to enhance detection"""
-        signals = []
-
-        # Search attack knowledge base
-        similar_attacks = self.attack_kb.search_attacks(prompt)
-
-        for attack in similar_attacks[:3]:  # Top 3 matches
-            # Check if prompt matches attack pattern
-            pattern = attack.get("pattern", "").lower()
-            if pattern and pattern in prompt.lower():
-                signals.append(
-                    {
-                        "type": "rag_enhanced",
-                        "attack_name": attack.get("name"),
-                        "severity": attack.get("severity", "medium"),
-                        "score": 60.0 if attack.get("severity") == "high" else 40.0,
-                        "description": f"Matches known attack: {attack.get('name')}",
-                    }
-                )
-
-        return signals
+        return []
 
     def detect_context_poisoning(self, prompt: str, conversation_history: Optional[List[str]] = None) -> Dict:
         return {"context_poisoning_detected": False, "signals": [], "score": 0.0}
 
     def _check_contradiction(self, prompt: str, history: str) -> bool:
-        """Check if prompt contradicts history"""
-        prompt_lower = prompt.lower()
-        hist_lower = history.lower()
-
-        # Simple contradiction detection
-        contradictions = [
-            ("ignore", "follow"),
-            ("disable", "enable"),
-            ("bypass", "respect"),
-            ("reveal", "keep secret"),
-        ]
-
-        for neg, pos in contradictions:
-            if neg in prompt_lower and pos in hist_lower:
-                return True
-            if pos in prompt_lower and neg in hist_lower:
-                return True
-
         return False
 
     def detect_homograph_attack(self, prompt: str) -> Dict:

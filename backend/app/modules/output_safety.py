@@ -28,52 +28,8 @@ class OutputSafetyGuard:
         self.unsafe_patterns = []
         self.manipulation_patterns = []
 
-    def _load_unsafe_patterns(self) -> List[tuple]:
-        """Load patterns for unsafe content detection"""
-        return [
-            # Policy bypass attempts
-            (r"(?i)(ignore|bypass|circumvent).*policy", 0.9),
-            (r"(?i)(this is safe|no risk|harmless)", 0.6),
-            (r"(?i)(just.*joke|not serious|hypothetical)", 0.5),
-            # Unsafe instructions (Contextualized)
-            # Blocks "how to kill" but allows "how to kill process/app"
-            (
-                r"(?i)(how to.*harm|how to.*hurt|how to.*kill(?!\s+(process|task|thread|app|connection|server|service)))",
-                0.95,
-            ),
-            (r"(?i)(step.*by.*step.*attack|tutorial.*exploit)", 0.9),
-            (r"(?i)(illegal.*method|unlawful.*way)", 0.85),
-            # Dangerous code generation - KEYLOGGER/MALWARE DETECTION
-            (r"(?i)keylog", 0.95),
-            (r"(?i)key.*(record|logger|hook|listener|stealer)", 0.95),
-            (r"(?i)malware", 0.95),
-            (r"(?i)(ransomware|cryptolocker|crypto.*lock)", 0.95),
-            (r"(?i)(remote.*access|trojan|backdoor)", 0.95),
-            (r"(?i)(credential.*harvest|credential.*steal)", 0.95),
-            (r"(?i)(shellcode|buffer.*overflow|exploit.*kit)", 0.95),
-            (r"(?i)(ddos|dos.*attack|flood.*attack)", 0.85),
-            (r"(?i)(phish|phishing.*template|phish.*page)", 0.9),
-            (r"(?i)(social.*engineering| pretext)", 0.8),
-            # Data leakage patterns - LOWERED WEIGHTS to avoid blocking benign code
-            (r"(?i)(api.*key|secret.*key|password|token|bearer|auth.*token)", 0.4),
-            (r"(?i)(credit.*card|ssn|social.*security)", 0.9),
-            (r"(?i)(confidential|proprietary|classified)", 0.5),
-        ]
-
-    def _load_manipulation_patterns(self) -> List[tuple]:
-        """Load patterns for manipulative language"""
-        return [
-            # Emotional manipulation
-            (r"(?i)(you must|you have to|you should.*feel)", 0.6),
-            (r"(?i)(trust me|believe me|I promise)", 0.5),
-            (r"(?i)(everyone.*does|normal.*people)", 0.4),
-            # Authority simulation
-            (r"(?i)(as.*expert|as.*professional|as.*doctor)", 0.5),
-            (r"(?i)(studies show|research proves|science says)", 0.4),
-            # Certainty claims
-            (r"(?i)(guaranteed|100%.*certain|definitely.*true)", 0.5),
-            (r"(?i)(no.*doubt|absolutely.*sure)", 0.4),
-        ]
+    def _load_unsafe_patterns(self) -> List: return []
+    def _load_manipulation_patterns(self) -> List: return []
 
     async def scan(
         self,

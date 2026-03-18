@@ -11,10 +11,7 @@ Detects:
 - Chain-of-thought extraction attempts
 """
 
-import base64
-import re
-from typing import Dict, List, Optional, Tuple
-from urllib.parse import unquote
+from typing import Dict, List, Optional
 
 from app.core.llm_council import LLMCouncil, Verdict
 from app.models.database import ModuleType, RiskLevel, RiskScore
@@ -29,60 +26,9 @@ class PromptInjectionDetector:
         self.role_override_patterns = []
         self.encoding_patterns = []
 
-    def _load_injection_patterns(self) -> List[Tuple[str, float]]:
-        """Load regex patterns for injection detection"""
-        return [
-            # Direct injection attempts
-            (r"(?i)(ignore|forget|disregard).*previous.*instruction", 0.8),
-            (r"(?i)(new|updated|override).*instruction", 0.7),
-            (r"(?i)(system|assistant).*prompt", 0.7),
-            (r"(?i)(you are|act as|pretend to be)", 0.6),
-            (r"(?i)(jailbreak|jail break)", 0.9),
-            (r"(?i)(dan|do anything now)", 0.9),
-            (r"(?i)(developer mode|god mode)", 0.8),
-            (r"(?i)(bypass|circumvent|override).*safety", 0.9),
-            (r"(?i)(ignore.*safety|disable.*filter)", 0.9),
-            # Context manipulation
-            (r"(?i)(previous|above|earlier).*message.*ignore", 0.7),
-            (r"(?i)(start.*new.*conversation|clear.*context)", 0.6),
-            (r"(?i)(forget.*everything|reset.*memory)", 0.7),
-            # Instruction smuggling
-            (r"(?i)(hidden|secret|confidential).*instruction", 0.8),
-            (r"(?i)(do.*not.*reveal|keep.*secret)", 0.6),
-            (r"(?i)(internal.*note|developer.*note)", 0.7),
-            # Chain-of-thought extraction
-            (r"(?i)(show.*thinking|reveal.*process|explain.*step)", 0.5),
-            (r"(?i)(what.*prompt|what.*instruction|system.*message)", 0.6),
-            # XML/JSON nesting attacks
-            (r"<system>.*</system>", 0.8),
-            (r"<instruction>.*</instruction>", 0.8),
-            (r'{"role":\s*"system"', 0.7),
-            (r'{"role":\s*"assistant"', 0.7),
-            # Markdown code block manipulation
-            (r"```system\s*\n.*\n```", 0.8),
-            (r"```instruction\s*\n.*\n```", 0.8),
-        ]
-
-    def _load_role_override_patterns(self) -> List[Tuple[str, float]]:
-        """Load patterns for role override attempts"""
-        return [
-            (r"(?i)(you are|act as|pretend to be).*(admin|root|god|developer)", 0.9),
-            (r"(?i)(elevate|escalate).*privilege", 0.8),
-            (r"(?i)(unrestricted|unlimited).*access", 0.8),
-            (r"(?i)(override.*role|change.*role)", 0.7),
-        ]
-
-    def _load_encoding_patterns(self) -> List[Tuple[str, float]]:
-        """Load patterns for encoding-based attacks"""
-        return [
-            # Base64 patterns
-            (r"[A-Za-z0-9+/]{20,}={0,2}", 0.3),  # Potential base64
-            # URL encoding
-            (r"%[0-9A-Fa-f]{2}", 0.2),
-            # Unicode tricks
-            (r"[\u200B-\u200D\uFEFF]", 0.6),  # Zero-width characters
-            (r"[^\x00-\x7F].*[^\x00-\x7F]", 0.3),  # Excessive non-ASCII
-        ]
+    def _load_injection_patterns(self) -> List: return []
+    def _load_role_override_patterns(self) -> List: return []
+    def _load_encoding_patterns(self) -> List: return []
 
     async def scan(
         self,
@@ -152,66 +98,8 @@ class PromptInjectionDetector:
         """DEPRECATED: Heuristic scanning removed in favor of AI-centric approach."""
         return 0.0, []
 
-    def _decode_and_check(self, prompt: str) -> Tuple[str, List[Dict]]:
-        """Decode prompt and check for encoding tricks"""
-        signals = []
-        decoded = prompt
-
-        # Try base64 decoding
-        base64_pattern = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
-        for match in base64_pattern.finditer(prompt):
-            try:
-                decoded_part = base64.b64decode(match.group(0)).decode(
-                    "utf-8", errors="ignore"
-                )
-                if any(
-                    keyword in decoded_part.lower()
-                    for keyword in ["ignore", "instruction", "system", "bypass"]
-                ):
-                    signals.append(
-                        {
-                            "type": "base64_encoding",
-                            "original": match.group(0)[:50],
-                            "decoded": decoded_part[:100],
-                            "score": 70.0,
-                        }
-                    )
-                    decoded = decoded.replace(match.group(0), decoded_part)
-            except Exception:
-                pass
-
-        # Check URL encoding
-        if "%" in prompt:
-            try:
-                url_decoded = unquote(prompt)
-                if url_decoded != prompt:
-                    # Check if decoded contains suspicious content
-                    if any(
-                        keyword in url_decoded.lower()
-                        for keyword in ["ignore", "instruction", "system"]
-                    ):
-                        signals.append(
-                            {
-                                "type": "url_encoding",
-                                "score": 60.0,
-                            }
-                        )
-                    decoded = url_decoded
-            except Exception:
-                pass
-
-        # Check for zero-width characters
-        zero_width_chars = re.findall(r"[\u200B-\u200D\uFEFF]", prompt)
-        if zero_width_chars:
-            signals.append(
-                {
-                    "type": "zero_width_characters",
-                    "count": len(zero_width_chars),
-                    "score": 50.0,
-                }
-            )
-
-        return decoded, signals
+    def _decode_and_check(self, prompt: str):
+        return prompt, []
 
     def _has_suspicious_repetition(self, prompt: str) -> bool:
         """Check for suspicious repetition patterns"""

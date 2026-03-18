@@ -10,10 +10,7 @@ Advanced techniques:
 - System prompt override attempts
 """
 
-import base64
-import re
-from typing import Dict, List, Optional, Tuple
-from urllib.parse import unquote
+from typing import Dict, List, Optional
 
 from app.core.llm_council import Verdict
 from app.core.enhanced_council import EnhancedLLMCouncil
@@ -56,19 +53,6 @@ class EnhancedPromptInjectionDetector:
         context: Optional[Dict] = None,
         scan_request_id: Optional[str] = None,
     ) -> RiskScore:
-        """
-        AI-Powered scan using LLM Council for final verdict.
-        This is the recommended scan method - uses AI to determine if prompt is malicious.
-
-        Returns:
-            - BLOCKED: Prompt is malicious, user must rephrase
-            - FLAGGED: Suspicious, review recommended
-            - SAFE: Prompt appears safe
-        """
-        session_id = context.get("session_id") if context else None
-        conversation_history = (
-            context.get("conversation_history", []) if context else []
-        )
 
         # Now use AI to make the final decision (Sole Arbiter)
         ai_result = await self.council.analyze_with_roles(
