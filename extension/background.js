@@ -1,10 +1,13 @@
 // IntellectSafe Companion - Background Worker
 
-let API_Base = "http://localhost:8001/api/v1/scan"; // Default Localhost
+let API_Base = "http://127.0.0.1:8001/api/v1/scan"; // Default Localhost (using IP for Windows reliability)
 
 function updateApiBase(rootUrl) {
   if (!rootUrl) return;
-  const cleanRoot = rootUrl.replace(/\/$/, "");
+  let cleanRoot = rootUrl.replace(/\/$/, "");
+  // Normalize localhost to 127.0.0.1 for consistency
+  cleanRoot = cleanRoot.replace("localhost", "127.0.0.1");
+  
   if (cleanRoot.endsWith('/api/v1/scan')) {
     API_Base = cleanRoot;
   } else if (cleanRoot.endsWith('/api/v1')) {
@@ -106,7 +109,7 @@ async function scanText(text, platform, endpoint) {
     return { action: "allow", score: riskScore };
 
   } catch (error) {
-    console.error("[IntellectSafe] Fetch error:", error);
-    return { action: "allow", error: "Connection failed" };
+    console.error(`[IntellectSafe] Fetch error at ${url}:`, error);
+    return { action: "allow", error: `Connection failed: ${error.message}` };
   }
 }
