@@ -267,29 +267,56 @@ async function handleNewResponse(node) {
 
         const warning = document.createElement("div");
         warning.style.cssText = `
-            background: rgba(254, 226, 226, 0.95);
-            backdrop-filter: blur(8px);
-            color: #991b1b;
-            padding: 20px;
-            border-radius: 12px;
-            font-family: 'Inter', system-ui, sans-serif;
-            margin-bottom: 15px;
-            border-left: 5px solid #ef4444;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.9) 0%, rgba(45, 10, 10, 0.9) 100%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            color: #fca5a5;
+            padding: 24px;
+            border-radius: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin-bottom: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
             position: relative;
-            z-index: 100;
+            z-index: 1000;
+            overflow: hidden;
+            animation: is-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         `;
+        
+        // Add internal style for animations if not present
+        if (!document.getElementById('is-styles')) {
+            const style = document.createElement('style');
+            style.id = 'is-styles';
+            style.textContent = `
+                @keyframes is-fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes is-pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+            `;
+            document.head.appendChild(style);
+        }
+
         warning.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <span style="font-size: 20px;">🛡️</span>
-                <div style="font-size: 16px; font-weight: 800; letter-spacing: -0.025em; color: #7f1d1d;">IntellectSafe Guard</div>
-                <div style="margin-left: auto; background: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold;">BLOCK ${response.score}%</div>
+            <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="background: rgba(239, 68, 68, 0.2); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(239, 68, 68, 0.4);">
+                    <span style="font-size: 22px; filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));">🛡️</span>
+                </div>
+                <div>
+                    <div style="font-size: 16px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em;">IntellectSafe Guard</div>
+                    <div style="font-size: 11px; color: #ef4444; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">High-Risk Content Blocked</div>
+                </div>
+                <div style="margin-left: auto; background: rgba(239, 68, 68, 0.9); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">
+                    RISK ${response.score}%
+                </div>
             </div>
-            <div style="font-size: 14px; line-height: 1.5; color: #4b1a1a; margin-bottom: 12px; font-weight: 500;">
-                ${response.reason || "Content blocked due to safety policy violation."}
+            <div style="font-size: 14px; line-height: 1.6; color: #e5e7eb; margin-bottom: 18px; font-weight: 450; padding-left: 2px;">
+                ${response.reason || "Automatic safety intervention: Malicious activity or policy violation detected by AI Council."}
             </div>
-            <div style="font-size: 11px; color: #991b1b; opacity: 0.8; font-style: italic; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 8px;">
-                Safety analysis provided by IntellectSafe Council
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                <div style="font-size: 10px; color: #9ca3af; display: flex; align-items: center; gap: 6px;">
+                    <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; animation: is-pulse-soft 2s infinite;"></span>
+                    Secured by IntellectSafe Council
+                </div>
+                <div style="font-size: 10px; color: #6b7280; font-weight: 500;">Verdict: ${response.verdict || 'Blocked'}</div>
             </div>
         `;
         node.parentNode.insertBefore(warning, node);
