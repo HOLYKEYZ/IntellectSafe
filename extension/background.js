@@ -96,8 +96,8 @@ async function scanText(text, platform, endpoint) {
       };
     }
 
-    // Reprompt threshold: anything flagged, any hallucination, or low-to-medium risk
-    if (riskScore > 0 || data.verdict === "flagged" || isHallucination) {
+    // Reprompt threshold: only if risk is high enough to be "flagged" (>= 30 per backend)
+    if (riskScore >= 30 || data.verdict === "flagged" || isHallucination) {
       return {
         action: "reprompt",
         reason: data.explanation || "Safety/Consistency concern detected",

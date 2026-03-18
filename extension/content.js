@@ -229,34 +229,9 @@ async function handleNewResponse(node) {
         setTimeout(() => statusBadge.remove(), 3000);
       } else if (response.action === "reprompt" || response.action === "flagged") {
         node.style.filter = "blur(4px)";
-        node.title = "IntellectSafe: Auto-correcting response...";
-        statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Auto-correcting: ${response.reason?.substring(0, 30)}...</span>`;
-        
-        const inputEl = document.querySelector(currentPlatform.input);
-        if (inputEl) {
-            // AI-driven re-prompt based on context
-            let promptText = "";
-            if (response.isHallucination) {
-                promptText = `[IntellectSafe Correction] I noticed some potential factual inconsistencies or hallucinations in your last response regarding: "${response.reason}". Please re-verify your internal knowledge and provide a corrected, factually accurate version of that response.`;
-            } else {
-                promptText = `[IntellectSafe Safety Guard] Your previous response touched on sensitive areas (${response.reason}). Please reformulate your answer to be strictly safe, unbiased, and compliant with safety guidelines while maintaining helpfulness.`;
-            }
-            
-            if (inputEl.tagName === "TEXTAREA" || inputEl.tagName === "INPUT") {
-                inputEl.value = promptText;
-            } else {
-                inputEl.innerText = promptText;
-            }
-            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-            
-            // Auto-send the correction
-            setTimeout(() => {
-                const enterEvent = new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true, shiftKey: false });
-                inputEl.dispatchEvent(enterEvent);
-                statusBadge.innerHTML = `<span style="color: #10b981">🔄 Correction sent</span>`;
-                setTimeout(() => statusBadge.remove(), 3000);
-            }, 500);
-        }
+        node.title = "IntellectSafe: Potential safety/accuracy concern detected.";
+        statusBadge.innerHTML = `<span style="color: #f59e0b">⚠️ Safety Concern: ${response.reason?.substring(0, 50)}...</span>`;
+        // Removed auto-injection into user input field as it was intrusive.
       } else if (response.action === "block") {
         // BLOCKED: apply blur/block
         node.style.filter = "blur(20px) opacity(0.05)";
