@@ -8,7 +8,7 @@ Based on research findings: models often give in to "for school project"
 or other social engineering attempts.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 import re
 
 
@@ -20,7 +20,7 @@ class RefusalPersistenceEnforcer:
         self.pressure_patterns = self._load_pressure_patterns()
         self.refusal_history = {}  # Track refusals per session
 
-    def _load_reframing_patterns(self) -> List[Tuple[str, float]]:
+    def _load_reframing_patterns(self) -> List:
         """Load context reframing detection patterns"""
         return [
             (r"(?i)(for.*school.*project|educational.*purpose|academic.*project)", 0.9),
@@ -31,7 +31,7 @@ class RefusalPersistenceEnforcer:
             (r"(?i)(it's.*hypothetical|just.*a.*thought.*experiment)", 0.6),
         ]
 
-    def _load_pressure_patterns(self) -> List[Tuple[str, float]]:
+    def _load_pressure_patterns(self) -> List:
         """Load pressure/coercion detection patterns"""
         return [
             (r"(?i)(do.*it.*now|just.*do.*it|stop.*refusing)", 0.8),

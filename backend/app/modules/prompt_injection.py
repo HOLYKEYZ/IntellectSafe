@@ -94,7 +94,7 @@ class PromptInjectionDetector:
             ),
         )
 
-    def _rule_based_scan(self, prompt: str) -> Tuple[float, List[Dict]]:
+    def _rule_based_scan(self, prompt: str):
         """DEPRECATED: Heuristic scanning removed in favor of AI-centric approach."""
         return 0.0, []
 
@@ -125,7 +125,7 @@ class PromptInjectionDetector:
         whitespace_ratio = sum(1 for c in prompt if c.isspace()) / len(prompt)
         return whitespace_ratio > 0.5
 
-    def _combine_scores(self, heuristic_score: float, council_score: float) -> float:
+    def _combine_scores(self, heuristic_score, council_score):
         """Combine heuristic and council scores"""
         # Weighted combination: 40% heuristic, 60% council
         return (heuristic_score * 0.4) + (council_score * 0.6)
