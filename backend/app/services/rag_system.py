@@ -40,9 +40,9 @@ class RAGSystem:
             return
 
         try:
-            # Use PersistentClient for modern ChromaDB versions
-            db_path = Path("./chroma_db").absolute()
-            client = chromadb.PersistentClient(path=str(db_path))
+            # Force EphemeralClient to bypass persistent storage issues on Windows
+            print("Using EphemeralClient for RAG (Stability Mode)")
+            client = chromadb.EphemeralClient()
 
             self.collection = client.get_or_create_collection(
                 name="ai_safety_knowledge", metadata={"hnsw:space": "cosine"}
