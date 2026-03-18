@@ -1,9 +1,5 @@
 # IntellectSafe - AI Safety & Security Platform
 
-[![CI](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/ci.yml/badge.svg)](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/ci.yml)
-[![Security](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/security.yml/badge.svg)](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/security.yml)
-[![CD](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/cd.yml/badge.svg)](https://github.com/HOLYKEYZ/IntellectSafe/actions/workflows/cd.yml)
-
 Production-grade AI Safety Engine protecting humans, organizations, and AI systems from misuse, deception, manipulation, and loss of control.
 
 ## 🛡️ Features
@@ -292,3 +288,5 @@ python verify_agent.py
 **GPLv2**
 GNU GENERAL PUBLIC LICENSE
 Version 2 License .
+
+NOTE: still in development & research stage due to constant frontier models releases
