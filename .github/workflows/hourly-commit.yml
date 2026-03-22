@@ -16,18 +16,8 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check timing and update
+      - name: Commit and push
         run: |
-          LAST_COMMIT=$(git log -1 --format=%ct)
-          NOW=$(date +%s)
-          DIFF=$((NOW - LAST_COMMIT))
-
-          if [ $DIFF -lt 3300 ]; then
-            echo "Only $((DIFF / 60))m since last commit — skipping."
-            exit 0
-          fi
-
-          echo "Last commit was $((DIFF / 60))m ago — committing."
           date > .github/.keep_active
           git config --global user.name "HOLYKEYZ"
           git config --global user.email "ayandajoseph390@gmail.com"
