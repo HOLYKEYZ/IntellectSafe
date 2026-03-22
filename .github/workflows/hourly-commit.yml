@@ -13,14 +13,47 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 2
+          python-version: '3.13'
+
+      - name: Update stats and README
+        run: |
+          git config --global user.name "HOLYKEYZ"
+          git config --global user.email "ayandajoseph390@gmail.com"
+
+          # Update stats file
+          echo "{\"last_updated\": \"$(date -u '+%Y-%m-%d %H:%M:%S UTC')\", \"commit_count\": $(git rev-list --count HEAD), \"total_contributors\": $(git shortlog -sn | wc -l)}" > .github/stats.json
+
+          # Update README with timestamp
+          if [ -f README.md ]; then
+            # Add/update activity section
+            if grep -q "## Activity" README.md; then
+              sed -i "s/Last updated:.*/Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')/" README.md
+            else
+              echo -e "\n## Activity\n> Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\n" >> README.md
+            fi
+          fi
+
+      - name: Check dependencies
+        run: |
+          cd backend || exit 0
+          if [ -f requirements.txt ]; then
+            echo "### Dependency Check" >> ../.github/deps_status.md
+            echo "Last checked: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> ../.github/deps_status.md
+            echo '```' >> ../.github/deps_status.md
+            cat requirements.txt >> ../.github/deps_status.md
+            echo '```' >> ../.github/deps_status.md
+          fi
 
       - name: Commit and push
         run: |
-          date > .github/.keep_active
-          git config --global user.name "HOLYKEYZ"
-          git config --global user.email "ayandajoseph390@gmail.com"
-          git add .github/.keep_active
-          git commit -m "chore: hourly update"
-          git push
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: $(date -u '+%Y-%m-%d %H:%M') update"
+            git push
+          fi
