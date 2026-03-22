@@ -50,10 +50,12 @@ jobs:
 
       - name: Commit and push
         run: |
+          git config --global user.name "HOLYKEYZ"
+          git config --global user.email "ayandajoseph390@gmail.com"
+
+          # Always update activity timestamp - forces a commit
+          echo "Last sync: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .github/activity_tracker.txt
+
           git add -A
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: $(date -u '+%Y-%m-%d %H:%M') update"
-            git push
-          fi
+          git commit -m "chore: $(date -u '+%Y-%m-%d %H:%M') sync"
+          git push
