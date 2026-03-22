@@ -37,25 +37,31 @@ jobs:
             fi
           fi
 
-      - name: Check dependencies
+      - name: Update CI/CD status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          cd backend || exit 0
-          if [ -f requirements.txt ]; then
-            echo "### Dependency Check" >> ../.github/deps_status.md
-            echo "Last checked: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> ../.github/deps_status.md
-            echo '```' >> ../.github/deps_status.md
-            cat requirements.txt >> ../.github/deps_status.md
-            echo '```' >> ../.github/deps_status.md
-          fi
+          echo "# CI/CD Status" > .github/ci_status.md
+          echo "Last sync: $(date -u)" >> .github/ci_status.md
+          echo "" >> .github/ci_status.md
+          curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs?per_page=5" | \
+            grep -o '"name":"[^"]*"|"conclusion":"[^"]*"' | \
+            sed 's/"name":"/Workflow: /g' | sed 's/","|"conclusion":"/ - /g' >> .github/ci_status.md || \
+            echo "Status unavailable" >> .github/ci_status.md
 
       - name: Commit and push
         run: |
           git config --global user.name "HOLYKEYZ"
           git config --global user.email "ayandajoseph390@gmail.com"
 
-          # Always update activity timestamp - forces a commit
-          echo "Last sync: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .github/activity_tracker.txt
+          # Update activity tracker
+          echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .github/activity_tracker.txt
 
-          git add -A
+          # Remove old keep_active if exists
+          rm -f .github/.keep_active
+
+          git add .github/activity_tracker.txt .github/stats.json .github/ci_status.md
           git commit -m "chore: $(date -u '+%Y-%m-%d %H:%M') sync"
           git push
