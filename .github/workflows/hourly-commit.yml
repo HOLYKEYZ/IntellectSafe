@@ -2,8 +2,7 @@ name: Hourly Commit
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Primary: every hour on the hour
-    - cron: '30 * * * *' # Fallback: catches delayed :00 runs
+    - cron: '*/10 * * * *'  # Every 10 minutes
   workflow_dispatch:
 
 jobs:
