@@ -109,8 +109,6 @@ async def scan_prompt(
             },
         )
         db.add(scan_request)
-        db.commit()
-        db.refresh(scan_request)
 
         # Run AI-POWERED detection (uses AI to judge intent)
         # This catches jailbreaks that pattern matching misses
