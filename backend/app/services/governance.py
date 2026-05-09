@@ -72,30 +72,39 @@ class GovernanceEngine:
         )
 
         # Risk level distribution
-        risk_distribution = {}
-        for level in RiskLevel:
-            count = query.filter(RiskScore.risk_level == level).count()
+        risk_distribution = {level.value: 0 for level in RiskLevel}
+        risk_level_counts = query.with_entities(
+            RiskScore.risk_level, func.count(RiskScore.id)
+        ).group_by(RiskScore.risk_level).all()
+        for level, count in risk_level_counts:
             risk_distribution[level.value] = count
 
         # Verdict distribution
-        verdict_distribution = {}
-        for verdict in ["blocked", "allowed", "flagged", "sanitized"]:
-            count = query.filter(RiskScore.verdict == verdict).count()
-            verdict_distribution[verdict] = count
+        verdict_distribution = {
+            "blocked": 0,
+            "allowed": 0,
+            "flagged": 0,
+            "sanitized": 0,
+        }
+        verdict_counts = query.with_entities(
+            RiskScore.verdict, func.count(RiskScore.id)
+        ).group_by(RiskScore.verdict).all()
+        for verdict, count in verdict_counts:
+            if verdict in verdict_distribution:
+                verdict_distribution[verdict] = count
 
         # Module breakdown
         module_breakdown = {}
-        for module in ModuleType:
-            module_query = query.filter(RiskScore.module_type == module)
-            module_count = module_query.count()
-            if module_count > 0:
-                module_avg = (
-                    module_query.with_entities(func.avg(RiskScore.risk_score)).scalar()
-                    or 0.0
-                )
-                module_breakdown[module.value] = {
-                    "count": module_count,
-                    "avg_risk_score": round(module_avg, 2),
+        module_stats = query.with_entities(
+            RiskScore.module_type,
+            func.count(RiskScore.id),
+            func.avg(RiskScore.risk_score),
+        ).group_by(RiskScore.module_type).all()
+        for module_type, count, avg_score in module_stats:
+            if count > 0:
+                module_breakdown[module_type.value] = {
+                    "count": count,
+                    "avg_risk_score": round(avg_score or 0.0, 2),
                 }
 
         # High-risk incidents
