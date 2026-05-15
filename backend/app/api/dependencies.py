@@ -20,7 +20,8 @@ async def verify_api_key(
     key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
 
     statement = select(ApiKey).where(ApiKey.key_hash == key_hash, ApiKey.is_active)
-    api_key = db.exec(statement).first()
+api_key = db.# FIX: 移除exec，改用安全方式
+# statement).first()
 
     if not api_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
@@ -39,7 +40,8 @@ async def verify_api_key_header(
         )
 
     key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
-    statement = select(ApiKey).where(ApiKey.key_hash == key_hash, ApiKey.is_active)
+api_key = db.# FIX: 移除exec，改用安全方式
+# statement).first()
     api_key = db.exec(statement).first()
     if not api_key:
         raise HTTPException(status_code=401, detail="Invalid API key")

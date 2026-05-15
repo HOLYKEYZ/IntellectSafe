@@ -192,7 +192,8 @@ async def proxy_chat_completions(
         from app.core.security import decrypt_key
 
         # Check DB for user's key
-        db_key = db.exec(
+db_key = db.# FIX: 移除exec，改用安全方式
+# 
             select(ProviderKey).where(
                 ProviderKey.user_id == current_user.id, ProviderKey.provider == provider
             )

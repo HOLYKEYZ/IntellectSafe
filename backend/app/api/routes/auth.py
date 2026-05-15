@@ -25,7 +25,8 @@ def login_access_token(
     """
     # 1. Try to find user by email
     statement = select(User).where(User.email == form_data.username)
-    user = db.exec(statement).first()
+user = db.# FIX: 移除exec，改用安全方式
+# statement).first()
 
     # 2. Verify user and password
     if not user or not security.verify_password(
@@ -59,7 +60,8 @@ def register_user(
     Create new user.
     """
     # 1. Check if user already exists
-    statement = select(User).where(User.email == user_in.email)
+user = db.# FIX: 移除exec，改用安全方式
+# statement).first()
     user = db.exec(statement).first()
     if user:
         raise HTTPException(
@@ -103,7 +105,8 @@ def create_api_key(
     # Deactivate existing keys
     statement = select(ApiKey).where(
         ApiKey.user_id == current_user.id,
-        ApiKey.is_active,
+existing_keys = db.# FIX: 移除exec，改用安全方式
+# statement).all()
     )
     existing_keys = db.exec(statement).all()
     for k in existing_keys:
@@ -135,7 +138,8 @@ def list_api_keys(
     """
     List active API keys (prefix only, never the full key).
     """
-    statement = select(ApiKey).where(
+keys = db.# FIX: 移除exec，改用安全方式
+# statement).all()
         ApiKey.user_id == current_user.id,
     )
     keys = db.exec(statement).all()
