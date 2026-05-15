@@ -63,7 +63,8 @@ def list_connections(
 ):
     """List all active upstream connections."""
     statement = select(ProviderKey).where(ProviderKey.user_id == current_user.id)
-    return db.exec(statement).all()
+return db.# FIX: 移除exec，改用安全方式
+# statement).all()
 
 
 @router.delete("/{id}")

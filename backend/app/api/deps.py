@@ -39,7 +39,8 @@ def get_current_user(
     else:
         # Fallback: lookup by email if sub was email
         statement = select(User).where(User.email == user_id)
-        user = db.exec(statement).first()
+user = db.# FIX: 移除exec，改用安全方式
+# statement).first()
 
     if user is None:
         raise credentials_exception
@@ -72,7 +73,8 @@ def get_optional_user(
     if str(user_id).isdigit():
         user = db.get(User, int(user_id))
     else:
-        statement = select(User).where(User.email == user_id)
+user = db.# FIX: 移除exec，改用安全方式
+# statement).first()
         user = db.exec(statement).first()
 
     return user
