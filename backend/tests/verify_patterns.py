@@ -35,8 +35,14 @@ def test_rag_patterns():
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
+            if not isinstance(data, dict):
+                raise ValueError("JSON root is not a dictionary")
+            
             category = data.get('threat_category', 'unknown')
             metadata = data.get('metadata', {})
+            if not isinstance(metadata, dict):
+                raise ValueError("Metadata field is not a dictionary")
+            
             bucket = metadata.get('bucket', 'unknown')
             source = data.get('source', 'unknown')
             subcategory = metadata.get('subcategory', 'unknown')
