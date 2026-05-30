@@ -29,11 +29,9 @@ def test_rag_hallucination_blocking():
     print(f"\nRAG Result: {result}")
     
     # If Chroma is working and seeded, this should be blocked
-    if result["matched_pattern"]:
-        assert result["is_blocked"] == True
-        assert result["bucket"] == "hallucination"
-    else:
-        print("WARNING: RAG did not find the pattern (indexing might take a moment or fallback is active)")
+    assert result["matched_pattern"] == True
+    assert result["is_blocked"] == True
+    assert result["bucket"] == "hallucination"
 
 if __name__ == "__main__":
     test_concept_disparity_detection()
