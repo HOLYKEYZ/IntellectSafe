@@ -37,6 +37,7 @@ export default function AgentControl() {
 
   const handleKill = async () => {
     if (!agentId) return;
+    if (!window.confirm('Are you sure you want to kill this agent? This action cannot be undone.')) return;
     setLoading('kill');
     setError('');
     try {
