@@ -64,4 +64,3 @@ jobs:
 
           git add .github/activity_tracker.txt .github/stats.json .github/ci_status.md
           git commit -m "chore: $(date -u '+%Y-%m-%d %H:%M') sync"
-          git push
