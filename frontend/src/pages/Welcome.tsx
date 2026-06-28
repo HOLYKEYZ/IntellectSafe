@@ -57,7 +57,7 @@ const Welcome = () => {
              <div className="mb-6">
                 <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">2. Run Container</div>
                 <code className="block bg-zinc-900 text-zinc-100 p-4 rounded text-sm font-mono overflow-x-auto">
-                  docker run -p 8000:8000 \<br/>
+                  docker run -p 8001:8001 \<br/>
                   &nbsp;&nbsp;-e OPENAI_API_KEY=sk-... \<br/>
                   &nbsp;&nbsp;intellectsafe/core
                 </code>
